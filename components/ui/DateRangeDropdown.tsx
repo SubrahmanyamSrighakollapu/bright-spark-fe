@@ -20,6 +20,7 @@ export interface DateRangeDropdownProps {
   showIcon?: boolean;
   align?: 'left' | 'right';
   size?: 'sm' | 'md';
+  allowedPresets?: DateFilterPreset[];
 }
 
 const PRESETS: { key: DateFilterPreset; label: string; description: string }[] = [
@@ -37,6 +38,7 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
   showIcon = true,
   align = 'right',
   size = 'sm',
+  allowedPresets,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -151,7 +153,7 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
           </div>
 
           <div className="space-y-0.5 max-h-60 overflow-y-auto">
-            {PRESETS.map((preset) => {
+            {PRESETS.filter((preset) => !allowedPresets || allowedPresets.includes(preset.key)).map((preset) => {
               const isSelected = selectedPreset === preset.key;
               return (
                 <button

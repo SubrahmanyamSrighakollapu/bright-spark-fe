@@ -7,10 +7,8 @@ import { formatDateTime } from '@/utils/formatters';
 import {
   Building2,
   User,
-  ShieldCheck,
   CheckCircle2,
   XCircle,
-  Network,
   Clock,
   FileText,
   Ban,
@@ -40,7 +38,6 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
 
   if (!item) return null;
 
-  const isDistributor = item.entityType === 'DISTRIBUTOR';
   const isBlocked = item.kycStatus === 'BLOCKED' || item.accountStatus === 'SUSPENDED';
 
   const handleConfirmApprove = () => {
@@ -60,8 +57,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
     onClose();
   };
 
-  // Realistic mock documents for the entity
-  const mockDocs: KYCDocument[] = [
+  const fallbackDocs: KYCDocument[] = [
     {
       id: `doc_aadhaar_${item.id}`,
       title: 'Aadhaar Card (UIDAI Proof)',
@@ -95,6 +91,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
       uploadedAt: item.createdAt,
     },
   ];
+  const documents = item.rawEntity.documents?.length ? item.rawEntity.documents : fallbackDocs;
 
   return (
     <>
@@ -243,11 +240,11 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
               <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
                 <FileText className="w-4 h-4 text-[var(--primary)]" /> Uploaded Verification Documents
               </div>
-              <span className="text-[11px] text-slate-500">4 / 4 Mandatory Documents Uploaded</span>
+              <span className="text-[11px] text-slate-500">{documents.length} document{documents.length === 1 ? '' : 's'} submitted</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {mockDocs.map((doc) => (
+              {documents.map((doc) => (
                 <div
                   key={doc.id}
                   className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between hover:border-indigo-300 transition-colors"

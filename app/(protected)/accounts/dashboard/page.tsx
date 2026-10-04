@@ -2,42 +2,22 @@
 
 import React, { useState } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { FinancialMetricCard } from '@/components/features/financial/FinancialMetricCard';
 import {
   Landmark,
   Wallet,
-  Receipt,
-  DollarSign,
-  ArrowRight,
   ArrowUpRight,
   ArrowDownLeft,
-  Clock,
-  Search,
-  Filter,
-  RefreshCw,
   FileText,
-  CheckCircle2,
 } from 'lucide-react';
 import Link from 'next/link';
 
-import { DateRangeDropdown, DateRangeValue } from '@/components/ui/DateRangeDropdown';
+import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
+import { RoleDashboardHero } from '@/components/features/dashboard/RoleDashboardHero';
 
-type HourlyWindow = '1h' | '3h' | '6h' | '12h' | '24h';
 type AccountantModule = 'PAY_IN' | 'PAY_OUT' | 'SETTLEMENTS';
 
 export default function AccountsDashboardPage() {
-  const [hourlyFilter, setHourlyFilter] = useState<HourlyWindow>('24h');
   const [activeModule, setActiveModule] = useState<AccountantModule>('PAY_IN');
-
-  const hourlyMultipliers: Record<HourlyWindow, { credits: number; debits: number; count: number }> = {
-    '1h': { credits: 1840000, debits: 1420000, count: 240 },
-    '3h': { credits: 5820000, debits: 4180000, count: 780 },
-    '6h': { credits: 12400000, debits: 8900000, count: 1650 },
-    '12h': { credits: 24800000, debits: 18100000, count: 3420 },
-    '24h': { credits: 48500000, debits: 36200000, count: 6890 },
-  };
-
-  const currentStats = hourlyMultipliers[hourlyFilter];
 
   const payInTxns = [
     { id: 'TXN_PIN_901', name: 'Apex National Retail', mobile: '+91 9876543210', amount: '₹ 1,25,000.00', mode: 'UPI_GATEWAY', hour: '10 mins ago', status: 'SUCCESS' },
@@ -59,25 +39,13 @@ export default function AccountsDashboardPage() {
 
   return (
     <PageContainer fullWidth className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="bg-white border border-[var(--border)] rounded-[var(--radius-xl)] p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center font-bold border border-violet-200">
-              <Landmark className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                Finance & Accountant Control Desk
-              </h1>
-              <p className="text-xs text-[var(--text-muted)]">
-                Financial Ledger Governance, Hourly Pay-In/Pay-Out Filters & Invoice Search
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
+      <RoleDashboardHero
+        eyebrow="Finance control"
+        title="Finance & Accountant Control Desk"
+        description="Financial Ledger Governance, Pay-In/Pay-Out Reconciliation & Invoice Search"
+        icon={<Landmark className="h-5 w-5" />}
+        tone="violet"
+        actions={<>
           <DateRangeDropdown size="sm" />
           <Link
             href="/admin/invoices"
@@ -85,8 +53,8 @@ export default function AccountsDashboardPage() {
           >
             Invoice Formats & Search →
           </Link>
-        </div>
-      </div>
+        </>}
+      />
 
       {/* Financial Ledger Cards Above: Credits, Debits, Net Balance */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -130,42 +98,13 @@ export default function AccountsDashboardPage() {
         </div>
       </div>
 
-      {/* Hourly Transaction Filtering Bar */}
-      <div className="p-4 bg-white border border-[var(--border)] rounded-[var(--radius-xl)] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-violet-600" />
-          <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Hourly Transaction Filter:</span>
-        </div>
-
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-700">
-          {(['1h', '3h', '6h', '12h', '24h'] as HourlyWindow[]).map((w) => (
-            <button
-              key={w}
-              type="button"
-              onClick={() => setHourlyFilter(w)}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                hourlyFilter === w
-                  ? 'bg-[var(--primary)] text-white shadow-xs font-extrabold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Last {w}
-            </button>
-          ))}
-        </div>
-
-        <div className="text-xs text-slate-600 font-mono">
-          Filtered Window ({hourlyFilter}): <strong>{currentStats.count} Txns</strong> | Pay-In Credits: <strong>₹{(currentStats.credits / 100000).toFixed(2)} L</strong> | Pay-Out Debits: <strong>₹{(currentStats.debits / 100000).toFixed(2)} L</strong>
-        </div>
-      </div>
-
       {/* Modules: Pay-In, Pay-Out & Settlements */}
       <div className="bg-white border border-[var(--border)] rounded-[var(--radius-xl)] p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-[var(--border-subtle)] pb-4">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-violet-600" />
             <h2 className="text-sm font-bold text-slate-900">
-              Accountant Ledger Modules ({hourlyFilter} filter applied)
+              Accountant Ledger Modules
             </h2>
           </div>
 

@@ -113,7 +113,6 @@ export default function MasterDistributorLedgerPage() {
       'Date & Time': e.createdAt,
     }));
     reportService.exportToCsv('MD_Wallet_Ledger_Report', exportRows);
-    toastSuccess('Ledger statement CSV exported successfully!');
   };
 
   const isFiltered = searchQuery || typeFilter !== 'ALL' || directionFilter !== 'ALL';

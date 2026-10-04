@@ -28,7 +28,6 @@ import { ArrowDownLeft, ArrowUpRight, Store } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const { session } = useAuth();
-  const { toastSuccess, toastError } = useToast();
 
   if (session?.role === 'KYC') {
     return <KYCDashboardPage />;
@@ -42,6 +41,13 @@ export default function AdminDashboardPage() {
   if (session?.role === 'OPERATIONS' || session?.role === 'SUPPORT') {
     return <OperationsDashboardPage />;
   }
+
+  return <AdminDashboardContent />;
+}
+
+function AdminDashboardContent() {
+  const { session } = useAuth();
+  const { toastSuccess, toastError } = useToast();
 
   // Dashboard View Tab State: PAY_IN | PAY_OUT | NETWORK_KYC
   const [activeTab, setActiveTab] = useState<'PAY_IN' | 'PAY_OUT' | 'NETWORK_KYC'>('PAY_IN');
@@ -92,7 +98,8 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    loadNetworkAndApprovalData();
+    const timeoutId = window.setTimeout(loadNetworkAndApprovalData, 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -219,12 +226,10 @@ export default function AdminDashboardPage() {
       {/* 1. Theme Executive Dashboard Header */}
       <AdminHeroGreetingCard
         adminName={session?.name || 'Admin'}
-        roleTitle="Platform Administrator"
-        lastRefreshedAt={data?.lastRefreshedAt || new Date().toISOString()}
+        lastLoginAt={session?.loggedInAt}
         onRefresh={handleRefresh}
         isLoading={isLoading}
         pendingApprovalsCount={pendingApprovalsCount}
-        todayTxnCount={data?.metrics.totalTransactions || 0}
         activeFilterCount={activeFilterCount}
         onOpenAddMember={handleOpenAddMember}
         onOpenFilterDrawer={() => setFilterDrawerOpen(true)}

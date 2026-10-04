@@ -463,7 +463,7 @@ export const PayInDashboardView: React.FC<PayInDashboardViewProps> = ({
       </Card>
 
       {/* 4. Recent Pay-In Transactions */}
-      <RecentTransactionsTable isLoading={isLoading} />
+      <RecentTransactionsTable transactionType="PAY_IN" isLoading={isLoading} />
     </div>
   );
 };

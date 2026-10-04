@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/Button';
-import { Download, Check } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 export interface ReportExportMenuProps {
   onExportCsv: () => void;
@@ -15,12 +15,8 @@ export const ReportExportMenu: React.FC<ReportExportMenuProps> = ({
   reportTitle = 'Report',
   disabled = false,
 }) => {
-  const [exported, setExported] = useState(false);
-
   const handleExport = () => {
     onExportCsv();
-    setExported(true);
-    setTimeout(() => setExported(false), 2500);
   };
 
   return (
@@ -29,11 +25,11 @@ export const ReportExportMenu: React.FC<ReportExportMenuProps> = ({
       size="sm"
       onClick={handleExport}
       disabled={disabled}
-      leftIcon={exported ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Download className="w-3.5 h-3.5" />}
-      title={`Export ${reportTitle} to CSV`}
-      aria-label={`Export ${reportTitle} to CSV`}
+      leftIcon={<Download className="w-3.5 h-3.5" />}
+      title={`Export ${reportTitle} to Excel`}
+      aria-label={`Export ${reportTitle} to Excel`}
     >
-      {exported ? 'CSV Downloaded' : 'Export CSV'}
+      Export
     </Button>
   );
 };

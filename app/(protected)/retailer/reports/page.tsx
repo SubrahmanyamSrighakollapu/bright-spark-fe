@@ -106,7 +106,6 @@ export default function RetailerReportsPage() {
       return;
     }
     reportService.exportToCsv(`Retailer_${retailerId}_${activeTab.toUpperCase()}`, reportData);
-    toastSuccess('Report CSV exported successfully!');
   };
 
   const handleResetFilters = () => {
@@ -385,7 +384,7 @@ export default function RetailerReportsPage() {
                 leftIcon={<Download className="w-4 h-4" />}
                 disabled={reportData.length === 0}
               >
-                Export CSV
+                Export
               </Button>
             </div>
           }

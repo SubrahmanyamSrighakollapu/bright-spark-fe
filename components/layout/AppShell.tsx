@@ -7,6 +7,7 @@ import { Header } from './Header';
 import { RetailerHeadlineTicker } from './RetailerHeadlineTicker';
 import { Drawer } from '@/components/ui/Drawer';
 import { useAuth } from '@/context/AuthContext';
+import { ExcelExportProvider } from '@/components/features/reports/ExcelExportProvider';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -65,6 +66,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[var(--bg-app)] flex">
+      <ExcelExportProvider />
       {/* Persistent Desktop Sidebar */}
       <div className="hidden lg:flex flex-col h-screen shrink-0 z-40">
         <Sidebar
@@ -80,7 +82,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         onClose={() => setIsMobileDrawerOpen(false)}
         position="left"
         size="sm"
-        className="p-0 bg-[var(--bg-sidebar)] overflow-hidden w-[300px] max-w-[85vw]"
+        className="bg-[var(--bg-sidebar)] overflow-hidden w-[300px] max-w-[85vw]"
+        contentClassName="p-0 sm:p-0 overflow-hidden"
       >
         <Sidebar
           isCollapsed={false}
@@ -102,7 +105,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         {/* Global Continuous Headline Alerts Ticker for Retailers */}
         <RetailerHeadlineTicker />
 
-        <main className="flex-1 overflow-y-auto min-h-0 bg-workspace-atmospheric scroll-smooth">{children}</main>
+        <main className="flex-1 overflow-y-auto min-h-0 bg-workspace-atmospheric scroll-smooth">
+          <div className="min-h-full w-full px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6 xl:px-8 xl:py-7">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

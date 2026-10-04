@@ -139,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: session.email,
         role: previewRole || session.role, // Preview role applies to UI rendering, NOT true auth permissions
         permissions: session.permissions,
+        entityId: session.entityId,
       }
     : null;
 

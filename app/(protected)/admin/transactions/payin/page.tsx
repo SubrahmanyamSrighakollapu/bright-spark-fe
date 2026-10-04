@@ -11,8 +11,8 @@ import { TransactionSummaryCards } from '@/components/features/transactions/Tran
 import { TransactionFilterBar } from '@/components/features/transactions/TransactionFilterBar';
 import { TransactionTable } from '@/components/features/transactions/TransactionTable';
 import { TransactionDetailsDrawer } from '@/components/features/transactions/TransactionDetailsDrawer';
-import { CreatePayInModal } from '@/components/features/transactions/CreatePayInModal';
-import { ArrowDownLeft, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
+import { getExportPeriodLabel } from '@/utils/exportPeriod';
 
 export default function PayInTransactionsPage() {
   const [data, setData] = useState<TransactionListResult | null>(null);
@@ -26,7 +26,6 @@ export default function PayInTransactionsPage() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const detailDrawer = useModal<Transaction>();
-  const [isPayInModalOpen, setIsPayInModalOpen] = useState(false);
 
   const fetchTransactions = useCallback(
     async (activeFilters?: TransactionFilters, page = 1, pageSize = 10) => {
@@ -80,9 +79,11 @@ export default function PayInTransactionsPage() {
   const pendingCount = items.filter((t) => t.status === 'PENDING' || t.status === 'PROCESSING').length;
   const successRate = items.length > 0 ? (successfulCount / items.length) * 100 : 0;
 
-  const handleExportCSV = () => {
-    if (!items.length) return;
-    const exportRows = items.map((t) => ({
+  const handleExportCSV = async () => {
+    const result = await transactionService.getPayinTransactions(filters, 1, Math.max(pagination.totalItems, 1));
+    const exportItems = result.data?.items || [];
+    if (!exportItems.length) return;
+    const exportRows = exportItems.map((t) => ({
       'Transaction ID': t.transactionRef,
       'Order ID': t.orderId || '',
       'Type': t.type,
@@ -94,7 +95,7 @@ export default function PayInTransactionsPage() {
       'UTR/RRN': t.utr || t.referenceId || '',
       'Date': t.createdAt,
     }));
-    reportService.exportToCsv(`Admin_PayIn_Transactions_${new Date().toISOString().split('T')[0]}`, exportRows);
+    reportService.exportToCsv(`Admin_PayIn_Transactions_${getExportPeriodLabel(filters.dateRange)}`, exportRows);
   };
 
   return (
@@ -109,15 +110,7 @@ export default function PayInTransactionsPage() {
             onClick={handleExportCSV}
             leftIcon={<Download className="w-4 h-4" />}
           >
-            Export CSV
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsPayInModalOpen(true)}
-            leftIcon={<ArrowDownLeft className="w-4 h-4" />}
-          >
-            Create Payment Request
+            Export
           </Button>
         </div>
       }
@@ -168,12 +161,6 @@ export default function PayInTransactionsPage() {
         onRefresh={() => fetchTransactions(filters, pagination.page, pagination.pageSize)}
       />
 
-      {/* Create Pay-In Request Modal */}
-      <CreatePayInModal
-        isOpen={isPayInModalOpen}
-        onClose={() => setIsPayInModalOpen(false)}
-        onSuccess={() => fetchTransactions(filters, 1, pagination.pageSize)}
-      />
     </PageContainer>
   );
 }

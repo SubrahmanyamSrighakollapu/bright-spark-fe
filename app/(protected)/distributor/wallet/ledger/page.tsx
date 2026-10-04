@@ -112,7 +112,6 @@ export default function DistributorLedgerPage() {
       'Date & Time': e.createdAt,
     }));
     reportService.exportToCsv('Distributor_Wallet_Ledger_Statement', exportRows);
-    toastSuccess('Ledger statement CSV exported successfully!');
   };
 
   const isFiltered = searchQuery || typeFilter !== 'ALL' || directionFilter !== 'ALL';

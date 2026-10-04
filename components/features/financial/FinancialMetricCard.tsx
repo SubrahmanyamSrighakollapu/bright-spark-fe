@@ -17,6 +17,7 @@ export const FinancialMetricCard: React.FC<FinancialMetricCardProps> = ({
   subtext,
   icon,
   variant = 'neutral',
+  isDominant = false,
 }) => {
   // Softly tinted icon background colors for intentional accenting
   const iconTintStyles = {
@@ -31,15 +32,37 @@ export const FinancialMetricCard: React.FC<FinancialMetricCardProps> = ({
 
   const iconStyle = iconTintStyles[variant] || iconTintStyles.neutral;
 
+  const accentStyles = {
+    primary: 'from-blue-500 to-indigo-500',
+    payin: 'from-emerald-400 to-teal-500',
+    payout: 'from-amber-400 to-orange-500',
+    success: 'from-emerald-400 to-teal-500',
+    warning: 'from-amber-400 to-orange-500',
+    danger: 'from-rose-400 to-red-500',
+    neutral: 'from-slate-300 to-slate-400',
+  };
+
+  const surfaceStyles = {
+    primary: 'from-blue-50/55 via-white to-white',
+    payin: 'from-emerald-50/55 via-white to-white',
+    payout: 'from-amber-50/60 via-white to-white',
+    success: 'from-emerald-50/55 via-white to-white',
+    warning: 'from-amber-50/60 via-white to-white',
+    danger: 'from-rose-50/55 via-white to-white',
+    neutral: 'from-slate-50 via-white to-white',
+  };
+
   return (
-    <div className="p-5 bg-white border border-[#E5EAF1] rounded-xl shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-slate-300">
+    <div className={`group relative overflow-hidden bg-gradient-to-br ${surfaceStyles[variant]} border border-slate-200/90 rounded-2xl shadow-[0_1px_2px_rgba(15,23,42,0.03),0_10px_30px_rgba(15,23,42,0.06)] flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] ${isDominant ? 'p-6 min-h-[156px]' : 'p-5 min-h-[138px]'}`}>
+      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accentStyles[variant]}`} />
+      <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-slate-50 transition-transform duration-500 group-hover:scale-125" />
       {/* Top: Icon + Label */}
       <div className="flex items-center justify-between gap-3">
         <span className="text-[12px] font-semibold uppercase tracking-wider text-[#64748B]">
           {label}
         </span>
         {icon && (
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${iconStyle}`}>
+          <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-inset ring-black/[0.04] ${iconStyle}`}>
             {icon}
           </div>
         )}
@@ -47,7 +70,7 @@ export const FinancialMetricCard: React.FC<FinancialMetricCardProps> = ({
 
       {/* Middle: Dominant Financial Value */}
       <div className="mt-3 mb-1">
-        <div className="text-[28px] leading-tight font-extrabold text-[#0F172A] tracking-tight tabular-nums font-mono">
+        <div className={`${isDominant ? 'text-[32px]' : 'text-[28px]'} leading-tight font-extrabold text-[#0F172A] tracking-[-0.035em] tabular-nums font-mono`}>
           {value}
         </div>
       </div>

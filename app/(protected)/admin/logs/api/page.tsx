@@ -13,6 +13,7 @@ import { ApiLogTable } from '@/components/features/logs/ApiLogTable';
 import { LogDetailsDrawer } from '@/components/features/logs/LogDetailsDrawer';
 import { TraceSearchDrawer } from '@/components/features/logs/TraceSearchDrawer';
 import { Search, Download, GitCommit } from 'lucide-react';
+import { reportService } from '@/services/reportService';
 
 export default function ApiLogsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,15 +50,7 @@ export default function ApiLogsPage() {
 
   const handleExportCsv = () => {
     if (!data?.items) return;
-    const csv = logService.exportLogsToCsv('API', data.items);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `api_logs_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    reportService.exportToCsv('API_Logs', data.items as unknown as Record<string, unknown>[]);
   };
 
   const sum = summary || {
@@ -79,7 +72,7 @@ export default function ApiLogsPage() {
             Trace Search
           </Button>
           <Button variant="primary" size="sm" onClick={handleExportCsv} leftIcon={<Download className="w-3.5 h-3.5" />}>
-            Export CSV
+            Export
           </Button>
         </div>
       }

@@ -1136,27 +1136,6 @@ export const reportService = {
    */
   exportToCsv(filename: string, rows: Record<string, unknown>[]) {
     if (!rows || rows.length === 0) return;
-
-    const headers = Object.keys(rows[0]);
-    const csvLines: string[] = [];
-    csvLines.push(headers.join(','));
-
-    for (const row of rows) {
-      const values = headers.map((header) => {
-        const val = row[header];
-        if (val === null || val === undefined) return '""';
-        const str = String(val).replace(/"/g, '""');
-        return `"${str}"`;
-      });
-      csvLines.push(values.join(','));
-    }
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvLines.join('\n'));
-    const link = document.createElement('a');
-    link.setAttribute('href', csvContent);
-    link.setAttribute('download', `${filename}_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.dispatchEvent(new CustomEvent('qin-star-pay:excel-export', { detail: { filename, rows } }));
   },
 };

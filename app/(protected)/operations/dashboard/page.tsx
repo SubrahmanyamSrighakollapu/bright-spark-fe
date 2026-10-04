@@ -23,6 +23,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
+import { RoleDashboardHero } from '@/components/features/dashboard/RoleDashboardHero';
 
 type TicketStatus = 'Open' | 'Processing' | 'Closed';
 type ViewRoleMode = 'MANAGER' | 'EXECUTIVE';
@@ -118,25 +119,13 @@ export default function OperationsDashboardPage() {
 
   return (
     <PageContainer fullWidth className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="bg-white border border-[var(--border)] rounded-[var(--radius-xl)] p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold border border-sky-200">
-              <Activity className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                Operations & Support Operations Center
-              </h1>
-              <p className="text-xs text-[var(--text-muted)]">
-                Live Transaction Routing, Gateway SLA Health & Hybrid Support Ticket Queue
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
+      <RoleDashboardHero
+        eyebrow="Live operations"
+        title="Operations & Support Operations Center"
+        description="Live Transaction Routing, Gateway SLA Health & Hybrid Support Ticket Queue"
+        icon={<Activity className="h-5 w-5" />}
+        tone="sky"
+        actions={<>
           {/* Universal Date Range Filter Dropdown */}
           <DateRangeDropdown size="sm" />
 
@@ -172,8 +161,8 @@ export default function OperationsDashboardPage() {
           >
             Disputes Queue →
           </Link>
-        </div>
-      </div>
+        </>}
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

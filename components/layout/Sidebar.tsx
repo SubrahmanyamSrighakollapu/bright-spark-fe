@@ -13,6 +13,7 @@ import { cn } from '@/utils/cn';
 
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { retailerPermissionService } from '@/services/retailerPermissionService';
 
 export interface SidebarProps {
   isCollapsed: boolean;
@@ -42,7 +43,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { logout } = useAuth();
 
   const baseNav = getNavigationForRole(currentUser.role);
-  const navItems = filterNavigationByRole(baseNav, currentUser);
+  const roleFilteredItems = filterNavigationByRole(baseNav, currentUser);
+  const navItems = currentUser.role === 'RETAILER' && currentUser.entityId
+    ? roleFilteredItems
+        .filter((item) => retailerPermissionService.canAccessNavigationItem(currentUser.entityId!, item.id))
+        .map((item) => ({
+          ...item,
+          children: item.children?.filter((child) => retailerPermissionService.canAccessNavigationItem(currentUser.entityId!, child.id)),
+        }))
+    : roleFilteredItems;
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { toastSuccess } = useToast();

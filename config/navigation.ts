@@ -38,7 +38,7 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
     children: [
       { id: 'user-list', label: 'User List', path: '/admin/users' },
       { id: 'add-user', label: 'Add User', path: '/admin/users/add' },
-      { id: 'user-settings', label: 'User Settings', path: '/admin/users/settings' },
+      { id: 'user-settings', label: 'Retailer Settings', path: '/admin/users/settings' },
       { id: 'add-wallet', label: 'Add Wallet', path: '/admin/users/add-wallet' },
       { id: 'hold-funds', label: 'Hold Funds', path: '/admin/users/hold-funds' },
     ],

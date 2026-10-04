@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { AddMemberModal, MemberType } from '@/components/features/users/AddMemberModal';
 import { hierarchyService } from '@/services/hierarchyService';
-import { UserPlus, Users, Building2, Store, Award, ArrowUpRight, Calendar } from 'lucide-react';
+import { UserPlus, Building2, Store, Award, ArrowUpRight, Calendar } from 'lucide-react';
+import { DateRangeDropdown, DateRangeValue } from '@/components/ui/DateRangeDropdown';
 
 export interface DailyOnboardedMembersCardProps {
   onMemberAdded?: () => void;
@@ -14,7 +15,7 @@ export interface DailyOnboardedMembersCardProps {
 export const DailyOnboardedMembersCard: React.FC<DailyOnboardedMembersCardProps> = ({ onMemberAdded }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<MemberType>('DISTRIBUTOR');
-  const [activePeriod, setActivePeriod] = useState<'TODAY' | 'YESTERDAY'>('TODAY');
+  const [dateRange, setDateRange] = useState<DateRangeValue>({ preset: 'today' });
 
   const counts = hierarchyService.getDailyOnboardingCounts();
 
@@ -23,22 +24,54 @@ export const DailyOnboardedMembersCard: React.FC<DailyOnboardedMembersCardProps>
     setModalOpen(true);
   };
 
-  const currentCounts =
-    activePeriod === 'TODAY'
-      ? {
+  const getSelectedPeriodCounts = () => {
+    if (dateRange.preset === 'today') {
+      return {
           md: counts.masterDistributorsToday,
           dist: counts.distributorsToday,
           ret: counts.retailersToday,
           total: counts.totalToday,
           label: 'Today',
-        }
-      : {
+      };
+    }
+
+    if (dateRange.preset === 'yesterday') {
+      return {
           md: counts.masterDistributorsYesterday,
           dist: counts.distributorsYesterday,
           ret: counts.retailersYesterday,
           total: counts.masterDistributorsYesterday + counts.distributorsYesterday + counts.retailersYesterday,
           label: 'Yesterday',
-        };
+      };
+    }
+
+    const end = dateRange.preset === 'custom' && dateRange.endDate
+      ? new Date(`${dateRange.endDate}T23:59:59.999`)
+      : new Date();
+    const start = dateRange.preset === 'custom' && dateRange.startDate
+      ? new Date(`${dateRange.startDate}T00:00:00`)
+      : new Date(end);
+
+    if (dateRange.preset === '7d') start.setDate(start.getDate() - 6);
+    if (dateRange.preset === '30d') start.setDate(start.getDate() - 29);
+
+    const isInRange = (createdAt: string) => {
+      const timestamp = new Date(createdAt).getTime();
+      return timestamp >= start.getTime() && timestamp <= end.getTime();
+    };
+    const md = hierarchyService.getAllMasterDistributors().filter((item) => isInRange(item.createdAt)).length;
+    const dist = hierarchyService.getAllDistributors().filter((item) => isInRange(item.createdAt)).length;
+    const ret = hierarchyService.getAllRetailers().filter((item) => isInRange(item.createdAt)).length;
+    const label = dateRange.preset === '7d'
+      ? 'Last 7 Days'
+      : dateRange.preset === '30d'
+      ? 'One Month'
+      : dateRange.label || 'Custom Range';
+
+    return { md, dist, ret, total: md + dist + ret, label };
+  };
+
+  const currentCounts = getSelectedPeriodCounts();
 
   return (
     <>
@@ -93,26 +126,11 @@ export const DailyOnboardedMembersCard: React.FC<DailyOnboardedMembersCardProps>
               <Calendar className="w-4 h-4 text-slate-400" />
               <span>Onboarding Period:</span>
             </div>
-            <div className="flex items-center gap-1 bg-slate-200/80 p-0.5 rounded-lg text-xs font-bold text-slate-700">
-              <button
-                type="button"
-                onClick={() => setActivePeriod('TODAY')}
-                className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
-                  activePeriod === 'TODAY' ? 'bg-white text-[var(--primary)] shadow-xs' : 'text-slate-600'
-                }`}
-              >
-                Today ({counts.totalToday})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActivePeriod('YESTERDAY')}
-                className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
-                  activePeriod === 'YESTERDAY' ? 'bg-white text-[var(--primary)] shadow-xs' : 'text-slate-600'
-                }`}
-              >
-                Yesterday ({counts.masterDistributorsYesterday + counts.distributorsYesterday + counts.retailersYesterday})
-              </button>
-            </div>
+            <DateRangeDropdown
+              value={dateRange}
+              onChange={setDateRange}
+              size="sm"
+            />
           </div>
 
           {/* 3 User Type Daily Onboarding Cards */}

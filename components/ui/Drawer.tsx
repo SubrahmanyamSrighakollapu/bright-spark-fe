@@ -1,4 +1,7 @@
-import React, { useEffect } from 'react';
+'use client';
+
+import React, { useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -15,6 +18,8 @@ export interface DrawerProps {
   position?: DrawerPosition;
   size?: DrawerSize;
   className?: string;
+  contentClassName?: string;
+  footerClassName?: string;
 }
 
 const sizeClasses: Record<DrawerSize, string> = {
@@ -34,7 +39,13 @@ export const Drawer: React.FC<DrawerProps> = ({
   position = 'right',
   size = 'md',
   className,
+  contentClassName,
+  footerClassName,
 }) => {
+  const titleId = useId();
+  const descriptionId = useId();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -42,71 +53,90 @@ export const Drawer: React.FC<DrawerProps> = ({
       }
     };
     if (isOpen) {
+      const previousOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
+      const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus(), 0);
+
+      return () => {
+        window.clearTimeout(focusTimer);
+        document.body.style.overflow = previousOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+
+    return undefined;
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] isolate overflow-hidden" data-drawer-root="true">
       <div
-        className="fixed inset-0 bg-[#0F172A]/20 backdrop-blur-[2px] transition-opacity duration-200"
+        className="absolute inset-0 bg-slate-950/35 backdrop-blur-[2px] animate-in fade-in duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
 
       <div
         className={cn(
-          'fixed inset-y-0 h-screen max-h-screen flex max-w-full z-10 overflow-hidden',
+          'absolute inset-y-0 z-10 flex h-[100dvh] max-h-[100dvh] w-full max-w-full overflow-hidden sm:w-auto',
           position === 'right' ? 'right-0' : 'left-0'
         )}
       >
         <div
           className={cn(
-            'h-screen max-h-screen w-screen bg-white shadow-2xl flex flex-col border-l border-[#E5EAF1] animate-in duration-200 overflow-hidden',
+            'flex h-full max-h-[100dvh] w-full min-w-0 flex-col overflow-hidden bg-white shadow-[-18px_0_50px_-20px_rgba(15,23,42,0.35)] sm:w-screen',
+            position === 'right' ? 'border-l border-[#E5EAF1]' : 'border-r border-[#E5EAF1]',
             position === 'right' ? 'slide-in-from-right' : 'slide-in-from-left',
+            'animate-in duration-200',
             sizeClasses[size],
             className
           )}
           role="dialog"
           aria-modal="true"
+          aria-labelledby={title ? titleId : undefined}
+          aria-describedby={description ? descriptionId : undefined}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5EAF1] bg-[#F8FAFC] shrink-0">
-            <div>
+          {(title || description) && (
+          <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#E5EAF1] bg-white px-4 py-4 sm:px-6">
+            <div className="min-w-0 py-0.5">
               {title && (
-                <h3 className="text-base font-semibold text-[#0F172A]">
+                <h3 id={titleId} className="text-base font-bold text-[#0F172A]">
                   {title}
                 </h3>
               )}
               {description && (
-                <p className="text-xs text-[#64748B] mt-0.5">{description}</p>
+                <p id={descriptionId} className="mt-1 text-xs leading-5 text-[#64748B]">{description}</p>
               )}
             </div>
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={onClose}
-              className="p-1.5 text-[#64748B] hover:text-[#0F172A] rounded-md hover:bg-slate-200 transition-colors cursor-pointer"
+              className="shrink-0 rounded-lg border border-slate-200 bg-white p-2 text-[#64748B] shadow-xs transition-colors hover:bg-slate-100 hover:text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#155EEF]/30 cursor-pointer"
               aria-label="Close panel"
             >
-              <X className="w-5 h-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
+          )}
 
-          <div className="p-6 overflow-y-auto flex-1 min-h-0 space-y-4">{children}</div>
+          <div className={cn('min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6', contentClassName)}>
+            {children}
+          </div>
 
           {footer && (
-            <div className="px-6 py-4 border-t border-[#E5EAF1] bg-[#F8FAFC] flex items-center justify-between gap-3 shrink-0">
+            <div className={cn(
+              'shrink-0 border-t border-[#E5EAF1] bg-white px-4 py-3 shadow-[0_-8px_24px_-18px_rgba(15,23,42,0.4)] sm:px-6 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] [&>div]:flex-wrap',
+              footerClassName
+            )}>
               {footer}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -13,6 +13,7 @@ import { ActivityLogTable } from '@/components/features/logs/ActivityLogTable';
 import { LogDetailsDrawer } from '@/components/features/logs/LogDetailsDrawer';
 import { TraceSearchDrawer } from '@/components/features/logs/TraceSearchDrawer';
 import { Search, Download } from 'lucide-react';
+import { reportService } from '@/services/reportService';
 
 export default function ActivityLogsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,15 +41,7 @@ export default function ActivityLogsPage() {
 
   const handleExportCsv = () => {
     if (!data?.items) return;
-    const csv = logService.exportLogsToCsv('ACTIVITY', data.items);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `activity_audit_logs_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    reportService.exportToCsv('Activity_Audit_Logs', data.items as unknown as Record<string, unknown>[]);
   };
 
   return (
@@ -57,7 +50,7 @@ export default function ActivityLogsPage() {
       description="Central immutable audit trail for administrative operations, wallet adjustments, settlement executions, and security decisions."
       actions={
         <Button variant="primary" size="sm" onClick={handleExportCsv} leftIcon={<Download className="w-3.5 h-3.5" />}>
-          Export Audit Trail CSV
+          Export
         </Button>
       }
     >

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useSyncExternalStore } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ResponsiveContainer,
   PieChart,
@@ -58,6 +59,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
   onRefreshData,
   isLoading = false,
 }) => {
+  const router = useRouter();
   const isMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -98,7 +100,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
       {/* 1. Retailers, Distributors & Master Distributors Details Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
         {/* Tier 1: Master Distributors Card */}
-        <div className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-slate-300">
+        <div role="link" tabIndex={0} onClick={() => router.push('/admin/network/master-distributors')} onKeyDown={(e) => e.key === 'Enter' && router.push('/admin/network/master-distributors')} className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-indigo-300 hover:shadow-md cursor-pointer">
           <div>
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
@@ -128,7 +130,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-[#0F172A]">0</strong></span>
             <button
               type="button"
-              onClick={() => onOpenAddMember('MASTER_DISTRIBUTOR')}
+              onClick={(e) => { e.stopPropagation(); onOpenAddMember('MASTER_DISTRIBUTOR'); }}
               className="font-semibold text-[#155EEF] hover:text-[#1149B8] flex items-center gap-0.5 cursor-pointer transition-colors"
             >
               + Add Master <ArrowUpRight className="w-3.5 h-3.5" />
@@ -137,7 +139,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
         </div>
 
         {/* Tier 2: Distributors Card */}
-        <div className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-slate-300">
+        <div role="link" tabIndex={0} onClick={() => router.push('/admin/network/distributors')} onKeyDown={(e) => e.key === 'Enter' && router.push('/admin/network/distributors')} className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-blue-300 hover:shadow-md cursor-pointer">
           <div>
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
@@ -167,7 +169,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-emerald-700">+2</strong></span>
             <button
               type="button"
-              onClick={() => onOpenAddMember('DISTRIBUTOR')}
+              onClick={(e) => { e.stopPropagation(); onOpenAddMember('DISTRIBUTOR'); }}
               className="font-semibold text-[#155EEF] hover:text-[#1149B8] flex items-center gap-0.5 cursor-pointer transition-colors"
             >
               + Add Dist <ArrowUpRight className="w-3.5 h-3.5" />
@@ -176,7 +178,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
         </div>
 
         {/* Tier 3: Retailers Card */}
-        <div className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-slate-300">
+        <div role="link" tabIndex={0} onClick={() => router.push('/admin/network/retailers')} onKeyDown={(e) => e.key === 'Enter' && router.push('/admin/network/retailers')} className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-emerald-300 hover:shadow-md cursor-pointer">
           <div>
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
@@ -206,7 +208,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-emerald-700">+5</strong></span>
             <button
               type="button"
-              onClick={() => onOpenAddMember('RETAILER')}
+              onClick={(e) => { e.stopPropagation(); onOpenAddMember('RETAILER'); }}
               className="font-semibold text-[#155EEF] hover:text-[#1149B8] flex items-center gap-0.5 cursor-pointer transition-colors"
             >
               + Add Retailer <ArrowUpRight className="w-3.5 h-3.5" />
@@ -215,7 +217,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
         </div>
 
         {/* Overall Network KYC SLA Summary */}
-        <div className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-slate-300">
+        <div role="link" tabIndex={0} onClick={() => router.push('/admin/network/approvals?status=PENDING')} onKeyDown={(e) => e.key === 'Enter' && router.push('/admin/network/approvals?status=PENDING')} className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-amber-300 hover:shadow-md cursor-pointer">
           <div>
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">

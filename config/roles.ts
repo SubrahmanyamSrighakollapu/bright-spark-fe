@@ -52,6 +52,7 @@ export interface UserContext {
   email: string;
   role: UserRole;
   permissions: string[];
+  entityId?: string;
   mappedParentRole?: string;
 }
 

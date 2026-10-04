@@ -137,7 +137,6 @@ export default function DistributorCommissionsPage() {
       'Credited Date': c.creditedDate || c.createdDate,
     }));
     reportService.exportToCsv('Distributor_Commission_Report', exportRows);
-    toastSuccess('Commission report CSV exported successfully!');
   };
 
   const isFiltered = searchQuery || statusFilter !== 'ALL';
@@ -247,7 +246,7 @@ export default function DistributorCommissionsPage() {
             onClick={handleExportCsv}
             leftIcon={<Download className="w-4 h-4 text-sky-600" />}
           >
-            Export CSV
+            Export
           </Button>
         </div>
       }

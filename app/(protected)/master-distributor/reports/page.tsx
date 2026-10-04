@@ -125,7 +125,6 @@ export default function MasterDistributorReportsPage() {
       return;
     }
     reportService.exportToCsv(`MD_${activeTab.toUpperCase()}_Export`, reportData);
-    toastSuccess('Report CSV exported successfully!');
   };
 
   // Render Table Columns dynamically based on active tab
@@ -223,7 +222,7 @@ export default function MasterDistributorReportsPage() {
               onClick={handleExportCsv}
               leftIcon={<Download className="w-4 h-4" />}
             >
-              Export Report CSV
+              Export
             </Button>
           </div>
         }

@@ -472,7 +472,7 @@ export const PayOutDashboardView: React.FC<PayOutDashboardViewProps> = ({
       {balanceOverview && <BalanceOverviewCard balance={balanceOverview} />}
 
       {/* 5. Recent Payout Transactions */}
-      <RecentTransactionsTable isLoading={isLoading} />
+      <RecentTransactionsTable transactionType="PAY_OUT" isLoading={isLoading} />
     </div>
   );
 };

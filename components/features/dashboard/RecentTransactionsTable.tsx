@@ -16,12 +16,20 @@ import { useModal } from '@/hooks/useModal';
 
 export interface RecentTransactionsTableProps {
   isLoading?: boolean;
+  transactionType: 'PAY_IN' | 'PAY_OUT';
 }
 
 export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
   isLoading = false,
+  transactionType,
 }) => {
   const detailDrawer = useModal<Transaction>();
+  const transactions = mockTransactions
+    .filter((transaction) => transaction.type === transactionType)
+    .slice(0, 6);
+  const isPayIn = transactionType === 'PAY_IN';
+  const listPath = isPayIn ? '/admin/transactions/payin' : '/admin/transactions/payout';
+  const transactionLabel = isPayIn ? 'Pay-In' : 'Pay-Out';
 
   const renderStatusDot = (status: string) => {
     const s = (status || '').toUpperCase();
@@ -138,13 +146,17 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
   return (
     <>
       <Card
-        title="Recent Transactions"
-        subtitle="Latest live operations across Pay-In & Pay-Out switches"
+        title={`Recent ${transactionLabel} Transactions`}
+        subtitle={
+          isPayIn
+            ? 'Latest collection transactions received through Pay-In channels'
+            : 'Latest disbursement transactions submitted through Pay-Out channels'
+        }
         noPadding
         action={
-          <Link href="/transactions/all">
+          <Link href={listPath}>
             <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-              View All
+              View All {transactionLabel}
             </Button>
           </Link>
         }
@@ -152,18 +164,17 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
         <div className="overflow-x-auto">
           <Table
             columns={columns}
-            data={mockTransactions}
+            data={transactions}
             keyExtractor={(row) => row.id}
             isLoading={isLoading}
             renderActions={(row) => (
-              <button
-                type="button"
-                onClick={() => detailDrawer.open(row)}
+              <Link
+                href={`/admin/transactions/${row.id}`}
                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#334155] hover:text-[#0F172A] bg-white hover:bg-[#F8FAFC] border border-[#E5EAF1] rounded-md transition-colors cursor-pointer"
               >
                 <Eye className="w-3.5 h-3.5 text-[#64748B]" />
                 <span>View</span>
-              </button>
+              </Link>
             )}
           />
         </div>
@@ -177,9 +188,9 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
         description="Operational audit details and raw logs"
         footer={
           <div className="flex items-center justify-between w-full">
-            <Link href="/transactions/all">
+            <Link href={`/admin/transactions/${detailDrawer.data?.id || ''}`}>
               <Button variant="outline" size="sm" onClick={detailDrawer.close}>
-                Open in Transactions Module
+                Open Full Details
               </Button>
             </Link>
             <Button variant="primary" size="sm" onClick={detailDrawer.close}>

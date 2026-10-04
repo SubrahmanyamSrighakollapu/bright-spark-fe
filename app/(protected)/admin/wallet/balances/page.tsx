@@ -117,7 +117,7 @@ export default function AvailableBalancesPage() {
           onClick={handleExportCSV}
           leftIcon={<Download className="w-4 h-4" />}
         >
-          Export CSV
+          Export
         </Button>
       }
       className="space-y-6"

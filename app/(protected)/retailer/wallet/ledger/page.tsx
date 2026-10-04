@@ -139,7 +139,7 @@ export default function RetailerLedgerPage() {
               leftIcon={<Download className="w-4 h-4" />}
               disabled={entries.length === 0}
             >
-              Export CSV
+              Export
             </Button>
           }
         />

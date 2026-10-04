@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowDownLeft, ArrowUpRight, CheckCircle2, AlertCircle, TrendingUp } from 'lucide-react';
+import { CheckCircle2, AlertCircle, TrendingUp } from 'lucide-react';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 import { RetailerDashboardSummary } from '@/services/retailerDashboardService';
 
@@ -20,12 +20,13 @@ export const RetailerKPIGrid: React.FC<RetailerKPIGridProps> = ({ summary, isLoa
   const totalVolume = transactionSummary.todayPayInVolume + transactionSummary.todayPayOutVolume;
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-xl p-3 px-4 shadow-2xs">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white px-5 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+      <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-blue-500 to-emerald-500" />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-[var(--primary)]" />
           <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[11px]">
-            Today's Business Summary
+            Today&apos;s Business Summary
           </span>
         </div>
 

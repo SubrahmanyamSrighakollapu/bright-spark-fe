@@ -105,9 +105,11 @@ export default function RetailerDashboardPage() {
     >
       <div className="space-y-5">
         {/* 1. Compact Header / Date Filter / Balance Bar */}
-        <div className="bg-white/95 backdrop-blur-xs border border-slate-200/90 rounded-2xl p-3.5 px-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="relative isolate overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50/60 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:px-6">
+          <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-emerald-400/10 blur-3xl" />
+          <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[var(--primary)] text-white font-extrabold text-xs flex items-center justify-center shadow-2xs shrink-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-xs font-extrabold text-white shadow-lg shadow-emerald-900/20">
               QSP
             </div>
             <div>
@@ -125,7 +127,7 @@ export default function RetailerDashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0 self-start md:self-auto">
+          <div className="flex flex-wrap items-center gap-3 shrink-0 self-start md:self-auto">
             {/* Standardized Date Range Filter Dropdown */}
             <DateRangeDropdown
               value={selectedPeriod}
@@ -164,6 +166,7 @@ export default function RetailerDashboardPage() {
             >
               <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
+          </div>
           </div>
         </div>
 

@@ -73,7 +73,7 @@ function LedgerContent() {
           onClick={handleExportCSV}
           leftIcon={<Download className="w-4 h-4" />}
         >
-          Export CSV
+          Export
         </Button>
       </div>
 

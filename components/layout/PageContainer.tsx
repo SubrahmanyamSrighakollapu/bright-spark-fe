@@ -27,7 +27,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   return (
     <div
       className={cn(
-        'w-full min-h-full p-4 sm:p-6 md:p-8 space-y-6 mx-auto animate-page-enter',
+        'w-full min-h-full space-y-6 mx-auto animate-page-enter',
         fullWidth ? 'max-w-full' : 'max-w-[1440px]',
         className
       )}

@@ -6,7 +6,7 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
 import { DashboardFilters, TransactionTypeFilter, StatusFilter } from '@/types/dashboard';
-import { Filter, RotateCcw, X, SlidersHorizontal } from 'lucide-react';
+import { Filter, RotateCcw, SlidersHorizontal } from 'lucide-react';
 
 export interface DashboardFilterDrawerProps {
   isOpen: boolean;
@@ -61,12 +61,13 @@ export const DashboardFilterDrawer: React.FC<DashboardFilterDrawerProps> = ({
       }
       description="Filter transaction streams, gateway providers, date ranges, and merchants."
       footer={
-        <div className="flex items-center justify-between w-full gap-3">
+        <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <Button
             variant="outline"
             onClick={handleReset}
             disabled={isLoading}
             leftIcon={<RotateCcw className="w-3.5 h-3.5 text-slate-500" />}
+            className="w-full sm:w-auto"
           >
             Reset Filters
           </Button>
@@ -76,6 +77,7 @@ export const DashboardFilterDrawer: React.FC<DashboardFilterDrawerProps> = ({
             onClick={handleApply}
             isLoading={isLoading}
             leftIcon={<Filter className="w-3.5 h-3.5" />}
+            className="w-full sm:w-auto"
           >
             Apply Operational Filters
           </Button>
