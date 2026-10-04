@@ -1,18 +1,11 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Button } from '@/components/ui/Button';
 import { Transaction } from '@/types/domain';
-import { formatCurrency, formatNumber } from '@/utils/formatters';
+import { formatCurrency } from '@/utils/formatters';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
   ArrowRight,
-  Zap,
-  QrCode,
-  CreditCard,
-  Building2,
   ChevronRight,
 } from 'lucide-react';
 
@@ -55,11 +48,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
   onOpenDrillDown,
   isLoading = false,
 }) => {
-  const periodLabel = useMemo(() => {
-    if (selectedPeriod === 'today') return "Today's";
-    if (selectedPeriod === '7d') return '7-Day';
-    return '30-Day';
-  }, [selectedPeriod]);
+  void selectedPeriod;
 
   // Calculate Pay-In Overview Metrics
   const payInData: OverviewData = useMemo(() => {
@@ -141,10 +130,11 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
     };
 
     txs.forEach((t) => {
-      const mode = t.paymentMode || 'UPI';
-      if (!groups[mode]) groups[mode] = { count: 0, amount: 0 };
-      groups[mode].count += 1;
-      if (t.status === 'SUCCESS') groups[mode].amount += t.amount;
+      const rawMode = t.paymentMode || 'UPI';
+      const mode = ['NEFT', 'IMPS', 'RTGS', 'NETBANKING'].includes(rawMode) ? 'NET_BANKING' : rawMode;
+      const resolvedMode = groups[mode] ? mode : 'UPI';
+      groups[resolvedMode].count += 1;
+      if (t.status === 'SUCCESS') groups[resolvedMode].amount += t.amount;
     });
 
     return Object.entries(groups)
@@ -171,9 +161,9 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
 
     txs.forEach((t) => {
       const mode = t.paymentMode || 'IMPS';
-      if (!groups[mode]) groups[mode] = { count: 0, amount: 0 };
-      groups[mode].count += 1;
-      if (t.status === 'SUCCESS') groups[mode].amount += t.amount;
+      const resolvedMode = groups[mode] ? mode : 'IMPS';
+      groups[resolvedMode].count += 1;
+      if (t.status === 'SUCCESS') groups[resolvedMode].amount += t.amount;
     });
 
     return Object.entries(groups)
@@ -256,7 +246,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 1. Pay-In Overview Card */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-5">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 grid grid-rows-[auto_1fr_auto] gap-5">
         {/* Modern Header */}
         <div className="flex items-start justify-between border-b border-slate-100 pb-3">
           <div>
@@ -276,7 +266,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
           <button
             type="button"
             onClick={() => onOpenDrillDown('PAY_IN')}
-            className="text-xs font-bold text-[var(--primary)] hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+            className="text-xs font-bold text-[var(--primary)] hover:underline flex items-center gap-1 cursor-pointer shrink-0 whitespace-nowrap"
           >
             <span>View Details</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -296,7 +286,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
               <span>Status</span>
               <div className="flex items-center gap-3">
                 <span>Share</span>
-                <span className="w-16 text-right">Amount</span>
+                <span className="w-20 text-right">Amount</span>
               </div>
             </div>
 
@@ -311,7 +301,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
                 <span className="text-[11px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-sans">
                   {payInData.totalCount > 0 ? Math.round((payInData.successCount / payInData.totalCount) * 100) : 100}%
                 </span>
-                <span className="w-16 text-right">{formatCurrency(payInData.successVolume)}</span>
+                <span className="w-20 text-right whitespace-nowrap">{formatCurrency(payInData.successVolume)}</span>
               </div>
             </div>
 
@@ -326,7 +316,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
                 <span className="text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-sans">
                   {payInData.totalCount > 0 ? Math.round((payInData.pendingCount / payInData.totalCount) * 100) : 0}%
                 </span>
-                <span className="w-16 text-right">{formatCurrency(payInData.pendingVolume)}</span>
+                <span className="w-20 text-right whitespace-nowrap">{formatCurrency(payInData.pendingVolume)}</span>
               </div>
             </div>
 
@@ -341,7 +331,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
                 <span className="text-[11px] text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded font-sans">
                   {payInData.totalCount > 0 ? Math.round((payInData.failedCount / payInData.totalCount) * 100) : 0}%
                 </span>
-                <span className="w-16 text-right">{formatCurrency(payInData.failedVolume)}</span>
+                <span className="w-20 text-right whitespace-nowrap">{formatCurrency(payInData.failedVolume)}</span>
               </div>
             </div>
           </div>
@@ -356,7 +346,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
             <button
               type="button"
               onClick={() => onOpenDrillDown('PAY_IN')}
-              className="text-[11px] font-bold text-[var(--primary)] hover:underline flex items-center gap-0.5 cursor-pointer"
+              className="text-[11px] font-bold text-[var(--primary)] hover:underline flex items-center gap-0.5 cursor-pointer whitespace-nowrap"
             >
               <span>View Full Breakdown</span>
               <ChevronRight className="w-3 h-3" />
@@ -365,7 +355,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {payInMethods.map((m) => (
-              <div key={m.mode} className="bg-slate-50 border border-slate-200/60 rounded-lg p-2 flex items-center justify-between text-xs">
+              <div key={m.mode} className="min-w-0 bg-slate-50 border border-slate-200/60 rounded-lg p-2 flex items-center justify-between text-xs">
                 <span className="font-extrabold text-slate-800 truncate">{m.label}</span>
                 <span className="font-mono font-bold text-[var(--primary)] shrink-0 ml-1">
                   {m.percent}%
@@ -377,7 +367,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
       </div>
 
       {/* 2. Pay-Out Overview Card */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-5">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 grid grid-rows-[auto_1fr_auto] gap-5">
         {/* Modern Header */}
         <div className="flex items-start justify-between border-b border-slate-100 pb-3">
           <div>
@@ -397,7 +387,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
           <button
             type="button"
             onClick={() => onOpenDrillDown('PAY_OUT')}
-            className="text-xs font-bold text-[var(--secondary)] hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+            className="text-xs font-bold text-[var(--secondary)] hover:underline flex items-center gap-1 cursor-pointer shrink-0 whitespace-nowrap"
           >
             <span>View Details</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -417,7 +407,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
               <span>Status</span>
               <div className="flex items-center gap-3">
                 <span>Share</span>
-                <span className="w-16 text-right">Amount</span>
+                <span className="w-20 text-right">Amount</span>
               </div>
             </div>
 
@@ -432,7 +422,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
                 <span className="text-[11px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-sans">
                   {payOutData.totalCount > 0 ? Math.round((payOutData.successCount / payOutData.totalCount) * 100) : 100}%
                 </span>
-                <span className="w-16 text-right">{formatCurrency(payOutData.successVolume)}</span>
+                <span className="w-20 text-right whitespace-nowrap">{formatCurrency(payOutData.successVolume)}</span>
               </div>
             </div>
 
@@ -447,7 +437,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
                 <span className="text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-sans">
                   {payOutData.totalCount > 0 ? Math.round((payOutData.pendingCount / payOutData.totalCount) * 100) : 0}%
                 </span>
-                <span className="w-16 text-right">{formatCurrency(payOutData.pendingVolume)}</span>
+                <span className="w-20 text-right whitespace-nowrap">{formatCurrency(payOutData.pendingVolume)}</span>
               </div>
             </div>
 
@@ -462,7 +452,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
                 <span className="text-[11px] text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded font-sans">
                   {payOutData.totalCount > 0 ? Math.round((payOutData.failedCount / payOutData.totalCount) * 100) : 0}%
                 </span>
-                <span className="w-16 text-right">{formatCurrency(payOutData.failedVolume)}</span>
+                <span className="w-20 text-right whitespace-nowrap">{formatCurrency(payOutData.failedVolume)}</span>
               </div>
             </div>
           </div>
@@ -477,7 +467,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
             <button
               type="button"
               onClick={() => onOpenDrillDown('PAY_OUT')}
-              className="text-[11px] font-bold text-[var(--secondary)] hover:underline flex items-center gap-0.5 cursor-pointer"
+              className="text-[11px] font-bold text-[var(--secondary)] hover:underline flex items-center gap-0.5 cursor-pointer whitespace-nowrap"
             >
               <span>View Full Breakdown</span>
               <ChevronRight className="w-3 h-3" />
@@ -486,7 +476,7 @@ export const RetailerPayInPayOutOverview: React.FC<RetailerPayInPayOutOverviewPr
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {payOutMethods.map((m) => (
-              <div key={m.mode} className="bg-slate-50 border border-slate-200/60 rounded-lg p-2 flex items-center justify-between text-xs">
+              <div key={m.mode} className="min-w-0 bg-slate-50 border border-slate-200/60 rounded-lg p-2 flex items-center justify-between text-xs">
                 <span className="font-extrabold text-slate-800 truncate">{m.label}</span>
                 <span className="font-mono font-bold text-[var(--secondary)] shrink-0 ml-1">
                   {m.percent}%

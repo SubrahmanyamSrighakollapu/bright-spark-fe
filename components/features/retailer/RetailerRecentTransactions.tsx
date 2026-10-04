@@ -41,11 +41,12 @@ export const RetailerRecentTransactions: React.FC<RetailerRecentTransactionsProp
         subtitle="Latest live operations executed at your retailer counter"
         action={
           <Link href="/retailer/transactions">
-            <Button variant="outline" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-              View Transactions
+            <Button variant="outline" size="sm" className="whitespace-nowrap" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+              View All
             </Button>
           </Link>
         }
+        className="h-full overflow-hidden"
       >
         {transactions.length === 0 ? (
           <EmptyState
@@ -54,24 +55,24 @@ export const RetailerRecentTransactions: React.FC<RetailerRecentTransactionsProp
             icon={<ArrowLeftRight className="w-8 h-8 text-slate-400" />}
           />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-5 -mb-5">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-[10px] font-bold uppercase text-[var(--text-muted)] bg-slate-50">
-                  <th className="py-2.5 px-3">Transaction ID</th>
-                  <th className="py-2.5 px-3">Service</th>
+                  <th className="py-2.5 px-5 min-w-40">Transaction ID</th>
+                  <th className="py-2.5 px-3 min-w-40">Service</th>
                   <th className="py-2.5 px-3">Type</th>
                   <th className="py-2.5 px-3">Mode</th>
                   <th className="py-2.5 px-3 text-right">Amount</th>
                   <th className="py-2.5 px-3 text-center">Status</th>
-                  <th className="py-2.5 px-3">Date & Time</th>
+                  <th className="py-2.5 px-3 min-w-36">Date & Time</th>
                   <th className="py-2.5 px-3 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {transactions.map((tx) => (
                   <tr key={tx.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-5">
                       <div className="flex flex-col">
                         <span className="font-mono font-bold text-xs text-[var(--primary)]">
                           {tx.transactionRef}
@@ -81,7 +82,7 @@ export const RetailerRecentTransactions: React.FC<RetailerRecentTransactionsProp
                     </td>
 
                     <td className="py-3 px-3 text-slate-700 font-medium">
-                      {tx.service || (tx.type === 'PAY_IN' ? 'UPI Pay-In Switch' : 'IMPS Payout Switch')}
+                      <span className="block max-w-44 truncate" title={tx.service}>{tx.service || (tx.type === 'PAY_IN' ? 'UPI Pay-In Switch' : 'IMPS Payout Switch')}</span>
                     </td>
 
                     <td className="py-3 px-3">

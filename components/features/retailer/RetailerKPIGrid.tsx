@@ -30,9 +30,9 @@ export const RetailerKPIGrid: React.FC<RetailerKPIGridProps> = ({ summary, isLoa
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-3 sm:gap-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 w-full sm:w-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 w-full lg:w-auto">
           {/* Total Transactions */}
-          <div className="flex items-center gap-2 pt-2 sm:pt-0">
+          <div className="flex items-center justify-between sm:justify-start gap-2 py-2 sm:py-0 sm:px-4 sm:first:pl-0 whitespace-nowrap">
             <span className="text-slate-500 font-medium">Transactions:</span>
             <span className="font-mono font-bold text-slate-900 tabular-nums">
               {formatNumber(transactionSummary.todayCount)}
@@ -40,7 +40,7 @@ export const RetailerKPIGrid: React.FC<RetailerKPIGridProps> = ({ summary, isLoa
           </div>
 
           {/* Combined Volume */}
-          <div className="flex items-center gap-2 sm:pl-6 pt-2 sm:pt-0">
+          <div className="flex items-center justify-between sm:justify-start gap-2 py-2 sm:py-0 sm:px-4 whitespace-nowrap">
             <span className="text-slate-500 font-medium">Turnover Volume:</span>
             <span className="font-mono font-bold text-[var(--primary)] tabular-nums">
               {formatCurrency(totalVolume)}
@@ -48,7 +48,7 @@ export const RetailerKPIGrid: React.FC<RetailerKPIGridProps> = ({ summary, isLoa
           </div>
 
           {/* Successful Count */}
-          <div className="flex items-center gap-2 sm:pl-6 pt-2 sm:pt-0">
+          <div className="flex items-center justify-between sm:justify-start gap-2 py-2 sm:py-0 sm:px-4 whitespace-nowrap">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span className="text-slate-500 font-medium">Successful:</span>
             <span className="font-mono font-bold text-emerald-700 tabular-nums">
@@ -57,7 +57,7 @@ export const RetailerKPIGrid: React.FC<RetailerKPIGridProps> = ({ summary, isLoa
           </div>
 
           {/* Failed Count */}
-          <div className="flex items-center gap-2 sm:pl-6 pt-2 sm:pt-0">
+          <div className="flex items-center justify-between sm:justify-start gap-2 py-2 sm:py-0 sm:px-4 whitespace-nowrap">
             <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
             <span className="text-slate-500 font-medium">Failed:</span>
             <span className="font-mono font-bold text-rose-700 tabular-nums">

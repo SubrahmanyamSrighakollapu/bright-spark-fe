@@ -10,6 +10,7 @@ import {
   serviceCategoryService,
   ServiceCategoryItem,
   ServiceProductItem,
+  CategoryPricingMode,
 } from '@/services/serviceCategoryService';
 import { formatCurrency } from '@/utils/formatters';
 import {
@@ -58,6 +59,7 @@ export default function ServiceCategoriesAdminPage() {
   const [catCode, setCatCode] = useState('');
   const [catDesc, setCatDesc] = useState('');
   const [catIcon, setCatIcon] = useState('ShoppingBag');
+  const [catPricingMode, setCatPricingMode] = useState<CategoryPricingMode>('BOTH');
 
   // Product Modal State
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -119,12 +121,14 @@ export default function ServiceCategoriesAdminPage() {
       setCatCode(cat.code);
       setCatDesc(cat.description);
       setCatIcon(cat.iconName || 'ShoppingBag');
+      setCatPricingMode(cat.pricingMode || 'BOTH');
     } else {
       setEditingCategory(null);
       setCatName('');
       setCatCode('');
       setCatDesc('');
       setCatIcon('ShoppingBag');
+      setCatPricingMode('BOTH');
     }
     setIsCategoryModalOpen(true);
   };
@@ -142,6 +146,7 @@ export default function ServiceCategoriesAdminPage() {
         code: catCode.trim(),
         description: catDesc.trim(),
         iconName: catIcon,
+        pricingMode: catPricingMode,
       });
       if (res.success) {
         toastSuccess('Category updated successfully');
@@ -157,6 +162,7 @@ export default function ServiceCategoriesAdminPage() {
         description: catDesc.trim(),
         iconName: catIcon,
         status: 'ACTIVE',
+        pricingMode: catPricingMode,
       });
       if (res.success) {
         toastSuccess('New Service Category created successfully');
@@ -175,6 +181,17 @@ export default function ServiceCategoriesAdminPage() {
       fetchCategories();
     } else {
       toastError('Failed to toggle status');
+    }
+  };
+
+  const handleDeleteCategory = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete category "${name}" and all its configured products?`)) return;
+    const res = await serviceCategoryService.deleteCategory(id);
+    if (res.success) {
+      toastSuccess(`Category "${name}" removed`);
+      fetchCategories();
+    } else {
+      toastError('Failed to delete category');
     }
   };
 
@@ -428,6 +445,21 @@ export default function ServiceCategoriesAdminPage() {
                           </span>
                           <h3 className="text-base font-bold text-slate-900">{category.name}</h3>
                           <StatusBadge status={category.status} size="sm" />
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                              (category.pricingMode || 'BOTH') === 'PRESET_ONLY'
+                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                : (category.pricingMode || 'BOTH') === 'MANUAL_ONLY'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                : 'bg-purple-50 text-purple-700 border-purple-200'
+                            }`}
+                          >
+                            {(category.pricingMode || 'BOTH') === 'PRESET_ONLY'
+                              ? 'Mode: Preset Prices Only'
+                              : (category.pricingMode || 'BOTH') === 'MANUAL_ONLY'
+                              ? 'Mode: Manual Input Only'
+                              : 'Mode: Presets + Manual'}
+                          </span>
                         </div>
                         <p className="text-xs text-slate-500">{category.description}</p>
                       </div>
@@ -460,6 +492,15 @@ export default function ServiceCategoriesAdminPage() {
                       >
                         Edit
                       </Button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(category.id, category.name)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-slate-200"
+                        title="Delete Category"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
 
                       <Button
                         variant="primary"
@@ -588,9 +629,14 @@ export default function ServiceCategoriesAdminPage() {
 
         {/* CREATE / EDIT CATEGORY MODAL */}
         {isCategoryModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-            <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-slate-200 space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150">
+            <div
+              className="fixed inset-0"
+              onClick={() => setIsCategoryModalOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 flex flex-col max-h-[85vh] overflow-hidden my-auto z-10 animate-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-[#0F4C81]" />
                   {editingCategory ? 'Edit Service Category' : 'Add New Service Category'}
@@ -604,7 +650,7 @@ export default function ServiceCategoriesAdminPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSaveCategory} className="space-y-4 text-xs">
+              <form onSubmit={handleSaveCategory} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1 min-h-0 pt-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="font-semibold text-slate-700 block">
@@ -653,6 +699,64 @@ export default function ServiceCategoriesAdminPage() {
                   />
                 </div>
 
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 block">
+                    Retailer Price Entry Mode <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCatPricingMode('BOTH')}
+                      className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 ${
+                        catPricingMode === 'BOTH'
+                          ? 'border-[#0F4C81] bg-indigo-50/70 ring-2 ring-indigo-100 font-bold text-[#0F4C81]'
+                          : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                      }`}
+                    >
+                      <div className="text-xs font-bold flex items-center gap-1">
+                        <span>Both Allowed</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-normal leading-tight">
+                        Presets & manual custom amount
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCatPricingMode('PRESET_ONLY')}
+                      className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 ${
+                        catPricingMode === 'PRESET_ONLY'
+                          ? 'border-amber-600 bg-amber-50/70 ring-2 ring-amber-100 font-bold text-amber-900'
+                          : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                      }`}
+                    >
+                      <div className="text-xs font-bold flex items-center gap-1">
+                        <span>Preset Prices Only</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-normal leading-tight">
+                        Must pick configured product
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCatPricingMode('MANUAL_ONLY')}
+                      className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 ${
+                        catPricingMode === 'MANUAL_ONLY'
+                          ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-100 font-bold text-blue-900'
+                          : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                      }`}
+                    >
+                      <div className="text-xs font-bold flex items-center gap-1">
+                        <span>Manual Input Only</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-normal leading-tight">
+                        Type custom amount only
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700 block">Description</label>
                   <textarea
@@ -664,7 +768,7 @@ export default function ServiceCategoriesAdminPage() {
                   />
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
                   <Button
                     type="button"
                     variant="outline"
@@ -689,9 +793,14 @@ export default function ServiceCategoriesAdminPage() {
 
         {/* CREATE / EDIT PRODUCT MODAL */}
         {isProductModalOpen && targetCategoryForProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-            <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-slate-200 space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150">
+            <div
+              className="fixed inset-0"
+              onClick={() => setIsProductModalOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 flex flex-col max-h-[85vh] overflow-hidden my-auto z-10 animate-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Package className="w-5 h-5 text-[#0F4C81]" />
                   {editingProduct ? 'Edit Product Details' : `Add Product under ${targetCategoryForProduct.name}`}
@@ -705,7 +814,7 @@ export default function ServiceCategoriesAdminPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+              <form onSubmit={handleSaveProduct} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1 min-h-0 pt-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="font-semibold text-slate-700 block">
@@ -777,7 +886,7 @@ export default function ServiceCategoriesAdminPage() {
                   />
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
                   <Button
                     type="button"
                     variant="outline"

@@ -115,7 +115,7 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
   };
 
   return (
-    <div className={cn('relative inline-block text-left select-none', className)} ref={dropdownRef}>
+    <div className={cn('relative inline-block text-left select-none', isOpen ? 'z-[120]' : 'z-auto', className)} ref={dropdownRef}>
       {/* Trigger Button */}
       <button
         type="button"
@@ -139,7 +139,7 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
       {isOpen && (
         <div
           className={cn(
-            'absolute z-50 mt-1.5 w-64 rounded-2xl bg-white border border-slate-200 shadow-xl p-2 space-y-1 animate-in fade-in zoom-in-95',
+            'absolute z-[130] mt-1.5 w-64 rounded-2xl bg-white border border-slate-200 shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95',
             align === 'right' ? 'right-0' : 'left-0'
           )}
         >

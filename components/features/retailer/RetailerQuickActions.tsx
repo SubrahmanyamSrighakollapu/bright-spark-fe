@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/Button';
 
 export const RetailerQuickActions: React.FC = () => {
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-      <div className="flex items-center gap-2.5">
+    <div className="h-full bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex flex-col justify-between gap-4">
+      <div className="flex items-start gap-2.5">
         <div className="w-8 h-8 rounded-lg bg-blue-50 text-[var(--primary)] border border-blue-100 flex items-center justify-center shrink-0">
           <Zap className="w-4 h-4 text-[var(--primary)]" />
         </div>
@@ -22,25 +22,25 @@ export const RetailerQuickActions: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 w-full sm:w-auto">
-        <Link href="/retailer/pay-in" className="flex-1 sm:flex-initial">
+      <div className="grid grid-cols-2 gap-2 w-full">
+        <Link href="/retailer/pay-in" className="min-w-0">
           <Button
             variant="primary"
             size="sm"
-            className="w-full sm:w-auto gap-2 text-xs font-bold shadow-2xs cursor-pointer h-9 px-4"
+            className="w-full gap-1.5 text-xs font-bold shadow-2xs cursor-pointer h-9 px-3 whitespace-nowrap"
+            leftIcon={<ArrowDownLeft className="w-4 h-4" />}
           >
-            <ArrowDownLeft className="w-4 h-4" />
-            <span>Collect Payment (Pay-In)</span>
+            New Pay-In
           </Button>
         </Link>
 
-        <Link href="/retailer/pay-out" className="flex-1 sm:flex-initial">
+        <Link href="/retailer/pay-out" className="min-w-0">
           <Button
             size="sm"
-            className="w-full sm:w-auto gap-2 text-xs font-bold bg-[var(--secondary)] text-white hover:bg-orange-700 shadow-2xs cursor-pointer h-9 px-4"
+            className="w-full gap-1.5 text-xs font-bold bg-[var(--secondary)] text-white hover:bg-orange-700 shadow-2xs cursor-pointer h-9 px-3 whitespace-nowrap"
+            leftIcon={<ArrowUpRight className="w-4 h-4" />}
           >
-            <ArrowUpRight className="w-4 h-4" />
-            <span>Send Funds (Pay-Out)</span>
+            New Pay-Out
           </Button>
         </Link>
       </div>

@@ -1,6 +1,8 @@
 import { APP_CONFIG } from '@/config';
 import { ApiResponse } from '@/types/common';
 
+export type CategoryPricingMode = 'BOTH' | 'PRESET_ONLY' | 'MANUAL_ONLY';
+
 export interface ServiceProductItem {
   id: string;
   code: string;
@@ -18,10 +20,11 @@ export interface ServiceCategoryItem {
   description: string;
   iconName?: string;
   status: 'ACTIVE' | 'INACTIVE';
+  pricingMode?: CategoryPricingMode;
   products: ServiceProductItem[];
 }
 
-const STORAGE_KEY = 'qin_star_pay_service_categories_v1';
+const STORAGE_KEY = 'qin_star_pay_service_categories_v2';
 
 export const INITIAL_SERVICE_CATEGORIES: ServiceCategoryItem[] = [
   {
@@ -31,6 +34,7 @@ export const INITIAL_SERVICE_CATEGORIES: ServiceCategoryItem[] = [
     description: 'Grocery stores, supermarkets, daily provisions and wholesale store packages',
     iconName: 'ShoppingBag',
     status: 'ACTIVE',
+    pricingMode: 'BOTH',
     products: [
       {
         id: 'prod_groc_1',
@@ -85,6 +89,7 @@ export const INITIAL_SERVICE_CATEGORIES: ServiceCategoryItem[] = [
     description: 'Travel vouchers, tour packages, hotel stays and flight passes',
     iconName: 'Plane',
     status: 'ACTIVE',
+    pricingMode: 'PRESET_ONLY',
     products: [
       {
         id: 'prod_tour_1',
@@ -138,6 +143,7 @@ export const INITIAL_SERVICE_CATEGORIES: ServiceCategoryItem[] = [
     description: 'Clothing brands, footwear, accessories and boutique shopping passes',
     iconName: 'Shirt',
     status: 'ACTIVE',
+    pricingMode: 'MANUAL_ONLY',
     products: [
       {
         id: 'prod_fash_1',
@@ -358,6 +364,7 @@ export const serviceCategoryService = {
       description: data.description,
       iconName: data.iconName || 'ShoppingBag',
       status: data.status || 'ACTIVE',
+      pricingMode: data.pricingMode || 'BOTH',
       products: (data.products || []).map((p, idx) => ({
         id: `prod_${newId}_${idx + 1}`,
         code: p.code || `${data.code.toUpperCase()}_${p.price}`,
@@ -478,6 +485,14 @@ export const serviceCategoryService = {
     saveToStorage(categories);
 
     return { success: true, data: { ...category }, timestamp: new Date().toISOString() };
+  },
+
+  async deleteCategory(categoryId: string): Promise<ApiResponse<ServiceCategoryItem[]>> {
+    await new Promise((res) => setTimeout(res, 150));
+    let categories = loadFromStorage();
+    categories = categories.filter((c) => c.id !== categoryId);
+    saveToStorage(categories);
+    return { success: true, data: categories, timestamp: new Date().toISOString() };
   },
 
   async resetToDefaults(): Promise<ApiResponse<ServiceCategoryItem[]>> {

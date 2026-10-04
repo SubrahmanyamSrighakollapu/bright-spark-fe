@@ -3,8 +3,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { Activity, TrendingUp } from 'lucide-react';
-import { formatCurrency } from '@/utils/formatters';
+import { Activity } from 'lucide-react';
 
 export interface RetailerAnalyticsSectionProps {
   trendData: {
@@ -36,8 +35,8 @@ export const RetailerAnalyticsSection: React.FC<RetailerAnalyticsSectionProps> =
   return (
     <Card
       title={
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-[var(--primary)] border border-blue-100 flex items-center justify-center shrink-0">
               <Activity className="w-4 h-4 text-[var(--primary)]" />
             </div>
@@ -51,21 +50,21 @@ export const RetailerAnalyticsSection: React.FC<RetailerAnalyticsSectionProps> =
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold text-slate-600 shrink-0">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="w-3 h-3 rounded-full bg-[var(--primary)]" />
               <span>Pay-In Collection</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="w-3 h-3 rounded-full bg-[var(--secondary)]" />
               <span>Pay-Out Disbursement</span>
             </div>
           </div>
         </div>
       }
-      className="p-5 shadow-xs hover:shadow-md transition-shadow rounded-2xl"
+      className="shadow-xs hover:shadow-md transition-shadow rounded-2xl overflow-hidden"
     >
-      <div className="h-56 w-full pt-3">
+      <div className="h-64 w-full pt-2">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
             <defs>

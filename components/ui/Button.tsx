@@ -70,7 +70,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           <span className="shrink-0 inline-flex items-center">{leftIcon}</span>
         ) : null}
 
-        {children && <span>{children}</span>}
+        {children && <span className="whitespace-nowrap leading-none">{children}</span>}
 
         {!isLoading && rightIcon ? (
           <span className="shrink-0 inline-flex items-center">{rightIcon}</span>

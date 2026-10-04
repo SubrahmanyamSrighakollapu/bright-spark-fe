@@ -90,6 +90,17 @@ export interface PayOutExecutionResult {
 }
 
 class PayOutService {
+  /** Generates a retailer-safe, unique disbursement reference. */
+  generateDisbursementReference(): string {
+    const now = new Date();
+    const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const time = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+    const random = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase()
+      : Math.random().toString(36).slice(2, 8).toUpperCase();
+    return `QSPD-${date}-${time}-${random}`;
+  }
+
   /**
    * Helper to mask bank account number (e.g. XXXXXX1234)
    */
@@ -358,7 +369,9 @@ class PayOutService {
       const transactionRef = `QSP2026${timestampSuffix}`;
       const utr = status === 'SUCCESS' ? `QSPUTR${timestampSuffix}` : undefined;
       const providerRef = `PRVREF${timestampSuffix}`;
-      const orderId = input.beneficiaryReference || `ORD_OUT_${timestampSuffix}`;
+      const orderId = input.beneficiaryReference?.startsWith('QSPD-')
+        ? input.beneficiaryReference
+        : this.generateDisbursementReference();
       const maskedAccount = this.maskAccountNumber(input.beneficiaryAccount);
 
       // 8. Build Snapshots

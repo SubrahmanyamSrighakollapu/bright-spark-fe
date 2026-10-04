@@ -86,6 +86,45 @@ export function formatNumber(
   }).format(value);
 }
 
+/** Converts an INR amount to uppercase English words using the Indian scale. */
+export function formatAmountInWords(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined || !Number.isFinite(amount) || amount < 0) return '';
+
+  const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
+  const tens = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY'];
+  const belowThousand = (value: number): string => {
+    const words: string[] = [];
+    if (value >= 100) { words.push(ones[Math.floor(value / 100)], 'HUNDRED'); value %= 100; }
+    if (value >= 20) { words.push(tens[Math.floor(value / 10)]); value %= 10; }
+    if (value > 0) words.push(ones[value]);
+    return words.join(' ');
+  };
+  const integerToWords = (value: number): string => {
+    if (value === 0) return 'ZERO';
+    const groups = [
+      { value: 10000000, label: 'CRORE' },
+      { value: 100000, label: 'LAKH' },
+      { value: 1000, label: 'THOUSAND' },
+    ];
+    const words: string[] = [];
+    for (const group of groups) {
+      if (value >= group.value) {
+        const count = Math.floor(value / group.value);
+        words.push(integerToWords(count), group.label);
+        value %= group.value;
+      }
+    }
+    if (value > 0) words.push(belowThousand(value));
+    return words.join(' ');
+  };
+
+  const rounded = Math.round(amount * 100);
+  const rupees = Math.floor(rounded / 100);
+  const paise = rounded % 100;
+  const rupeeWords = `RUPEES ${integerToWords(rupees)}`;
+  return paise > 0 ? `${rupeeWords} AND ${integerToWords(paise)} PAISE ONLY` : `${rupeeWords} ONLY`;
+}
+
 /**
  * Formats a number as a percentage (e.g. 98.4%).
  */

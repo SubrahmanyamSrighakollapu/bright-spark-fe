@@ -21,6 +21,9 @@ export interface PayInAccountingResult {
   customerCharge: number;
   gstAmount: number;
   customerTotal: number;
+  chargeRateLabel: string;
+  totalDeductions: number;
+  actualCreditAmount: number;
 
   // Commercial Revenue Pool
   grossCommercialRevenue: number;
@@ -138,24 +141,39 @@ class PayInService {
       masterDistributorCommissionAmount
     ).toFixed(2);
 
-    // 4. Gross Commercial Revenue / Service Charge & Tax Calculation
-    // Commercial Service Charge: 0.40% (min ₹ 5.00) to ensure positive platform revenue margin over commissions (0.32% total)
-    const customerCharge = principalAmount > 0 ? Math.max(5.0, +(principalAmount * 0.004).toFixed(2)) : 0;
+    // 4. Resolve the effective Pay-In fee from the central Fee & Charge Master.
+    const feeRulesRes = await adminService.getFeeRules();
+    const activeFeeRule = feeRulesRes.data?.find((feeRule) =>
+      feeRule.status === 'ACTIVE' && feeRule.transactionType === 'PAY_IN' &&
+      (feeRule.entityType === 'RETAILER' || feeRule.entityType === 'ALL')
+    );
+    const resolvedFeeRule = activeFeeRule || {
+      id: 'FEE_PAYIN_FALLBACK', code: 'FEE_PAYIN_FALLBACK', name: 'Pay-In Fee',
+      transactionType: 'PAY_IN' as const, entityType: 'RETAILER' as const,
+      calculationType: 'PERCENTAGE' as const, value: 1.75, minimumFee: 0,
+      maximumFee: 100000, gstApplicable: true, status: 'ACTIVE' as const,
+      effectiveFrom: new Date().toISOString(),
+    };
+    const feePreview = adminService.calculateFeePreview(principalAmount, resolvedFeeRule);
+    const customerCharge = +feePreview.baseFee.toFixed(2);
     const grossCommercialRevenue = customerCharge;
 
     // GST (18% on Commercial Service Charge)
-    const gstAmount = +(customerCharge * 0.18).toFixed(2);
+    const gstAmount = +feePreview.gstAmount.toFixed(2);
     const taxLiability = gstAmount;
+    const totalDeductions = +(customerCharge + gstAmount).toFixed(2);
+    const actualCreditAmount = Math.max(0, +(principalAmount - totalDeductions).toFixed(2));
+    const chargeRateLabel = resolvedFeeRule.calculationType === 'PERCENTAGE' ? `${resolvedFeeRule.value}%` : `₹${resolvedFeeRule.value.toFixed(2)} flat`;
 
     // Customer Inflow
-    const customerTotal = +(principalAmount + customerCharge + gstAmount).toFixed(2);
+    const customerTotal = principalAmount;
 
     // 5. Platform Retained Revenue (Revenue Pool - Hierarchy Commissions)
     // Accounting Invariant: grossCommercialRevenue = retailerCommission + distributorCommission + mdCommission + platformRetainedRevenue
     const platformRetainedRevenue = +(grossCommercialRevenue - totalHierarchyCommission).toFixed(2);
 
     // 6. Retailer Wallet Movements (Pre-funded / Collected Operational Principal + Earned Commission)
-    const retailerPrincipalWalletCredit = principalAmount;
+    const retailerPrincipalWalletCredit = actualCreditAmount;
     const retailerCommissionWalletCredit = retailerCommissionAmount;
     const retailerWalletCredit = +(retailerPrincipalWalletCredit + retailerCommissionWalletCredit).toFixed(2);
     const retailerWalletDebit = 0;
@@ -165,9 +183,9 @@ class PayInService {
     const settlementFeeComponent = customerCharge;
     const settlementTaxComponent = gstAmount;
     const grossSettlementReceivable = customerTotal;
-    const netSettlementAmount = principalAmount;
+    const netSettlementAmount = actualCreditAmount;
 
-    const walletEffect = `Wallet Credited (+₹${retailerWalletCredit.toFixed(2)}) upon clearance [Principal: +₹${principalAmount.toFixed(2)}, Commission: +₹${retailerCommissionAmount.toFixed(2)}]`;
+    const walletEffect = `Wallet credited ₹${retailerWalletCredit.toFixed(2)} after ₹${totalDeductions.toFixed(2)} in fee/tax deductions, including ₹${retailerCommissionAmount.toFixed(2)} commission.`;
 
     return {
       success: true,
@@ -176,6 +194,9 @@ class PayInService {
         customerCharge,
         gstAmount,
         customerTotal,
+        chargeRateLabel,
+        totalDeductions,
+        actualCreditAmount,
         grossCommercialRevenue,
         retailerCommissionRate,
         retailerCommissionAmount,
@@ -364,7 +385,7 @@ class PayInService {
         amount: preview.principalAmount,
         fee: preview.customerCharge,
         gst: preview.gstAmount,
-        netAmount: preview.customerTotal,
+        netAmount: preview.actualCreditAmount,
         status,
         paymentMode: (input.paymentMode as any) || 'UPI',
         provider: 'Qin Star Pay Mock Gateway',

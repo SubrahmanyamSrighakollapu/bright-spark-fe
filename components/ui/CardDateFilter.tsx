@@ -82,7 +82,7 @@ export const CardDateFilter: React.FC<CardDateFilterProps> = ({
   };
 
   return (
-    <div className={cn('relative inline-block text-left select-none', className)} ref={dropdownRef}>
+    <div className={cn('relative inline-block text-left select-none', isOpen ? 'z-[120]' : 'z-auto', className)} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -98,7 +98,7 @@ export const CardDateFilter: React.FC<CardDateFilterProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-30 mt-1.5 w-56 rounded-xl bg-white border border-[#E5EAF1] shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95">
+        <div className="absolute right-0 z-[130] mt-1.5 w-56 rounded-xl bg-white border border-[#E5EAF1] shadow-2xl p-1.5 space-y-1 animate-in fade-in zoom-in-95">
           <div className="px-2 py-1 border-b border-[#F1F5F9] text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
             Select Date Range
           </div>
