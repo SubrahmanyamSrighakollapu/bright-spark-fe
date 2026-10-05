@@ -1410,6 +1410,7 @@ export interface Role {
   description: string;
   status: 'ACTIVE' | 'INACTIVE';
   isSystemRole: boolean;
+  category?: 'SYSTEM' | 'NETWORK' | 'EMPLOYEE';
   assignedUserCount: number;
   permissions: string[];
   createdAt: string;

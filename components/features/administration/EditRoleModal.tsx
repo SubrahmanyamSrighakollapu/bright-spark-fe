@@ -37,10 +37,10 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
 
   if (!role) return null;
 
-  const isSuperAdmin = role.code === 'SUPER_ADMIN';
+  const isProtectedRole = role.category === 'SYSTEM' || role.category === 'NETWORK' || role.isSystemRole;
 
   const handleTogglePermission = (permCode: string) => {
-    if (isSuperAdmin) return;
+    if (isProtectedRole) return;
     let next: string[];
     if (selectedPermissions.includes(permCode)) {
       next = selectedPermissions.filter((p) => p !== permCode);
@@ -51,7 +51,7 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
   };
 
   const handleSelectModuleGroup = (groupPermissions: string[]) => {
-    if (isSuperAdmin) return;
+    if (isProtectedRole) return;
     const allSelected = groupPermissions.every((p) => selectedPermissions.includes(p));
     let next: string[];
     if (allSelected) {
@@ -83,7 +83,7 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
             <span className="text-[11px] text-slate-600">{role.description}</span>
           </div>
           <span className="px-2.5 py-1 rounded text-xs font-mono font-extrabold bg-purple-100 text-purple-900 shrink-0">
-            {isSuperAdmin ? 'ALL (*)' : `${selectedPermissions.length} Tokens`}
+            {isProtectedRole ? 'PROTECTED' : `${selectedPermissions.length} Tokens`}
           </span>
         </div>
 
@@ -105,7 +105,7 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
               <div key={group.moduleName} className="p-3 border border-slate-200 rounded-lg bg-white space-y-2">
                 <div className="flex items-center justify-between pb-1 border-b border-slate-100">
                   <span className="font-bold text-xs text-slate-900">{group.moduleName}</span>
-                  {!isSuperAdmin && (
+                  {!isProtectedRole && (
                     <button
                       type="button"
                       onClick={() => handleSelectModuleGroup(groupPermCodes)}
@@ -118,13 +118,13 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   {group.permissions.map((perm) => {
-                    const isChecked = isSuperAdmin || selectedPermissions.includes(perm.code);
+                    const isChecked = isProtectedRole || selectedPermissions.includes(perm.code);
                     return (
                       <button
                         key={perm.code}
                         type="button"
                         onClick={() => handleTogglePermission(perm.code)}
-                        disabled={isSuperAdmin}
+                        disabled={isProtectedRole}
                         className={`p-2 rounded border text-left flex items-start gap-2 transition-colors ${
                           isChecked
                             ? 'bg-purple-50/80 border-purple-300 text-purple-950 font-semibold'

@@ -16,6 +16,16 @@ export const USER_ROLES = {
   MERCHANT: 'MERCHANT',
 } as const;
 
+/** Backend role classification. Network roles are protected; Admin-created roles are EMPLOYEE roles. */
+export const ROLE_CATEGORIES = {
+  SYSTEM: 'SYSTEM',
+  NETWORK: 'NETWORK',
+  EMPLOYEE: 'EMPLOYEE',
+} as const;
+
+export const PROTECTED_ROLE_CODES = ['ADMIN', 'MASTER_DISTRIBUTOR', 'DISTRIBUTOR', 'RETAILER'] as const;
+export const DEFAULT_EMPLOYEE_ROLE_CODES = ['OPERATIONS', 'ACCOUNTS', 'KYC', 'SALES'] as const;
+
 export type UserRole = keyof typeof USER_ROLES;
 
 export const ROLE_HIERARCHY_LEVELS: Record<UserRole, number> = {
