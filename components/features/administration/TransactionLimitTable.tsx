@@ -25,7 +25,7 @@ export const TransactionLimitTable: React.FC<TransactionLimitTableProps> = ({
           <span className={`px-1.5 py-0.2 rounded text-[10px] font-extrabold ${
             row.scopeType === 'MERCHANT' ? 'bg-purple-100 text-purple-900 border border-purple-300' : 'bg-blue-100 text-blue-900 border border-blue-200'
           }`}>
-            {row.scopeType} {row.scopeName ? `(${row.scopeName})` : ''}
+            {row.scopeType === 'MERCHANT' ? 'RETAILER' : row.scopeType} {row.scopeName ? `(${row.scopeName})` : ''}
           </span>
         </div>
       ),

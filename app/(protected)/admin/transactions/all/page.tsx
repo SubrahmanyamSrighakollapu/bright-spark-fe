@@ -99,7 +99,7 @@ export default function AllTransactionsPage() {
       'Transaction ID': t.transactionRef,
       'Order ID': t.orderId || '',
       'Type': t.type,
-      'Retailer/Merchant': t.retailerName || t.merchantName || '',
+      'Retailer': t.retailerName || t.merchantName || '',
       'Distributor': t.distributorName || '',
       'Master Distributor': (t as unknown as Record<string, unknown>).masterDistributorName || t.masterDistributorId || '',
       'Payment Mode': t.paymentMode || '',

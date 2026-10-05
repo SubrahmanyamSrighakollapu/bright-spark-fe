@@ -109,7 +109,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     moduleName: 'Users & Hierarchy',
     permissions: [
-      { code: 'USER_VIEW', label: 'View Users', description: 'View distributors, merchants, retailers, and back office users' },
+      { code: 'USER_VIEW', label: 'View Users', description: 'View distributors, retailers, and back office users' },
       { code: 'USER_CREATE', label: 'Create Users', description: 'Onboard new commercial entities', requires: 'USER_VIEW' },
       { code: 'USER_EDIT', label: 'Edit Users', description: 'Modify commercial user details and mappings', requires: 'USER_VIEW' },
       { code: 'USER_BLOCK', label: 'Block / Unblock Users', description: 'Suspend or activate user accounts', requires: 'USER_VIEW' },
@@ -118,8 +118,8 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     moduleName: 'KYC & Onboarding',
     permissions: [
-      { code: 'KYC_VIEW', label: 'View KYC Applications', description: 'View merchant onboarding documents' },
-      { code: 'KYC_APPROVE', label: 'Approve KYC', description: 'Approve submitted merchant KYC dossiers', requires: 'KYC_VIEW' },
+      { code: 'KYC_VIEW', label: 'View KYC Applications', description: 'View retailer onboarding documents' },
+      { code: 'KYC_APPROVE', label: 'Approve KYC', description: 'Approve submitted retailer KYC dossiers', requires: 'KYC_VIEW' },
       { code: 'KYC_REJECT', label: 'Reject KYC', description: 'Reject KYC applications with reason codes', requires: 'KYC_VIEW' },
     ],
   },
@@ -137,7 +137,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     moduleName: 'Settlements',
     permissions: [
       { code: 'SETTLEMENT_VIEW', label: 'View Settlements', description: 'Inspect settlement batches and reconciliation queues' },
-      { code: 'SETTLEMENT_PROCESS', label: 'Process Settlements', description: 'Disburse nodal payouts to merchants', requires: 'SETTLEMENT_VIEW' },
+      { code: 'SETTLEMENT_PROCESS', label: 'Process Settlements', description: 'Disburse nodal payouts to retailers', requires: 'SETTLEMENT_VIEW' },
       { code: 'SETTLEMENT_RECONCILE', label: 'Reconcile Settlements', description: 'Perform manual reconciliation checks', requires: 'SETTLEMENT_VIEW' },
     ],
   },

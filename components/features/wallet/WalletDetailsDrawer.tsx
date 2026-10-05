@@ -238,7 +238,7 @@ export const WalletDetailsDrawer: React.FC<WalletDetailsDrawerProps> = ({
         )}
 
         {activeTab === 'TRANSACTIONS' && (
-          <Card title="Transactions Preview" subtitle="Latest merchant transactions linked to wallet">
+          <Card title="Transactions Preview" subtitle="Latest retailer transactions linked to wallet">
             <div className="space-y-3 text-xs">
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-1">
                 <div className="flex justify-between font-bold">

@@ -192,7 +192,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
             </div>
             <div className="flex justify-between py-1 border-b border-slate-100">
               <span className="text-slate-500 font-medium">Legal Name of Business:</span>
-              <span className="font-semibold text-slate-900">Qin Star Merchant Services LLP</span>
+              <span className="font-semibold text-slate-900">Qin Star Retailer Services LLP</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-100">
               <span className="text-slate-500 font-medium">Constitution of Business:</span>

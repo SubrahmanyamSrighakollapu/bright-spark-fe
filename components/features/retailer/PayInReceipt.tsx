@@ -207,7 +207,7 @@ ${transaction.utr ? `UTR: ${transaction.utr}` : ''}
         {/* Footer Guarantee */}
         <div className="pt-3 border-t border-slate-200 text-center text-[10px] text-slate-400 space-y-0.5">
           <p className="flex items-center justify-center gap-1 font-semibold text-slate-500">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Authorized Qin Star Pay Merchant Receipt
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Authorized Qin Star Pay Retailer Receipt
           </p>
           <p>Thank you for using Qin Star Pay collection switch services.</p>
         </div>

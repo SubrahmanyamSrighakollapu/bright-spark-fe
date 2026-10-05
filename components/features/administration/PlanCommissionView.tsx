@@ -223,7 +223,7 @@ export const PlanCommissionView: React.FC = () => {
             Set multi-tier revenue distribution margin rates across Super Distributors (SD), Master Distributors (MD), Distributors (DS), and Retailers.
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenAdd} className="bg-[#155EEF] hover:bg-[#124BCC]">
+        <Button variant="primary" onClick={handleOpenAdd}>
           <Plus className="w-4 h-4 mr-2" />
           Add Rate Rule
         </Button>
@@ -327,7 +327,7 @@ export const PlanCommissionView: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="bg-[#155EEF]">
+              <Button type="submit" variant="primary">
                 Save Rate Rule
               </Button>
             </div>

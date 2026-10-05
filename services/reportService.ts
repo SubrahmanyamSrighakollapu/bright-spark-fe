@@ -585,7 +585,7 @@ export const reportService = {
   },
 
   /**
-   * Balance Report across Master, Distributors, Retailers, Merchants
+   * Balance Report across Master Distributors, Distributors, and Retailers
    */
   async getBalanceReport(
     filters?: ReportFilters,

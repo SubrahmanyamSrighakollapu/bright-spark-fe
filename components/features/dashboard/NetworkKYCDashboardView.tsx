@@ -19,7 +19,6 @@ import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { DailyOnboardedMembersCard } from '@/components/features/dashboard/DailyOnboardedMembersCard';
 import { AdminApprovalQueueCard } from '@/components/features/dashboard/AdminApprovalQueueCard';
 import { PendingApprovalItem } from '@/services/approvalService';
-import { MemberType } from '@/components/features/users/AddMemberModal';
 import { formatNumber } from '@/utils/formatters';
 import {
   Award,
@@ -39,7 +38,6 @@ export interface NetworkKYCDashboardViewProps {
   pendingApprovalsCount: number;
   approvalItems: PendingApprovalItem[];
   onReviewItem: (item: PendingApprovalItem) => void;
-  onOpenAddMember: (role: MemberType) => void;
   onRefreshData?: () => void;
   isLoading?: boolean;
 }
@@ -55,7 +53,6 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
   pendingApprovalsCount,
   approvalItems,
   onReviewItem,
-  onOpenAddMember,
   onRefreshData,
   isLoading = false,
 }) => {
@@ -128,13 +125,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E5EAF1] mt-3 text-xs">
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-[#0F172A]">0</strong></span>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenAddMember('MASTER_DISTRIBUTOR'); }}
-              className="font-semibold text-[#155EEF] hover:text-[#1149B8] flex items-center gap-0.5 cursor-pointer transition-colors"
-            >
-              + Add Master <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
+            <span className="flex items-center gap-0.5 font-semibold text-[#155EEF]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
           </div>
         </div>
 
@@ -167,13 +158,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E5EAF1] mt-3 text-xs">
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-emerald-700">+2</strong></span>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenAddMember('DISTRIBUTOR'); }}
-              className="font-semibold text-[#155EEF] hover:text-[#1149B8] flex items-center gap-0.5 cursor-pointer transition-colors"
-            >
-              + Add Dist <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
+            <span className="flex items-center gap-0.5 font-semibold text-[#155EEF]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
           </div>
         </div>
 
@@ -199,20 +184,14 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
                 {retailerCount}
               </div>
               <p className="text-xs text-[#64748B] font-medium mt-1">
-                {activeRetailersCount} active merchant stores
+                {activeRetailersCount} active retailer stores
               </p>
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E5EAF1] mt-3 text-xs">
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-emerald-700">+5</strong></span>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpenAddMember('RETAILER'); }}
-              className="font-semibold text-[#155EEF] hover:text-[#1149B8] flex items-center gap-0.5 cursor-pointer transition-colors"
-            >
-              + Add Retailer <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
+            <span className="flex items-center gap-0.5 font-semibold text-[#155EEF]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
           </div>
         </div>
 

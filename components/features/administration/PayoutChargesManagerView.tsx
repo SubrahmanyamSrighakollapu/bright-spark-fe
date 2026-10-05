@@ -217,7 +217,7 @@ export const PayoutChargesManagerView: React.FC = () => {
             Define platform service charges deducted when users execute bank payouts or wallet withdrawals.
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenAdd} className="bg-[#155EEF] hover:bg-[#124BCC]">
+        <Button variant="primary" onClick={handleOpenAdd}>
           <Plus className="w-4 h-4 mr-2" />
           Add Charge Rule
         </Button>
@@ -298,7 +298,7 @@ export const PayoutChargesManagerView: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="bg-[#155EEF]">
+              <Button type="submit" variant="primary">
                 Save Rule
               </Button>
             </div>

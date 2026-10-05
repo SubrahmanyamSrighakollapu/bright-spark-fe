@@ -153,7 +153,7 @@ export const InvoiceDetailsView: React.FC = () => {
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button type="submit" variant="primary" className="px-6 bg-[#155EEF] hover:bg-[#124BCC]">
+                <Button type="submit" variant="primary" className="px-6">
                   <Save className="w-4 h-4 mr-2" />
                   Save Invoice Settings
                 </Button>

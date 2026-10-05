@@ -72,12 +72,12 @@ export default function MerchantsPage() {
 
   return (
     <PageContainer
-      title="Merchants"
-      description="Manage commercial merchant accounts, KYC verification and entity mappings."
+      title="Retailers"
+      description="Manage commercial retailer accounts, KYC verification and entity mappings."
       actions={
         <Link href="/admin/kyc/onboarding/new">
           <Button variant="primary" size="sm" leftIcon={<UserPlus className="w-4 h-4" />}>
-            New Merchant Onboarding
+            New Retailer Onboarding
           </Button>
         </Link>
       }
@@ -85,7 +85,7 @@ export default function MerchantsPage() {
     >
       {/* 1. Summary Cards */}
       <UserSummaryCards
-        titlePrefix="Merchants"
+        titlePrefix="Retailers"
         metrics={{ total, active, blocked, kycPending }}
         isLoading={isLoading}
       />

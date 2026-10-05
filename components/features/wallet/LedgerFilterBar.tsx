@@ -89,7 +89,7 @@ export const LedgerFilterBar: React.FC<LedgerFilterBarProps> = ({
           { value: 'MASTER', label: 'Master' },
           { value: 'DISTRIBUTOR', label: 'Distributor' },
           { value: 'RETAILER', label: 'Retailer' },
-          { value: 'MERCHANT', label: 'Merchant' },
+          { value: 'MERCHANT', label: 'Retailer' },
         ]}
       />
 

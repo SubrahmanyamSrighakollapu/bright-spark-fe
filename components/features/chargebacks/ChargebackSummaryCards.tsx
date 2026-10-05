@@ -52,7 +52,7 @@ export const ChargebackSummaryCards: React.FC<ChargebackSummaryCardsProps> = ({ 
         <div className="mt-2 font-mono font-extrabold text-lg text-purple-900">
           {summary.evidenceRequired}
         </div>
-        <span className="text-[10px] text-purple-600 block mt-0.5 font-medium">Awaiting merchant POD</span>
+        <span className="text-[10px] text-purple-600 block mt-0.5 font-medium">Awaiting retailer POD</span>
       </Card>
 
       {/* 4. Response Due Soon */}

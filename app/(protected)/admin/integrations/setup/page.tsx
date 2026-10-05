@@ -3,7 +3,7 @@ import { PaymentGatewaySetupView } from '@/components/features/integrations/Paym
 
 export const metadata = {
   title: 'Gateway Setup & Mapping | Qin Star Pay Admin',
-  description: 'Map payment methods to gateways and set up API merchant credentials',
+  description: 'Map payment methods to gateways and configure provider API credentials',
 };
 
 export default function GatewaySetupPage() {

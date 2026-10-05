@@ -1,332 +1,116 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AlertCircle, ArrowRight, BadgeIndianRupee, Building2, CheckCircle2, ChevronDown, ChevronUp, Eye, EyeOff, Landmark, Lock, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getDefaultRouteForRole } from '@/services/mockAuthService';
 import { DEV_FEATURES } from '@/config/devFeatures';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
+import { Checkbox } from '@/components/ui/Checkbox';
 import { Button } from '@/components/ui/Button';
 import { FormField } from '@/components/ui/FormField';
 import { Modal } from '@/components/ui/Modal';
-import { Eye, EyeOff, Lock, User, AlertCircle, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+
+const demoAccounts = [
+  ['Platform Admin', 'admin@qinstarpay.com'],
+  ['KYC Manager', 'kyc.manager@qinstarpay.com'],
+  ['Sales Lead', 'sales.lead@qinstarpay.com'],
+  ['Accountant', 'accountant@qinstarpay.com'],
+  ['Operations', 'operations@qinstarpay.com'],
+  ['Master Distributor', 'md001@qinstarpay.com'],
+  ['Distributor', 'dst001@qinstarpay.com'],
+  ['Retailer', 'ret001@qinstarpay.com'],
+] as const;
 
 export default function LoginPage() {
   const router = useRouter();
   const { session, isAuthenticated, isLoading, login } = useAuth();
-
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [showDemoAccounts, setShowDemoAccounts] = useState(false);
 
-  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-  const [showDemoAccounts, setShowDemoAccounts] = useState(true);
-
-  // Automatic redirect if user is already authenticated
   useEffect(() => {
-    if (!isLoading && isAuthenticated && session) {
-      const defaultRoute = getDefaultRouteForRole(session.role);
-      router.replace(defaultRoute);
-    }
+    if (!isLoading && isAuthenticated && session) router.replace(getDefaultRouteForRole(session.role));
   }, [isLoading, isAuthenticated, session, router]);
 
-  const validate = (): boolean => {
-    const errs: { identifier?: string; password?: string } = {};
-
-    if (!identifier.trim()) {
-      errs.identifier = 'Username, email, or mobile number is required.';
-    }
-    if (!password) {
-      errs.password = 'Password is required.';
-    }
-
-    setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const errors = { identifier: identifier.trim() ? undefined : 'Username, email, or mobile number is required.', password: password ? undefined : 'Password is required.' };
+    setFieldErrors(errors);
     setErrorMessage(null);
-
-    if (!validate()) return;
-
+    if (errors.identifier || errors.password) return;
     setIsSubmitting(true);
     try {
       const result = await login(identifier, password, rememberMe);
-
-      if (result.success && result.defaultRoute) {
-        router.push(result.defaultRoute);
-      } else {
-        setErrorMessage(result.error || 'Invalid credentials or account restricted.');
-      }
+      if (result.success && result.defaultRoute) router.push(result.defaultRoute);
+      else setErrorMessage(result.error || 'Invalid credentials or account restricted.');
     } catch {
-      setErrorMessage('An unexpected error occurred. Please try again.');
+      setErrorMessage('Unable to sign in right now. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const fillDemoAccount = (demoId: string) => {
-    setIdentifier(demoId);
+  const fillDemoAccount = (email: string) => {
+    setIdentifier(email);
     setPassword('demo1234');
     setErrorMessage(null);
     setFieldErrors({});
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen w-screen bg-[var(--bg-app)] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center font-bold animate-pulse">
-            QSP
-          </div>
-          <span className="text-xs text-[var(--text-muted)] font-medium">Loading session...</span>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="flex min-h-screen items-center justify-center bg-slate-950 text-sm font-semibold text-white">Preparing your secure workspace…</div>;
 
   return (
-    <div className="min-h-screen w-screen bg-[var(--bg-app)] flex flex-col justify-between p-4 sm:p-6 md:p-10">
-      {/* Top Header Logo */}
-      <header className="w-full max-w-[1280px] mx-auto flex items-center justify-between py-2">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-[var(--primary)] text-white font-extrabold flex items-center justify-center tracking-tighter shadow-md">
-            QSP
-          </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-base tracking-tight text-[var(--text-primary)]">
-              QIN STAR PAY
-            </span>
-            <span className="text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-wider">
-              Fintech Operations Platform
-            </span>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Login Center Workspace */}
-      <main className="w-full max-w-md mx-auto my-auto py-6 space-y-6">
-        <div className="bg-white border border-[var(--border)] rounded-[var(--radius-xl)] p-6 sm:p-8 shadow-sm space-y-6">
-          {/* Card Header */}
-          <div className="space-y-1 text-center">
-            <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
-              Welcome Back
-            </h1>
-            <p className="text-xs text-[var(--text-muted)]">
-              Sign in to continue to your Qin Star Pay workspace
-            </p>
-          </div>
-
-          {/* Error Banner */}
-          {errorMessage && (
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-[var(--radius-md)] flex items-start gap-2.5 text-xs text-rose-800 animate-in fade-in duration-150">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <div className="flex-1 font-medium leading-relaxed">{errorMessage}</div>
+    <main className="min-h-screen bg-white">
+      <div className="grid min-h-screen w-full bg-white lg:grid-cols-[1.08fr_0.92fr]">
+        <section className="relative hidden overflow-hidden bg-[#082f52] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl" />
+          <div className="absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-orange-400/15 blur-3xl" />
+          <div className="relative">
+            <div className="flex items-center gap-3"><Image src="/logo.jpeg" alt="Qin Star Pay" width={52} height={52} priority className="h-13 w-13 rounded-2xl border border-white/20 bg-white object-contain p-1" /><div><p className="text-lg font-extrabold tracking-tight">QIN STAR PAY</p><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200">Fintech workspace</p></div></div>
+            <div className="mt-20 max-w-xl">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-blue-100"><Sparkles className="h-3.5 w-3.5" />Secure payment operations</span>
+              <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight xl:text-5xl">One platform for your entire payment network.</h1>
+              <p className="mt-5 max-w-lg text-sm leading-7 text-blue-100">Manage collections, payouts, wallets, settlements, commissions, partner onboarding, and compliance from a role-aware financial operations platform.</p>
             </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField label="Username, Email or Mobile" required error={fieldErrors.identifier}>
-              <div className="relative flex items-center">
-                <User className="absolute left-3 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
-                <Input
-                  type="text"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="admin@qinstarpay.com or mobile"
-                  className="pl-9"
-                  autoComplete="username"
-                />
-              </div>
-            </FormField>
-
-            <FormField label="Password" required error={fieldErrors.password}>
-              <div className="relative flex items-center">
-                <Lock className="absolute left-3 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="pl-9 pr-10"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </FormField>
-
-            {/* Options: Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 text-[var(--primary)] focus:ring-[var(--border-focus)] cursor-pointer"
-                />
-                <span className="text-[var(--text-secondary)] font-medium">Remember me</span>
-              </label>
-
-              <button
-                type="button"
-                onClick={() => setIsForgotPasswordOpen(true)}
-                className="text-xs font-semibold text-[var(--primary)] hover:underline cursor-pointer"
-              >
-                Forgot Password?
-              </button>
+            <div className="mt-10 grid grid-cols-3 gap-3">
+              {[['Pay-In', BadgeIndianRupee], ['Settlements', Landmark], ['Network', Building2]].map(([label, Icon]) => <div key={label as string} className="rounded-2xl border border-white/10 bg-white/[0.07] p-4"><Icon className="h-5 w-5 text-orange-300" /><p className="mt-3 text-xs font-bold">{label as string}</p></div>)}
             </div>
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full mt-2 font-bold tracking-wide"
-              isLoading={isSubmitting}
-            >
-              {isSubmitting ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </form>
-
-          {/* Collapsible Demo Accounts Section for Testing (guarded by DEV_FEATURES) */}
-          {DEV_FEATURES.showDemoCredentials && (
-            <div className="border-t border-[var(--border-subtle)] pt-4">
-              <button
-                type="button"
-                onClick={() => setShowDemoAccounts((prev) => !prev)}
-                className="w-full flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-[var(--primary)] transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[var(--primary)]" />
-                  <span>Quick Demo Credentials</span>
-                </div>
-                {showDemoAccounts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-
-              {showDemoAccounts && (
-                <div className="mt-3 space-y-2 text-xs animate-in fade-in duration-150">
-                  <span className="text-[11px] text-[var(--text-muted)] block">
-                    Click any credential below to auto-fill input fields:
-                  </span>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => fillDemoAccount('admin@qinstarpay.com')}
-                      className="p-2 text-left bg-slate-50 hover:bg-blue-50/80 border border-slate-200 rounded-md transition-colors cursor-pointer"
-                    >
-                      <div className="font-bold text-[var(--text-primary)]">Admin Account</div>
-                      <div className="text-[10px] text-slate-500 font-mono">admin@qinstarpay.com</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fillDemoAccount('kyc.manager@qinstarpay.com')}
-                      className="p-2 text-left bg-slate-50 hover:bg-amber-50/80 border border-slate-200 rounded-md transition-colors cursor-pointer"
-                    >
-                      <div className="font-bold text-[var(--text-primary)]">KYC & Onboarding Approval</div>
-                      <div className="text-[10px] text-slate-500 font-mono">kyc.manager@qinstarpay.com</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fillDemoAccount('sales.lead@qinstarpay.com')}
-                      className="p-2 text-left bg-slate-50 hover:bg-emerald-50/80 border border-slate-200 rounded-md transition-colors cursor-pointer"
-                    >
-                      <div className="font-bold text-[var(--text-primary)]">Sales Lead</div>
-                      <div className="text-[10px] text-slate-500 font-mono">sales.lead@qinstarpay.com</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fillDemoAccount('accountant@qinstarpay.com')}
-                      className="p-2 text-left bg-slate-50 hover:bg-violet-50/80 border border-slate-200 rounded-md transition-colors cursor-pointer"
-                    >
-                      <div className="font-bold text-[var(--text-primary)]">Accountant</div>
-                      <div className="text-[10px] text-slate-500 font-mono">accountant@qinstarpay.com</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fillDemoAccount('operations@qinstarpay.com')}
-                      className="p-2 text-left bg-slate-50 hover:bg-sky-50/80 border border-slate-200 rounded-md transition-colors cursor-pointer"
-                    >
-                      <div className="font-bold text-[var(--text-primary)]">Operations (Support Tickets)</div>
-                      <div className="text-[10px] text-slate-500 font-mono">operations@qinstarpay.com</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fillDemoAccount('md001@qinstarpay.com')}
-                      className="p-2 text-left bg-slate-50 hover:bg-purple-50/80 border border-slate-200 rounded-md transition-colors cursor-pointer"
-                    >
-                      <div className="font-bold text-[var(--text-primary)]">Master Distributor</div>
-                      <div className="text-[10px] text-slate-500 font-mono">md001@qinstarpay.com</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fillDemoAccount('dst001@qinstarpay.com')}
-                      className="p-2 text-left bg-slate-50 hover:bg-teal-50/80 border border-slate-200 rounded-md transition-colors cursor-pointer"
-                    >
-                      <div className="font-bold text-[var(--text-primary)]">Distributor</div>
-                      <div className="text-[10px] text-slate-500 font-mono">dst001@qinstarpay.com</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fillDemoAccount('ret001@qinstarpay.com')}
-                      className="p-2 text-left bg-slate-50 hover:bg-indigo-50/80 border border-slate-200 rounded-md transition-colors cursor-pointer sm:col-span-2"
-                    >
-                      <div className="font-bold text-[var(--text-primary)]">Retailer (Metro Store #01)</div>
-                      <div className="text-[10px] text-slate-500 font-mono">ret001@qinstarpay.com</div>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Forgot Password Modal */}
-      <Modal
-        isOpen={isForgotPasswordOpen}
-        onClose={() => setIsForgotPasswordOpen(false)}
-        title="Password Recovery"
-        description="Password recovery instructions can be dispatched to your registered credentials."
-        size="md"
-      >
-        <div className="space-y-4">
-          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-            Please contact your platform account administrator or support desk to initiate an identity verification and password reset request for your account.
-          </p>
-          <div className="flex justify-end pt-2">
-            <Button variant="primary" size="sm" onClick={() => setIsForgotPasswordOpen(false)}>
-              Understood
-            </Button>
           </div>
-        </div>
-      </Modal>
+          <div className="relative flex items-center gap-2 text-xs text-blue-200"><ShieldCheck className="h-4 w-4 text-emerald-300" />Role-based access • KYC controlled • Audit ready</div>
+        </section>
 
-      {/* Footer */}
-      <footer className="py-2 text-center text-xs text-[var(--text-muted)]">
-        Qin Star Pay — Enterprise Payment Gateway Platform
-      </footer>
-    </div>
+        <section className="flex items-center justify-center p-5 sm:p-10 xl:p-14">
+          <div className="w-full max-w-md">
+            <div className="mb-9 flex items-center gap-3 lg:hidden"><Image src="/logo.jpeg" alt="Qin Star Pay" width={46} height={46} className="h-12 w-12 rounded-xl border border-slate-200 object-contain" /><div><p className="font-extrabold text-slate-950">QIN STAR PAY</p><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Fintech workspace</p></div></div>
+            <div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0F4C81]">Secure sign in</p><h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">Welcome back</h2><p className="mt-2 text-sm leading-6 text-slate-500">Access the workspace assigned to your Qin Star Pay role.</p></div>
+            {errorMessage && <div className="mt-6 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-medium leading-5 text-rose-800"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{errorMessage}</div>}
+            <form onSubmit={submit} className="mt-7 space-y-4">
+              <FormField label="Username, email or mobile" required error={fieldErrors.identifier}><Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="Enter your registered identity" className="h-11" leftIcon={<Mail className="h-4 w-4" />} autoComplete="username" /></FormField>
+              <FormField label="Password" required error={fieldErrors.password}><div className="relative"><Lock className="pointer-events-none absolute left-3 top-3.5 z-10 h-4 w-4 text-slate-400" /><PasswordInput masked={!showPassword} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" className="h-11 pl-9 pr-11" autoComplete="current-password" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-2 top-1.5 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div></FormField>
+              <div className="flex items-center justify-between"><Checkbox checked={rememberMe} onChange={setRememberMe} label={<span className="text-xs font-medium">Remember me</span>} /><button type="button" onClick={() => setForgotOpen(true)} className="cursor-pointer text-xs font-bold text-[#0F4C81] hover:underline">Forgot password?</button></div>
+              <Button type="submit" size="lg" fullWidth isLoading={isSubmitting} rightIcon={<ArrowRight className="h-4 w-4" />}>Sign in securely</Button>
+            </form>
+            <div className="my-6 flex items-center gap-3"><span className="h-px flex-1 bg-slate-200" /><span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">New partner?</span><span className="h-px flex-1 bg-slate-200" /></div>
+            <Link href="/signup" className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-700 transition-colors hover:border-[#0F4C81] hover:bg-blue-50 hover:text-[#0F4C81]">Apply for an account <ArrowRight className="h-4 w-4" /></Link>
+
+            {DEV_FEATURES.showDemoCredentials && <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/70 p-3"><button type="button" onClick={() => setShowDemoAccounts((value) => !value)} className="flex w-full cursor-pointer items-center justify-between text-xs font-bold text-slate-600"><span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#0F4C81]" />Demo workspaces</span>{showDemoAccounts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</button>{showDemoAccounts && <div className="mt-3 grid max-h-52 grid-cols-2 gap-2 overflow-y-auto">{demoAccounts.map(([label, email]) => <button key={email} type="button" onClick={() => fillDemoAccount(email)} className="cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:border-blue-200 hover:bg-blue-50"><span className="block text-[11px] font-bold text-slate-800">{label}</span><span className="mt-0.5 block truncate text-[9px] text-slate-500">{email}</span></button>)}</div>}</div>}
+            <p className="mt-7 text-center text-[11px] text-slate-400">Protected by Qin Star Pay security and access controls.</p>
+          </div>
+        </section>
+      </div>
+
+      <Modal isOpen={forgotOpen} onClose={() => setForgotOpen(false)} title="Password recovery" description="Account recovery requires identity verification." size="sm"><div className="space-y-5"><div className="flex gap-3 rounded-xl bg-blue-50 p-4 text-xs leading-5 text-blue-900"><CheckCircle2 className="h-5 w-5 shrink-0" />Contact your platform administrator or support desk. Reset instructions will only be sent to registered contact details.</div><div className="flex justify-end"><Button size="sm" onClick={() => setForgotOpen(false)}>Understood</Button></div></div></Modal>
+    </main>
   );
 }

@@ -352,7 +352,7 @@ export default function AdminApprovalsPage() {
             Pending Retailers
           </p>
           <h3 className="text-2xl font-bold text-slate-900 mt-1">{summary.pendingRetailers}</h3>
-          <p className="text-xs text-slate-500 mt-0.5">Merchant outlet requests</p>
+          <p className="text-xs text-slate-500 mt-0.5">Retailer outlet requests</p>
         </div>
 
         <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs">

@@ -112,7 +112,7 @@ export const CreateAdminUserModal: React.FC<CreateAdminUserModalProps> = ({
               { value: 'Payment Operations', label: 'Payment Operations' },
               { value: 'Finance & Taxation', label: 'Finance & Taxation' },
               { value: 'Risk & Compliance', label: 'Risk & Compliance' },
-              { value: 'Merchant Support', label: 'Merchant Support' },
+              { value: 'Retailer Support', label: 'Retailer Support' },
               { value: 'Executive Operations', label: 'Executive Operations' },
             ]}
           />

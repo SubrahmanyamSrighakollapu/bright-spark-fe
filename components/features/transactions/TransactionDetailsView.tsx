@@ -191,7 +191,7 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
                 </span>
                 <div className="space-y-1.5">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Merchant:</span>
+                    <span className="text-slate-500">Retailer:</span>
                     <span className="font-semibold text-slate-900">{tx.merchantName}</span>
                   </div>
                   <div className="flex justify-between">
@@ -205,7 +205,7 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
                     <span className="text-slate-800">{tx.distributorName || 'Direct Network'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Retailer / Merchant:</span>
+                    <span className="text-slate-500">Retailer:</span>
                     <span className="text-slate-800">{tx.retailerName || tx.merchantName || 'Direct'}</span>
                   </div>
                 </div>

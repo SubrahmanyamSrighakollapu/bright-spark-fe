@@ -10,8 +10,8 @@ import { ArrowLeft } from 'lucide-react';
 export default function NewMerchantOnboardingPage() {
   return (
     <PageContainer
-      title="New Merchant Onboarding"
-      description="Register a new commercial merchant account and initiate KYC verification."
+      title="New Retailer Onboarding"
+      description="Register a new commercial retailer account and initiate KYC verification."
       actions={
         <Link href="/admin/kyc/onboarding">
           <Button variant="outline" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>

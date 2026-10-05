@@ -96,7 +96,7 @@ export const MerchantOnboardingWizard: React.FC = () => {
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs">
-              <span className="font-bold text-emerald-950 text-sm block">Merchant Onboarding Application Created</span>
+              <span className="font-bold text-emerald-950 text-sm block">Retailer Onboarding Application Created</span>
               <p className="text-emerald-800">
                 Application reference <strong>{submittedAppId}</strong> for <strong>{formData.businessName}</strong> has been submitted.
               </p>
@@ -175,7 +175,7 @@ export const MerchantOnboardingWizard: React.FC = () => {
 
       <Card
         title={`Step ${step} of 6: ${stepsList[step - 1].title}`}
-        subtitle="Complete the merchant onboarding requirements"
+        subtitle="Complete the retailer onboarding requirements"
       >
         <form onSubmit={handleNext} className="space-y-4 text-xs">
           {/* Step 1: Business Information */}
@@ -258,7 +258,7 @@ export const MerchantOnboardingWizard: React.FC = () => {
                 <Input
                   label="Email Address *"
                   type="email"
-                  placeholder="merchant@example.com"
+                  placeholder="retailer@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                   required

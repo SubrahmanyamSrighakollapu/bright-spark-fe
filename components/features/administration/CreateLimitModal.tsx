@@ -95,7 +95,7 @@ export const CreateLimitModal: React.FC<CreateLimitModalProps> = ({
             onChange={(e) => setScopeType(e.target.value as TransactionLimit['scopeType'])}
             options={[
               { value: 'GLOBAL', label: 'GLOBAL (Platform Default)' },
-              { value: 'MERCHANT', label: 'MERCHANT (Specific Merchant Override)' },
+              { value: 'MERCHANT', label: 'RETAILER (Specific Retailer Override)' },
               { value: 'DISTRIBUTOR', label: 'DISTRIBUTOR Scope' },
               { value: 'RETAILER', label: 'RETAILER Scope' },
             ]}
@@ -188,7 +188,7 @@ export const CreateLimitModal: React.FC<CreateLimitModalProps> = ({
         </div>
 
         <div className="p-3 bg-purple-50 border border-purple-200 rounded text-purple-900 leading-relaxed text-[11px]">
-          <strong>Precedence Rule:</strong> Specific entity overrides (Merchant/Distributor) take precedence over Global platform defaults during limit evaluation.
+          <strong>Precedence Rule:</strong> Specific entity overrides (Retailer/Distributor) take precedence over Global platform defaults during limit evaluation.
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">

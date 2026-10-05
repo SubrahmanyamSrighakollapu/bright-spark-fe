@@ -85,7 +85,7 @@ export const initialMockDashboardData: FullDashboardData = {
     {
       id: 'alt_2',
       title: '6 KYC Applications Pending Approval',
-      message: 'New merchant onboarding documents awaiting review.',
+      message: 'New retailer onboarding documents awaiting review.',
       type: 'WARNING',
       timestamp: '30 mins ago',
       actionPath: '/admin/kyc',

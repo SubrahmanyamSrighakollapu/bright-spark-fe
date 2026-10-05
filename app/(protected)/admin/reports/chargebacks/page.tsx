@@ -38,7 +38,7 @@ export default function ChargebackReportPage() {
       'Chargeback ID': c.chargebackId,
       'Transaction ID': c.transactionId,
       'Order ID': c.orderId || 'N/A',
-      'Merchant Name': c.entityName,
+      'Retailer Name': c.entityName,
       'Disputed Amount (INR)': c.disputedAmount,
       'Lien Hold (INR)': c.holdAmount,
       'Dispute Reason': c.reasonCode,
@@ -77,7 +77,7 @@ export default function ChargebackReportPage() {
     },
     {
       key: 'entityName',
-      header: 'Merchant Name',
+      header: 'Retailer Name',
       render: (row: Chargeback) => (
         <span className="font-semibold text-xs text-slate-900">{row.entityName}</span>
       ),

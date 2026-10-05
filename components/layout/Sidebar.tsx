@@ -25,12 +25,22 @@ export interface SidebarProps {
 
 function getCategoryForNavItem(id: string): string | null {
   if (id === 'dashboard' || id === 'md-dashboard' || id === 'dst-dashboard' || id === 'ret-dashboard') return 'MAIN';
-  if (id === 'transactions' || id === 'users' || id === 'employees' || id === 'kyc' || id === 'ret-payin' || id === 'ret-payout' || id === 'md-distributors' || id === 'dst-retailers') return 'OPERATIONS';
-  if (id === 'wallet' || id === 'wallet-management' || id === 'settlements' || id === 'reports' || id === 'chargebacks' || id === 'invoices' || id === 'md-wallet' || id === 'dst-wallet' || id === 'ret-wallet' || id === 'md-commissions' || id === 'dst-commissions' || id === 'ret-commissions') return 'FINANCE';
+  if (id === 'transactions' || id === 'users' || id === 'employees' || id === 'kyc' || id === 'ret-bbps' || id === 'ret-payin' || id === 'ret-qr-payin' || id === 'ret-payment-links' || id === 'ret-payout' || id === 'ret-transactions' || id === 'md-distributors' || id === 'md-retailers' || id === 'dst-retailers') return 'OPERATIONS';
+  if (id === 'wallet' || id === 'wallet-management' || id === 'topup-approvals' || id === 'settlements' || id === 'reports' || id === 'chargebacks' || id === 'invoices' || id === 'ret-topup' || id === 'md-wallet' || id === 'dst-wallet' || id === 'ret-wallet' || id === 'md-commissions' || id === 'dst-commissions' || id === 'ret-commissions' || id === 'md-reports' || id === 'dst-reports' || id === 'ret-reports') return 'FINANCE';
+  if (id === 'notifications' || id === 'md-notifications' || id === 'dst-notifications' || id === 'ret-notifications') return 'COMMUNICATIONS';
   if (id === 'integrations' || id === 'administration' || id === 'website') return 'SYSTEM';
-  if (id === 'notifications' || id === 'dst-notifications' || id === 'ret-notifications' || id === 'dst-profile' || id === 'ret-profile') return 'ACCOUNT';
+  if (id === 'md-profile' || id === 'dst-profile' || id === 'ret-profile') return 'ACCOUNT';
   return null;
 }
+
+const ADMIN_CATEGORY_ORDER: Record<string, number> = {
+  MAIN: 0,
+  OPERATIONS: 1,
+  FINANCE: 2,
+  COMMUNICATIONS: 3,
+  SYSTEM: 4,
+  ACCOUNT: 5,
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
@@ -52,6 +62,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           children: item.children?.filter((child) => retailerPermissionService.canAccessNavigationItem(currentUser.entityId!, child.id)),
         }))
     : roleFilteredItems;
+
+  // Keep the administrator menu in coherent, non-repeating sections while
+  // retaining the configured order inside each section.
+  const displayedNavItems = currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN'
+    ? navItems
+        .map((item, index) => ({ item, index }))
+        .sort((a, b) => {
+          const aOrder = ADMIN_CATEGORY_ORDER[getCategoryForNavItem(a.item.id) || 'ACCOUNT'] ?? 99;
+          const bOrder = ADMIN_CATEGORY_ORDER[getCategoryForNavItem(b.item.id) || 'ACCOUNT'] ?? 99;
+          return aOrder - bOrder || a.index - b.index;
+        })
+        .map(({ item }) => item)
+    : navItems;
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { toastSuccess } = useToast();
@@ -132,9 +155,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation List with Category Headings */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1 no-scrollbar">
-        {navItems.map((item: NavigationItem, index: number) => {
+        {displayedNavItems.map((item: NavigationItem, index: number) => {
           const category = getCategoryForNavItem(item.id);
-          const prevCategory = index > 0 ? getCategoryForNavItem(navItems[index - 1].id) : null;
+          const prevCategory = index > 0 ? getCategoryForNavItem(displayedNavItems[index - 1].id) : null;
           const showCategoryHeader = !isCollapsed && category && category !== prevCategory;
 
           return (

@@ -50,13 +50,13 @@ export default function SalesDashboardPage() {
   const distributors: SalesPartner[] = [
     { id: 'dst_1', name: 'North Zone Distributors', code: 'DST001', role: 'Distributor', phone: '+91 9876543220', email: 'northzone@qinstar.in', parent: 'Apex National Network', gtvVolume: '₹4.2 Cr', txnCount: 4120, conversionRate: '92.4%', downstreamCount: 18, joinedDate: '10 Jan 2025' },
     { id: 'dst_2', name: 'Capital Financial Services', code: 'DST002', role: 'Distributor', phone: '+91 9876543221', email: 'capital@qinstar.in', parent: 'Vanguard Payments Systems', gtvVolume: '₹3.8 Cr', txnCount: 3840, conversionRate: '89.1%', downstreamCount: 14, joinedDate: '22 Feb 2025' },
-    { id: 'dst_3', name: 'Deccan Merchant Services', code: 'DST003', role: 'Distributor', phone: '+91 9876543222', email: 'deccan@qinstar.in', parent: 'Apex National Network', gtvVolume: '₹2.9 Cr', txnCount: 2910, conversionRate: '87.6%', downstreamCount: 11, joinedDate: '01 Mar 2025' },
+    { id: 'dst_3', name: 'Deccan Retailer Services', code: 'DST003', role: 'Distributor', phone: '+91 9876543222', email: 'deccan@qinstar.in', parent: 'Apex National Network', gtvVolume: '₹2.9 Cr', txnCount: 2910, conversionRate: '87.6%', downstreamCount: 11, joinedDate: '01 Mar 2025' },
   ];
 
   const retailers: SalesPartner[] = [
     { id: 'ret_1', name: 'Metro Super Store', code: 'RET001', role: 'Retailer', phone: '+91 9876543230', email: 'metro@qinstar.in', parent: 'North Zone Distributors', gtvVolume: '₹84.5 Lakhs', txnCount: 1120, conversionRate: '96.2%', downstreamCount: 0, joinedDate: '15 Jan 2025' },
     { id: 'ret_2', name: 'Star Express Mart', code: 'RET002', role: 'Retailer', phone: '+91 9876543231', email: 'starexpress@qinstar.in', parent: 'Capital Financial Services', gtvVolume: '₹68.2 Lakhs', txnCount: 940, conversionRate: '94.8%', downstreamCount: 0, joinedDate: '28 Feb 2025' },
-    { id: 'ret_3', name: 'Sunrise Digital Communications', code: 'RET003', role: 'Retailer', phone: '+91 9876543232', email: 'sunrise@qinstar.in', parent: 'Deccan Merchant Services', gtvVolume: '₹52.1 Lakhs', txnCount: 780, conversionRate: '93.4%', downstreamCount: 0, joinedDate: '10 Mar 2025' },
+    { id: 'ret_3', name: 'Sunrise Digital Communications', code: 'RET003', role: 'Retailer', phone: '+91 9876543232', email: 'sunrise@qinstar.in', parent: 'Deccan Retailer Services', gtvVolume: '₹52.1 Lakhs', txnCount: 780, conversionRate: '93.4%', downstreamCount: 0, joinedDate: '10 Mar 2025' },
   ];
 
   const currentPartners =
@@ -106,7 +106,7 @@ export default function SalesDashboardPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <FinancialMetricCard
-          label={`Active Merchants (${period})`}
+          label={`Active Retailers (${period})`}
           value={(184 * (periodMultiplier * 0.7)).toFixed(0)}
           subtext="+14% Growth Rate"
           icon={<Store className="w-4 h-4 text-emerald-600" />}
@@ -284,7 +284,7 @@ export default function SalesDashboardPage() {
                 <p className="text-lg font-extrabold text-blue-950 font-mono">{selectedPartner.txnCount.toLocaleString()}</p>
               </div>
               <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl space-y-1 text-center">
-                <p className="text-[11px] text-purple-700 font-bold uppercase tracking-wider">Sub-Merchants</p>
+                <p className="text-[11px] text-purple-700 font-bold uppercase tracking-wider">Retailers</p>
                 <p className="text-lg font-extrabold text-purple-950 font-mono">{selectedPartner.downstreamCount}</p>
               </div>
             </div>

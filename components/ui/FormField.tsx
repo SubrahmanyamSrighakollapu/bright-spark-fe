@@ -21,7 +21,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   children,
 }) => {
   return (
-    <div className={cn('flex flex-col gap-1.5 w-full', className)}>
+    <div className={cn('flex w-full flex-col gap-2', className)}>
       {label && (
         <label
           htmlFor={htmlFor}

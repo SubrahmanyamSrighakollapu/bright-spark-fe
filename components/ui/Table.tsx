@@ -1,10 +1,14 @@
+"use client";
+
 import React, { ReactNode } from 'react';
+import { DataTable, type DataTableRowClickEvent } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { ColumnDefinition } from '@/types/common';
 import { cn } from '@/utils/cn';
 import { LoadingSkeleton } from './LoadingSkeleton';
 import { EmptyState } from './EmptyState';
 
-export interface TableProps<T> {
+export interface TableProps<T extends object> {
   columns: ColumnDefinition<T>[];
   data: T[];
   keyExtractor: (row: T, index: number) => string | number;
@@ -17,7 +21,7 @@ export interface TableProps<T> {
   renderActions?: (row: T) => ReactNode;
 }
 
-export function Table<T>({
+export function Table<T extends object>({
   columns,
   data,
   keyExtractor,
@@ -29,86 +33,51 @@ export function Table<T>({
   actionHeader = 'Actions',
   renderActions,
 }: TableProps<T>) {
-  if (isLoading) {
-    return <LoadingSkeleton variant="table" count={5} />;
-  }
+  void keyExtractor;
+  if (isLoading) return <LoadingSkeleton variant="table" count={5} />;
+  if (!data?.length) return <EmptyState title={emptyTitle} description={emptyDescription} className="my-4" />;
 
-  if (!data || data.length === 0) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} className="my-4" />;
-  }
+  const rowIndex = (row: T) => data.indexOf(row);
+  const alignment = (align?: ColumnDefinition<T>['align']) =>
+    align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
 
   return (
-    <div className={cn('w-full overflow-x-auto border border-[var(--border)] rounded-[var(--radius-lg)] bg-white shadow-xs', className)}>
-      <table className="w-full text-left border-collapse text-sm">
-        <thead>
-          <tr className="bg-[var(--bg-secondary)] border-b border-[var(--border)] text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                style={{ width: col.width, minWidth: col.minWidth }}
-                className={cn(
-                  'px-4 py-3 font-semibold select-none whitespace-nowrap',
-                  col.align === 'center'
-                    ? 'text-center'
-                    : col.align === 'right'
-                    ? 'text-right'
-                    : 'text-left',
-                  col.headerClassName
-                )}
-              >
-                {col.header}
-              </th>
-            ))}
-            {renderActions && (
-              <th className="px-4 py-3 text-right font-semibold select-none whitespace-nowrap">{actionHeader}</th>
-            )}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--text-primary)]">
-          {data.map((row, index) => {
-            const rawKey = keyExtractor(row, index);
-            const key = rawKey != null && rawKey !== '' ? String(rawKey) : `table-row-${index}`;
-            return (
-              <tr
-                key={key}
-                onClick={() => onRowClick && onRowClick(row)}
-                className={cn(
-                  'transition-colors hover:bg-slate-50/80',
-                  onRowClick ? 'cursor-pointer' : ''
-                )}
-              >
-                {columns.map((col) => {
-                  const cellValue = (row as Record<string, unknown>)[col.key];
-                  return (
-                    <td
-                      key={col.key}
-                      style={{ width: col.width, minWidth: col.minWidth }}
-                      className={cn(
-                        'px-4 py-3.5 align-middle text-xs font-normal tabular-nums',
-                        col.align === 'center'
-                          ? 'text-center'
-                          : col.align === 'right'
-                          ? 'text-right'
-                          : 'text-left',
-                        col.className
-                      )}
-                    >
-                      {col.render ? col.render(row, index) : (cellValue as ReactNode) ?? '-'}
-                    </td>
-                  );
-                })}
-                {renderActions && (
-                  <td className="px-4 py-3 text-right align-middle shrink-0">
-                    <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                      {renderActions(row)}
-                    </div>
-                  </td>
-                )}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      value={data}
+      rowHover
+      onRowClick={onRowClick ? (event: DataTableRowClickEvent) => onRowClick(event.data as T) : undefined}
+      className={cn('qs-datatable w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-white shadow-xs', onRowClick && 'qs-datatable-clickable', className)}
+      tableClassName="w-full border-collapse text-left text-sm"
+      unstyled
+    >
+      {columns.map((col) => (
+        <Column
+          key={col.key}
+          field={col.key}
+          header={col.header}
+          sortable={col.sortable}
+          style={{ width: col.width, minWidth: col.minWidth }}
+          headerClassName={cn('px-4 py-3 font-semibold select-none whitespace-nowrap', alignment(col.align), col.headerClassName)}
+          bodyClassName={cn('px-4 py-3.5 align-middle text-xs font-normal tabular-nums', alignment(col.align), col.className)}
+          body={(row: T) => {
+            const index = rowIndex(row);
+            const value = (row as Record<string, unknown>)[col.key];
+            return col.render ? col.render(row, index) : (value as ReactNode) ?? '-';
+          }}
+        />
+      ))}
+      {renderActions && (
+        <Column
+          header={actionHeader}
+          headerClassName="px-4 py-3 text-right font-semibold select-none whitespace-nowrap"
+          bodyClassName="px-4 py-3 text-right align-middle"
+          body={(row: T) => (
+            <div className="flex items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
+              {renderActions(row)}
+            </div>
+          )}
+        />
+      )}
+    </DataTable>
   );
 }

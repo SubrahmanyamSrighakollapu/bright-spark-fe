@@ -87,7 +87,7 @@ export default function PayOutTransactionsPage() {
       'Transaction ID': t.transactionRef,
       'Order ID': t.orderId || '',
       'Type': t.type,
-      'Retailer/Merchant': t.retailerName || t.merchantName || '',
+      'Retailer': t.retailerName || t.merchantName || '',
       'Beneficiary': t.beneficiaryName || '',
       'Bank Account': t.beneficiaryAccount || '',
       'IFSC': t.beneficiaryIfsc || '',
@@ -104,7 +104,7 @@ export default function PayOutTransactionsPage() {
   return (
     <PageContainer
       title="Pay-Out Transactions"
-      description="Monitor and manage outgoing vendor and merchant disbursements."
+      description="Monitor and manage outgoing vendor and retailer disbursements."
       actions={
         <div className="flex items-center gap-2">
           <Button

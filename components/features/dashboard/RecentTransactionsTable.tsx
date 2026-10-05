@@ -99,11 +99,11 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
     },
     {
       key: 'merchantName',
-      header: 'Merchant / Retailer',
+      header: 'Retailer',
       render: (row) => (
         <div>
           <div className="font-semibold text-xs text-[#0F172A]">{row.merchantName}</div>
-          <div className="text-[11px] text-[#64748B]">{row.distributorName || 'Direct Merchant'}</div>
+          <div className="text-[11px] text-[#64748B]">{row.distributorName || 'Direct Retailer'}</div>
         </div>
       ),
     },
@@ -215,7 +215,7 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
               </div>
 
               <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
-                <span className="text-[#64748B]">Merchant Name:</span>
+                <span className="text-[#64748B]">Retailer Name:</span>
                 <span className="font-semibold text-[#0F172A]">{detailDrawer.data.merchantName}</span>
               </div>
 

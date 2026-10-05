@@ -57,7 +57,7 @@ export const mockInvoices: Invoice[] = [
         timestamp: '2026-09-03T09:35:00Z',
         event: 'Invoice Issued',
         actor: 'Finance Accounts Lead',
-        description: 'Invoice dispatched to merchant billing portal & email.',
+        description: 'Invoice dispatched to retailer billing portal and email.',
         status: 'COMPLETED',
       },
     ],

@@ -136,10 +136,10 @@ export const TransactionFilterBar: React.FC<TransactionFilterBarProps> = ({
       {showAdvanced && (
         <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[var(--radius-lg)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 animate-in fade-in duration-150">
           <Select
-            label="Merchant"
+            label="Retailer"
             value={filters.merchantId || ''}
             onChange={(e) => setFilters((prev) => ({ ...prev, merchantId: e.target.value }))}
-            placeholder="All Merchants"
+            placeholder="All Retailers"
             options={[
               { value: 'Apex Pay Solutions', label: 'Apex Pay Solutions' },
               { value: 'Zenith Retail', label: 'Zenith Retail' },

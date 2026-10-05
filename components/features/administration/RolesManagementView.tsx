@@ -237,7 +237,7 @@ export const RolesManagementView: React.FC = () => {
             Configure system user roles and module visibility permissions across network downlines and staff.
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenAdd} className="bg-[#155EEF] hover:bg-[#124BCC]">
+        <Button variant="primary" onClick={handleOpenAdd}>
           <Plus className="w-4 h-4 mr-2" />
           Create New Role
         </Button>
@@ -304,7 +304,7 @@ export const RolesManagementView: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="bg-[#155EEF]">
+              <Button type="submit" variant="primary">
                 {editingRole ? 'Update Role' : 'Save Role'}
               </Button>
             </div>

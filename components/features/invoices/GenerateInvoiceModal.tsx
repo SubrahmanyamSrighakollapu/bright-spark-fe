@@ -108,8 +108,8 @@ export const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
             value={entityId}
             onChange={(e) => handleEntitySelect(e.target.value)}
             options={[
-              { value: 'ent_mch_01', label: 'Apex Pay Solutions (Merchant)' },
-              { value: 'ent_mch_02', label: 'Global Fintech Ltd (Merchant)' },
+              { value: 'ent_mch_01', label: 'Apex Pay Solutions (Retailer)' },
+              { value: 'ent_mch_02', label: 'Global Fintech Ltd (Retailer)' },
               { value: 'ent_dist_01', label: 'North Zone Dist (Distributor)' },
               { value: 'ent_rtl_01', label: 'Zenith Retail (Retailer)' },
             ]}

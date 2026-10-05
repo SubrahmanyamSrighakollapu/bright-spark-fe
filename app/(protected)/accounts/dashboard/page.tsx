@@ -145,7 +145,7 @@ export default function AccountsDashboardPage() {
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
               <tr>
                 <th className="p-3">Reference ID</th>
-                <th className="p-3">Entity / Merchant</th>
+                <th className="p-3">Entity / Retailer</th>
                 <th className="p-3">Contact Mobile</th>
                 <th className="p-3">Payment Mode</th>
                 <th className="p-3">Amount</th>

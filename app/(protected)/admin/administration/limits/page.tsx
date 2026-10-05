@@ -61,7 +61,7 @@ export default function LimitsPage() {
     >
       <div className="space-y-6">
         {/* Precedence Inspector Banner */}
-        <Card title="Deterministic Scope Precedence Inspector" subtitle="Rule Evaluation: Specific Merchant Override > Entity Rule > Global Default">
+        <Card title="Deterministic Scope Precedence Inspector" subtitle="Rule Evaluation: Specific Retailer Override > Entity Rule > Global Default">
           <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
             <div>
               <span className="text-[11px] font-sans text-slate-500 font-semibold block">Evaluated Limit: Apex Pay Solutions (PAY_OUT)</span>

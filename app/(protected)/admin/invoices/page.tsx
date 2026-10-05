@@ -145,7 +145,7 @@ export default function InvoicesPage() {
           <div class="header">
             <div>
               <div class="title">QIN STAR PAY</div>
-              <div style="font-weight:600; color: #475569;">${isFormat2 ? 'Corporate Settlement & Payout Engine' : 'Commercial Merchant Gateway Services'}</div>
+              <div style="font-weight:600; color: #475569;">${isFormat2 ? 'Corporate Settlement & Payout Engine' : 'Commercial Retailer Gateway Services'}</div>
               <div>GSTIN: 36QSPAY9981P1Z0 | CIN: U72900TG2026PTC189000</div>
             </div>
             <div style="text-align: right">

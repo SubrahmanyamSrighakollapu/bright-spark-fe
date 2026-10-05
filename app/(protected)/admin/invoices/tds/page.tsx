@@ -232,7 +232,7 @@ export default function TdsPage() {
               onChange={(e) => setEntityFilter(e.target.value as 'ALL' | EntityType)}
               options={[
                 { value: 'ALL', label: 'All Entity Types' },
-                { value: 'MERCHANT', label: 'Merchant' },
+                { value: 'MERCHANT', label: 'Retailer' },
                 { value: 'DISTRIBUTOR', label: 'Distributor' },
                 { value: 'RETAILER', label: 'Retailer' },
               ]}

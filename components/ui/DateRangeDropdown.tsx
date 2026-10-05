@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, ChevronDown, Check, ArrowRight, X } from 'lucide-react';
+import { Calendar, ChevronDown, Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 export type DateFilterPreset = 'today' | 'yesterday' | '7d' | '30d' | 'custom';
@@ -120,10 +120,12 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
         className={cn(
-          'flex items-center justify-between gap-2 bg-white border border-slate-300 hover:border-[#0F4C81] text-slate-800 rounded-xl transition-all shadow-2xs font-medium cursor-pointer',
-          size === 'sm' ? 'px-3 py-1.5 text-xs h-9' : 'px-3.5 py-2 text-xs h-10',
-          isOpen ? 'border-[#0F4C81] ring-2 ring-indigo-100' : ''
+          'flex w-full min-w-36 cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-white px-4 text-[var(--text-primary)] transition-colors hover:border-slate-300 focus-visible:border-[var(--border-focus)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100',
+          size === 'sm' ? 'h-9 text-xs' : 'h-11 text-sm',
+          isOpen ? 'border-[var(--border-focus)] ring-2 ring-blue-100' : ''
         )}
       >
         <div className="flex items-center gap-1.5 truncate">
@@ -131,7 +133,7 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
           <span className="truncate font-semibold">{getDisplayLabel()}</span>
         </div>
         <ChevronDown
-          className={cn('w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200', isOpen ? 'rotate-180 text-[#0F4C81]' : '')}
+          className={cn('h-4 w-4 shrink-0 cursor-pointer text-slate-500 transition-all duration-200', isOpen ? 'rotate-180 text-[var(--primary)]' : '')}
         />
       </button>
 
@@ -139,11 +141,11 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
       {isOpen && (
         <div
           className={cn(
-            'absolute z-[130] mt-1.5 w-64 rounded-2xl bg-white border border-slate-200 shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95',
+            'absolute z-[130] mt-1.5 min-w-full w-72 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95',
             align === 'right' ? 'right-0' : 'left-0'
           )}
         >
-          <div className="px-2.5 py-1.5 border-b border-slate-100 flex items-center justify-between">
+          <div className="mb-1 flex items-center justify-between border-b border-slate-100 px-2.5 py-2">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
               Filter by Date Range
             </span>
@@ -152,24 +154,26 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
             </span>
           </div>
 
-          <div className="space-y-0.5 max-h-60 overflow-y-auto">
+          <div className="flex max-h-72 flex-col gap-1 overflow-y-auto overscroll-contain" role="listbox">
             {PRESETS.filter((preset) => !allowedPresets || allowedPresets.includes(preset.key)).map((preset) => {
               const isSelected = selectedPreset === preset.key;
               return (
                 <button
                   key={preset.key}
                   type="button"
+                  role="option"
+                  aria-selected={isSelected}
                   onClick={() => handleSelectPreset(preset.key)}
                   className={cn(
-                    'w-full text-left px-2.5 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer',
+                    'flex min-h-11 w-full cursor-pointer items-center justify-between rounded-lg px-3.5 py-2.5 text-left text-sm leading-5 outline-none transition-colors',
                     isSelected
-                      ? 'bg-indigo-50/80 text-[#0F4C81] font-bold'
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-[var(--primary-light)] font-bold text-[var(--primary)] hover:bg-[var(--primary-100)]'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
                   )}
                 >
                   <div>
-                    <span className="block leading-tight font-semibold">{preset.label}</span>
-                    <span className="text-[10px] text-slate-400 font-normal leading-none">
+                    <span className="block cursor-pointer font-semibold leading-5">{preset.label}</span>
+                    <span className="block cursor-pointer text-[11px] font-normal leading-4 text-slate-400">
                       {preset.description}
                     </span>
                   </div>

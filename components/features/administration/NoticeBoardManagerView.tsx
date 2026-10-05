@@ -219,7 +219,7 @@ export const NoticeBoardManagerView: React.FC = () => {
             Create modal bulletin announcements and platform notice banners for user downlines.
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenAdd} className="bg-[#155EEF] hover:bg-[#124BCC]">
+        <Button variant="primary" onClick={handleOpenAdd}>
           <Plus className="w-4 h-4 mr-2" />
           Create Notice
         </Button>
@@ -302,7 +302,7 @@ export const NoticeBoardManagerView: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="bg-[#155EEF]">
+              <Button type="submit" variant="primary">
                 Publish Notice
               </Button>
             </div>

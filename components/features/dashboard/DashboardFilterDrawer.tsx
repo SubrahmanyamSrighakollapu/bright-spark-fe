@@ -59,7 +59,7 @@ export const DashboardFilterDrawer: React.FC<DashboardFilterDrawerProps> = ({
           )}
         </div>
       }
-      description="Filter transaction streams, gateway providers, date ranges, and merchants."
+      description="Filter transaction streams, gateway providers, date ranges, and retailers."
       footer={
         <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <Button
@@ -112,10 +112,10 @@ export const DashboardFilterDrawer: React.FC<DashboardFilterDrawerProps> = ({
         />
 
         <Select
-          label="Merchant Entity"
+          label="Retailer"
           value={filters.merchantId || ''}
           onChange={(e) => setFilters((prev) => ({ ...prev, merchantId: e.target.value }))}
-          placeholder="All Merchants"
+          placeholder="All Retailers"
           options={[
             { value: 'mch_01', label: 'Apex Pay Solutions' },
             { value: 'mch_02', label: 'Zenith Retail' },

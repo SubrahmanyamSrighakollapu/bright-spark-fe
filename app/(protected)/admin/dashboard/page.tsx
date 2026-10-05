@@ -324,7 +324,7 @@ function AdminDashboardContent() {
             </div>
 
             <div className="text-xs text-[#64748B] font-medium px-3 hidden md:block">
-              {activeTab === 'PAY_IN' && 'Merchant acquiring collection streams & gateway SLAs'}
+              {activeTab === 'PAY_IN' && 'Retailer acquiring collection streams & gateway SLAs'}
               {activeTab === 'PAY_OUT' && 'Settlement disbursements, nodal escrow & bank channels'}
               {activeTab === 'NETWORK_KYC' && 'Retailer, Distributor hierarchy & onboarding verifications'}
             </div>
@@ -359,7 +359,6 @@ function AdminDashboardContent() {
               pendingApprovalsCount={pendingApprovalsCount}
               approvalItems={approvalItems}
               onReviewItem={handleReviewItem}
-              onOpenAddMember={handleOpenAddMember}
               onRefreshData={handleRefresh}
               isLoading={isLoading}
             />

@@ -40,7 +40,7 @@ export default function ClientLogsPage() {
   return (
     <PageContainer
       title="Client Logs"
-      description="Track requests, authentication calls, and API usage originating from merchants, distributors, and commercial consumers."
+      description="Track requests, authentication calls, and API usage originating from retailers, distributors, and commercial consumers."
     >
       <div className="space-y-6">
         {/* Filter Bar */}

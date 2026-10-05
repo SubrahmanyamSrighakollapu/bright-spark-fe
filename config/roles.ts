@@ -43,7 +43,7 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   ACCOUNTS: 'Accountant',
   OPERATIONS: 'Operations (Support Tickets)',
   SUPPORT: 'Support Executive',
-  MERCHANT: 'Merchant',
+  MERCHANT: 'Retailer',
 };
 
 export interface UserContext {
@@ -67,7 +67,7 @@ export const ROLE_MAPPED_PARENTS: Record<UserRole, string> = {
   ACCOUNTS: 'Operations & Finance Control',
   OPERATIONS: 'Operations & Finance Control',
   SUPPORT: 'Support & Operations Desk',
-  MERCHANT: 'Merchant Network',
+  MERCHANT: 'Retailer Network',
 };
 
 export const MOCK_CURRENT_USER: UserContext = {

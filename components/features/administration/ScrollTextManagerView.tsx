@@ -204,7 +204,7 @@ export const ScrollTextManagerView: React.FC = () => {
             Publish real-time scrolling news tickers displayed on downline dashboards (Distributor & Retailer terminals).
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenAdd} className="bg-[#155EEF] hover:bg-[#124BCC]">
+        <Button variant="primary" onClick={handleOpenAdd}>
           <Plus className="w-4 h-4 mr-2" />
           Add News Ticker
         </Button>
@@ -294,7 +294,7 @@ export const ScrollTextManagerView: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="bg-[#155EEF]">
+              <Button type="submit" variant="primary">
                 Save Ticker
               </Button>
             </div>

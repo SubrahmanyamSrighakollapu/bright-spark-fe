@@ -156,14 +156,15 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
       title={
         <div className="flex items-center gap-2 text-slate-900 font-bold">
           <UserPlus className="w-5 h-5 text-[var(--primary)]" />
-          <span>Onboard New Network Member / User</span>
+          <span>Add User</span>
         </div>
       }
       size="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+      <form onSubmit={handleSubmit} className="space-y-5 text-xs">
         <Select
-          label="User / Member Type *"
+          label="User Role"
+          required
           value={memberType}
           onChange={(e) => setMemberType(e.target.value as MemberType)}
           options={[
@@ -175,7 +176,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
         />
 
         <Input
-          label="Full Name *"
+          label="Full Name"
           placeholder="e.g. Subrahmanyam S"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -184,26 +185,26 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
         />
 
         {memberType !== 'BACKOFFICE' && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <div className="mb-3">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+            <div className="mb-4">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-700">KYC document uploads</p>
               <p className="mt-1 text-[11px] text-slate-500">Aadhaar, PAN and bank proof are required before onboarding.</p>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {[
                 ['AADHAAR', 'Aadhaar Card *'],
                 ['PAN', 'PAN Card *'],
                 ['GST_CERTIFICATE', 'GST Certificate'],
                 ['CANCELLED_CHEQUE', 'Cancelled Cheque / Passbook *'],
               ].map(([type, label]) => (
-                <label key={type} className="space-y-1 text-[11px] font-semibold text-slate-700">
-                  <span>{label}</span>
+                <label key={type} className="flex cursor-pointer flex-col gap-2 text-[11px] font-semibold text-slate-700">
+                  <span className="block">{label}</span>
                   <input
                     type="file"
                     accept="image/png,image/jpeg,application/pdf"
                     required={type !== 'GST_CERTIFICATE'}
                     onChange={(e) => setKycFiles((prev) => ({ ...prev, [type]: e.target.files?.[0] || null }))}
-                    className="block w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-[11px] file:mr-2 file:rounded-md file:border-0 file:bg-blue-50 file:px-2 file:py-1 file:font-bold file:text-blue-700"
+                    className="block min-h-11 w-full cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-blue-50 file:px-2.5 file:py-1.5 file:font-bold file:text-blue-700 hover:border-slate-300"
                   />
                 </label>
               ))}
@@ -219,9 +220,9 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
           leftIcon={<Building className="w-4 h-4 text-slate-400" />}
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Input
-            label="Mobile Number (+91) *"
+            label="Mobile Number (+91)"
             placeholder="9876543210"
             value={mobile}
             onChange={(e) => setMobile(e.target.value)}
@@ -246,7 +247,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
           onChange={(e) => setParentName(e.target.value)}
         />
 
-        <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
+        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
             Cancel
           </Button>

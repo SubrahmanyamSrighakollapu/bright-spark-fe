@@ -223,10 +223,10 @@ export const CreatePayoutForm: React.FC = () => {
             {/* Section 1: Entity Selection */}
             <div className="space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                1. Requesting Merchant
+                1. Requesting Retailer
               </h3>
               <Select
-                label="Select Merchant / Retailer *"
+                label="Select Retailer *"
                 value={formData.merchantId}
                 onChange={(e) => setFormData((prev) => ({ ...prev, merchantId: e.target.value }))}
                 options={[

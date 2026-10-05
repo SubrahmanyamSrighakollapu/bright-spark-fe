@@ -183,7 +183,7 @@ export const SetBalanceRequirementView: React.FC = () => {
             Set mandatory safety buffer balances that users must maintain in their Main and Lean wallets for active operations.
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenAdd} className="bg-[#155EEF] hover:bg-[#124BCC]">
+        <Button variant="primary" onClick={handleOpenAdd}>
           <Plus className="w-4 h-4 mr-2" />
           Set Balance Rule
         </Button>
@@ -242,7 +242,7 @@ export const SetBalanceRequirementView: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="bg-[#155EEF]">
+              <Button type="submit" variant="primary">
                 Save Requirement
               </Button>
             </div>

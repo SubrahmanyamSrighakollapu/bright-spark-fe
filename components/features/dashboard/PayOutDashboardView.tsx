@@ -46,7 +46,7 @@ function getPayOutMetricsForRange(preset: CardDatePreset, base: DashboardMetrics
         dispatches: 4215,
         pendingSettlements: base.pendingSettlement || 375000,
         successRate: 99.2,
-        subtext: 'Processed Merchant Dispatches',
+        subtext: 'Processed Retailer Dispatches',
       };
     case 'yesterday':
       return {
@@ -297,7 +297,7 @@ export const PayOutDashboardView: React.FC<PayOutDashboardViewProps> = ({
         <div className="lg:col-span-2 h-full flex flex-col justify-between">
           <Card
             title="Pay-Out Settlement & Dispatch Trend"
-            subtitle="Real-time merchant payout volume and dispatch count over time"
+            subtitle="Real-time retailer payout volume and dispatch count over time"
             className="h-full flex flex-col justify-between"
             action={
               <CardDateFilter value={trendRange} onChange={(preset) => setTrendRange(preset)} />

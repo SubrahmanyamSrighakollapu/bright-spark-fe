@@ -87,7 +87,7 @@ export default function PayInTransactionsPage() {
       'Transaction ID': t.transactionRef,
       'Order ID': t.orderId || '',
       'Type': t.type,
-      'Retailer/Merchant': t.retailerName || t.merchantName || '',
+      'Retailer': t.retailerName || t.merchantName || '',
       'Payment Mode': t.paymentMode || '',
       'Amount': t.amount,
       'Fee': t.fee,

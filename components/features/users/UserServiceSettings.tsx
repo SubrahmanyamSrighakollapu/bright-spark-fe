@@ -32,7 +32,7 @@ interface RetailerPermission {
 
 const DEFAULT_PERMISSIONS: RetailerPermission[] = [
   { id: 'pay-in', name: 'Pay-In', description: 'Accept customer collections through enabled payment methods.', icon: <ArrowDownLeft className="h-4 w-4 text-emerald-600" />, enabled: true },
-  { id: 'pay-out', name: 'Pay-Out', description: 'Initiate beneficiary and merchant disbursements.', icon: <ArrowUpRight className="h-4 w-4 text-rose-600" />, enabled: true },
+  { id: 'pay-out', name: 'Pay-Out', description: 'Initiate beneficiary and retailer disbursements.', icon: <ArrowUpRight className="h-4 w-4 text-rose-600" />, enabled: true },
   { id: 'transactions', name: 'Transactions', description: 'View Pay-In and Pay-Out transaction history and details.', icon: <ArrowLeftRight className="h-4 w-4 text-blue-600" />, enabled: true },
   { id: 'wallet-ledger', name: 'Wallet & Ledger', description: 'View available balance, holds and wallet ledger entries.', icon: <Wallet className="h-4 w-4 text-indigo-600" />, enabled: true },
   { id: 'commissions', name: 'Commissions', description: 'View earned commission summaries and transaction-level earnings.', icon: <Percent className="h-4 w-4 text-violet-600" />, enabled: true },
