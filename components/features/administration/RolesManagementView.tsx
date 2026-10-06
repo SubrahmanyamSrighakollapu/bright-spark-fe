@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Table } from '@/components/ui/Table';
 import { Modal } from '@/components/ui/Modal';
+import { ActionKebabMenu, ActionMenuItem } from '@/components/ui/ActionKebabMenu';
 import { useToast } from '@/components/ui/Toast';
 import { ColumnDefinition } from '@/types/common';
-import { Shield, Plus, Edit, Lock, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Shield, Plus, Edit, Lock, CheckCircle2, XCircle, Trash2, RefreshCw } from 'lucide-react';
 import { roleService, BackendRole, BackendPermission } from '@/services/roleService';
 
 export const RolesManagementView: React.FC = () => {
@@ -74,6 +75,36 @@ export const RolesManagementView: React.FC = () => {
     setSelectedPermissions((prev) =>
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
+  };
+
+  const handleToggleStatus = async (role: BackendRole) => {
+    try {
+      const newStatus = !role.isActive;
+      const res = await roleService.updateRole(role.id, { isActive: newStatus });
+      if (res.success) {
+        toastSuccess(`Role "${role.name}" ${newStatus ? 'activated' : 'inactivated'} successfully.`);
+        fetchRolesAndPermissions();
+      } else {
+        toastError(res.message || 'Failed to update role status.');
+      }
+    } catch (err: unknown) {
+      toastError((err as Error)?.message || 'Failed to toggle role status.');
+    }
+  };
+
+  const handleDeleteRole = async (role: BackendRole) => {
+    if (!confirm(`Are you sure you want to delete role "${role.name}"?`)) return;
+    try {
+      const res = await roleService.deleteRole(role.id);
+      if (res.success) {
+        toastSuccess(`Role "${role.name}" deleted successfully.`);
+        fetchRolesAndPermissions();
+      } else {
+        toastError(res.message || 'Failed to delete role.');
+      }
+    } catch (err: unknown) {
+      toastError((err as Error)?.message || 'Failed to delete role.');
+    }
   };
 
   const handleSaveRole = async (e: React.FormEvent) => {
@@ -185,43 +216,58 @@ export const RolesManagementView: React.FC = () => {
       ),
     },
     {
-      key: 'permissions',
-      header: 'Permission Matrix Summary',
+      key: 'status',
+      header: 'Status',
       render: (row) => (
-        <div className="flex flex-wrap gap-1 max-w-md">
-          {row.permissions.slice(0, 6).map((code) => (
-            <span
-              key={code}
-              className="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
-            >
-              {code}
-            </span>
-          ))}
-          {row.permissions.length > 6 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-slate-100 text-slate-600 border border-slate-200">
-              +{row.permissions.length - 6} more
-            </span>
-          )}
-        </div>
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+            row.isActive
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-rose-50 text-rose-700 border-rose-200'
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${row.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+          {row.isActive ? 'Active' : 'Inactive'}
+        </span>
       ),
     },
     {
       key: 'actions',
       header: 'Actions',
-      render: (row) => (
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleOpenEdit(row)}
-            disabled={row.isSystem}
-            className="h-8 px-2 text-[#155EEF] hover:bg-[#F1F5F9] disabled:opacity-40"
-          >
-            <Edit className="w-3.5 h-3.5 mr-1" />
-            Configure Permissions
-          </Button>
-        </div>
-      ),
+      render: (row) => {
+        const actionItems: ActionMenuItem[] = [
+          {
+            key: 'edit',
+            label: 'Update',
+            icon: <Edit className="w-4 h-4 text-blue-600" />,
+            onClick: () => handleOpenEdit(row),
+            variant: 'info',
+            disabled: row.isSystem,
+          },
+          {
+            key: 'toggle_status',
+            label: row.isActive ? 'Inactivate' : 'Activate',
+            icon: row.isActive ? (
+              <XCircle className="w-4 h-4 text-rose-600" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            ),
+            onClick: () => handleToggleStatus(row),
+            variant: row.isActive ? 'danger' : 'success',
+            disabled: row.isSystem,
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: <Trash2 className="w-4 h-4 text-rose-600" />,
+            onClick: () => handleDeleteRole(row),
+            danger: true,
+            disabled: row.isSystem || row.assignedUserCount > 0,
+          },
+        ];
+
+        return <ActionKebabMenu items={actionItems} align="right" />;
+      },
     },
   ];
 
@@ -251,7 +297,7 @@ export const RolesManagementView: React.FC = () => {
       </div>
 
       {/* Roles Table */}
-      <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-4">
+      <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-4 overflow-visible">
         <Table columns={columns} data={roles} keyExtractor={(r) => String(r.id)} isLoading={isLoading} />
       </Card>
 

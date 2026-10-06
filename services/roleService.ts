@@ -165,4 +165,11 @@ export const roleService = {
   async updateRole(id: number, input: UpdateRoleInput): Promise<ApiResponse<BackendRole>> {
     return apiClient.patch<ApiResponse<BackendRole>>(`/roles/${id}`, input);
   },
+
+  /**
+   * Delete a custom role.
+   */
+  async deleteRole(id: number): Promise<ApiResponse<{ message: string; id: number }>> {
+    return apiClient.delete<ApiResponse<{ message: string; id: number }>>(`/roles/${id}`);
+  },
 };
