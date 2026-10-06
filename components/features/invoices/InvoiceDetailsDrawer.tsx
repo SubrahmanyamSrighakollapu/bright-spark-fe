@@ -19,6 +19,8 @@ import {
   BookOpen,
 } from 'lucide-react';
 
+import { ServiceInvoiceRenderer } from './ServiceInvoiceRenderer';
+
 export interface InvoiceDetailsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,7 +37,7 @@ export const InvoiceDetailsDrawer: React.FC<InvoiceDetailsDrawerProps> = ({
   onDownload,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'LINE_ITEMS' | 'PAYMENTS' | 'TIMELINE'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'SERVICE_TEMPLATE' | 'LINE_ITEMS' | 'PAYMENTS' | 'TIMELINE'>('OVERVIEW');
 
   if (!invoice) return null;
 
@@ -89,10 +91,10 @@ export const InvoiceDetailsDrawer: React.FC<InvoiceDetailsDrawerProps> = ({
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-slate-200 font-semibold">
+        <div className="flex border-b border-slate-200 font-semibold overflow-x-auto">
           <button
             onClick={() => setActiveTab('OVERVIEW')}
-            className={`pb-2.5 px-4 border-b-2 transition-colors ${
+            className={`pb-2.5 px-4 border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'OVERVIEW'
                 ? 'border-[var(--primary)] text-[var(--primary)] font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -101,8 +103,19 @@ export const InvoiceDetailsDrawer: React.FC<InvoiceDetailsDrawerProps> = ({
             Overview & Breakdown
           </button>
           <button
+            onClick={() => setActiveTab('SERVICE_TEMPLATE')}
+            className={`pb-2.5 px-4 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'SERVICE_TEMPLATE'
+                ? 'border-[var(--primary)] text-[var(--primary)] font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Service Invoice Template</span>
+          </button>
+          <button
             onClick={() => setActiveTab('LINE_ITEMS')}
-            className={`pb-2.5 px-4 border-b-2 transition-colors flex items-center gap-1.5 ${
+            className={`pb-2.5 px-4 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
               activeTab === 'LINE_ITEMS'
                 ? 'border-[var(--primary)] text-[var(--primary)] font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -113,7 +126,7 @@ export const InvoiceDetailsDrawer: React.FC<InvoiceDetailsDrawerProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('PAYMENTS')}
-            className={`pb-2.5 px-4 border-b-2 transition-colors flex items-center gap-1.5 ${
+            className={`pb-2.5 px-4 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
               activeTab === 'PAYMENTS'
                 ? 'border-[var(--primary)] text-[var(--primary)] font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -124,7 +137,7 @@ export const InvoiceDetailsDrawer: React.FC<InvoiceDetailsDrawerProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('TIMELINE')}
-            className={`pb-2.5 px-4 border-b-2 transition-colors flex items-center gap-1.5 ${
+            className={`pb-2.5 px-4 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
               activeTab === 'TIMELINE'
                 ? 'border-[var(--primary)] text-[var(--primary)] font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -276,7 +289,12 @@ export const InvoiceDetailsDrawer: React.FC<InvoiceDetailsDrawerProps> = ({
           </div>
         )}
 
-        {/* Tab 2: Line Items */}
+        {/* Tab 2: Service Template View */}
+        {activeTab === 'SERVICE_TEMPLATE' && (
+          <ServiceInvoiceRenderer invoice={invoice} />
+        )}
+
+        {/* Tab 3: Line Items */}
         {activeTab === 'LINE_ITEMS' && (
           <Card title="Invoice Line Item Details" subtitle="Billed services and platform fee items">
             <div className="overflow-x-auto border border-slate-200 rounded-lg">

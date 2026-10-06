@@ -36,6 +36,22 @@ class ApiClient {
     return url.toString();
   }
 
+  private getStoredToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const sessionRaw =
+        sessionStorage.getItem('qin-star-pay-auth-session-session') ||
+        localStorage.getItem('qin-star-pay-auth-session-local');
+      if (sessionRaw) {
+        const parsed = JSON.parse(sessionRaw);
+        return parsed.accessToken || null;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
   private getHeaders(customHeaders?: HeadersInit, authToken?: string): HeadersInit {
     const defaultHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -43,8 +59,9 @@ class ApiClient {
       'X-Client-Platform': 'web-admin',
     };
 
-    if (authToken) {
-      defaultHeaders['Authorization'] = `Bearer ${authToken}`;
+    const token = authToken || this.getStoredToken();
+    if (token) {
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
     }
 
     return {

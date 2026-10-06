@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserContext, UserRole } from '@/config/roles';
 import { AuthSession, mockAuthService, getDefaultRouteForRole } from '@/services/mockAuthService';
+import { authService } from '@/services/authService';
 
 const STORAGE_KEY_SESSION_LOCAL = 'qin-star-pay-auth-session-local';
 const STORAGE_KEY_SESSION_SESSION = 'qin-star-pay-auth-session-session';
@@ -66,17 +67,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(
     async (
       identifier: string,
-      _password?: string,
+      password?: string,
       rememberMe: boolean = false
     ): Promise<{ success: boolean; error?: string; defaultRoute?: string }> => {
+      // 1. Attempt real API login first
+      const realRes = await authService.login(identifier, password);
+      if (realRes.success && realRes.session) {
+        const newSession = realRes.session;
+        setSession(newSession);
+        setPreviewRoleState(null);
+
+        if (typeof window !== 'undefined') {
+          const sessionJson = JSON.stringify(newSession);
+          if (rememberMe) {
+            localStorage.setItem(STORAGE_KEY_SESSION_LOCAL, sessionJson);
+            sessionStorage.removeItem(STORAGE_KEY_SESSION_SESSION);
+          } else {
+            sessionStorage.setItem(STORAGE_KEY_SESSION_SESSION, sessionJson);
+            localStorage.removeItem(STORAGE_KEY_SESSION_LOCAL);
+          }
+        }
+        return { success: true, defaultRoute: realRes.defaultRoute };
+      }
+
+      // 2. Fallback to mock auth if real login failed due to offline/mock mode
       const res = await mockAuthService.authenticate(identifier);
 
       if (res.success && res.data) {
         const newSession = res.data;
         setSession(newSession);
-        setPreviewRoleState(null); // Reset preview on new login
+        setPreviewRoleState(null);
 
-        // Save session according to Remember Me setting
         if (typeof window !== 'undefined') {
           const sessionJson = JSON.stringify(newSession);
           if (rememberMe) {
@@ -93,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         return {
           success: false,
-          error: res.error?.message || 'Invalid credentials.',
+          error: realRes.error || res.error?.message || 'Invalid credentials.',
         };
       }
     },
@@ -101,6 +122,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const logout = useCallback(() => {
+    if (session?.refreshToken) {
+      authService.logout(session.refreshToken, session.accessToken).catch(() => {});
+    }
     setSession(null);
     setPreviewRoleState(null);
 
@@ -108,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem(STORAGE_KEY_SESSION_LOCAL);
       sessionStorage.removeItem(STORAGE_KEY_SESSION_SESSION);
     }
-  }, []);
+  }, [session]);
 
   const hasRole = useCallback(
     (roles: UserRole | UserRole[]): boolean => {

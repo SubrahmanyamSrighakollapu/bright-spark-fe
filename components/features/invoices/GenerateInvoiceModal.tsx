@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { InvoiceType, EntityType } from '@/types/domain';
+import { InvoiceType, EntityType, ServiceCode } from '@/types/domain';
 import { calculateInvoiceBreakdown } from '@/utils/taxCalculations';
 import { formatCurrency } from '@/utils/formatters';
 import { FilePlus, Calculator } from 'lucide-react';
@@ -24,7 +24,8 @@ export interface GenerateInvoiceModalProps {
     tdsApplicable: boolean,
     tdsRate: number,
     billingPeriod: string,
-    description: string
+    description: string,
+    serviceCode?: ServiceCode
   ) => Promise<void>;
 }
 
@@ -33,6 +34,7 @@ export const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
   onClose,
   onGenerate,
 }) => {
+  const [serviceCode, setServiceCode] = useState<ServiceCode>('DEFAULT');
   const [entityId, setEntityId] = useState('ent_mch_01');
   const [entityName, setEntityName] = useState('Apex Pay Solutions');
   const [entityCode, setEntityCode] = useState('QSP-MCH-001');
@@ -43,7 +45,7 @@ export const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
   const [tdsApplicable, setTdsApplicable] = useState(true);
   const [tdsRate, setTdsRate] = useState('10');
   const [billingPeriod, setBillingPeriod] = useState('September 2026');
-  const [description, setDescription] = useState('Platform processing fee billing');
+  const [description, setDescription] = useState('Platform service fee billing');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const parsedTaxable = parseFloat(taxableAmount) || 0;
@@ -93,16 +95,32 @@ export const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
       tdsApplicable,
       parsedTdsRate,
       billingPeriod,
-      description
+      description,
+      serviceCode
     );
     setIsSubmitting(false);
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Generate Platform Invoice" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Generate Service Invoice" size="lg">
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Select
+            label="Platform Service"
+            value={serviceCode}
+            onChange={(e) => setServiceCode(e.target.value as ServiceCode)}
+            options={[
+              { value: 'DEFAULT', label: 'Qin Star Pay Platform Default (SAC 998311)' },
+              { value: 'PAY_IN', label: 'Pay-In Collection Service (SAC 998311)' },
+              { value: 'PAY_OUT', label: 'Pay-Out Disbursal Service (SAC 998312)' },
+              { value: 'AEPS', label: 'AEPS & MicroATM Service (SAC 998313)' },
+              { value: 'BBPS', label: 'BBPS Utility Bills Service (SAC 998314)' },
+              { value: 'DMT', label: 'DMT Domestic Money Transfer (SAC 998315)' },
+              { value: 'RECHARGE', label: 'Mobile & DTH Recharge (SAC 998316)' },
+            ]}
+          />
+
           <Select
             label="Billed Entity"
             value={entityId}
@@ -181,7 +199,7 @@ export const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
 
         <Input
           label="Line Item Description"
-          placeholder="State platform processing fee details..."
+          placeholder="State platform service fee details..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required

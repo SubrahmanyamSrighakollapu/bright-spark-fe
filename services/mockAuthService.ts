@@ -15,6 +15,8 @@ export interface AuthSession {
   approvalStatus?: RetailerApprovalStatus;
   accountStatus?: AccountStatus;
   permissions: string[];
+  accessToken?: string;
+  refreshToken?: string;
   loggedInAt: string;
 }
 

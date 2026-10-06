@@ -417,6 +417,54 @@ export type NoteStatus = 'DRAFT' | 'ISSUED' | 'APPLIED' | 'CANCELLED';
 export type TaxMode = 'INTRA_STATE' | 'INTER_STATE';
 export type TdsStatus = 'PENDING' | 'DEDUCTED' | 'DEPOSITED' | 'CERTIFICATE_AVAILABLE';
 
+export type ServiceCode =
+  | 'PAY_IN'
+  | 'PAY_OUT'
+  | 'AEPS'
+  | 'BBPS'
+  | 'DMT'
+  | 'RECHARGE'
+  | 'DEFAULT';
+
+export type InvoiceTemplateStyle =
+  | 'STANDARD_TAX'
+  | 'ITEMIZED_SERVICE'
+  | 'PAYOUT_DISBURSAL'
+  | 'BANKING_CORRESPONDENT'
+  | 'UTILITY_BILL_RECEIPT'
+  | 'REMITTANCE_COMMISSION'
+  | 'COMPACT_RECEIPT';
+
+export interface ServiceInvoiceConfig {
+  id: string;
+  serviceCode: ServiceCode;
+  serviceName: string;
+  templateStyle: InvoiceTemplateStyle;
+  templateName: string;
+  businessName: string;
+  legalName: string;
+  gstin: string;
+  pan: string;
+  sacCode: string;
+  email: string;
+  mobile: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  beneficiaryName: string;
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+  branchName: string;
+  primaryColor: string;
+  logoUrl?: string;
+  termsAndConditions: string;
+  footerDeclaration: string;
+  isActive: boolean;
+  updatedAt: string;
+}
+
 export interface InvoiceLineItem {
   id: string;
   description: string;
@@ -452,6 +500,8 @@ export interface Invoice {
   entityName: string;
   entityCode: string;
   entityType: EntityType;
+  serviceCode?: ServiceCode;
+  serviceConfig?: ServiceInvoiceConfig;
   gstin?: string;
   billingAddress?: string;
   invoiceType: InvoiceType;

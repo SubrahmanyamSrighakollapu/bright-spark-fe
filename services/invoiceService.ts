@@ -7,9 +7,12 @@ import {
   TaxRecord,
   TdsRecord,
   PaginationState,
+  ServiceCode,
+  ServiceInvoiceConfig,
 } from '@/types/domain';
 import { ApiResponse } from '@/types/common';
 import { mockInvoices, mockCreditDebitNotes, mockTaxRecords, mockTdsRecords } from '@/mocks/mockInvoice';
+import { MOCK_SERVICE_INVOICE_CONFIGS } from '@/mocks/mockServiceInvoices';
 import { calculateInvoiceBreakdown, InvoiceCalculationInput } from '@/utils/taxCalculations';
 import { apiClient } from './apiClient';
 import { APP_CONFIG } from '@/config';
@@ -18,6 +21,7 @@ const inMemoryInvoices: Invoice[] = [...mockInvoices];
 const inMemoryNotes: CreditDebitNote[] = [...mockCreditDebitNotes];
 const inMemoryTax: TaxRecord[] = [...mockTaxRecords];
 const inMemoryTds: TdsRecord[] = [...mockTdsRecords];
+const inMemoryServiceConfigs: ServiceInvoiceConfig[] = [...MOCK_SERVICE_INVOICE_CONFIGS];
 
 export interface InvoiceListResult {
   items: Invoice[];
@@ -144,7 +148,7 @@ export const invoiceService = {
   },
 
   /**
-   * Generate a new invoice with calculated financial breakdown.
+   * Generate a new invoice with calculated financial breakdown & service configuration.
    */
   async generateInvoice(
     entityId: string,
@@ -155,13 +159,15 @@ export const invoiceService = {
     calcInput: InvoiceCalculationInput,
     billingPeriod = 'September 2026',
     description = 'Platform service fee billing',
-    createdBy = 'Qin Star Billing Admin'
+    createdBy = 'Qin Star Billing Admin',
+    serviceCode: ServiceCode = 'DEFAULT'
   ): Promise<ApiResponse<Invoice>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 350));
 
       const breakdown = calculateInvoiceBreakdown(calcInput);
       const newId = `INV_20260903_${String(inMemoryInvoices.length + 1).padStart(3, '0')}`;
+      const svcConfig = inMemoryServiceConfigs.find((s) => s.serviceCode === serviceCode) || inMemoryServiceConfigs[0];
 
       const newInvoice: Invoice = {
         id: newId,
@@ -169,8 +175,10 @@ export const invoiceService = {
         entityName,
         entityCode,
         entityType,
-        gstin: '36ABCDE1234F1Z5',
-        billingAddress: 'Commercial Billing Address',
+        serviceCode,
+        serviceConfig: svcConfig,
+        gstin: svcConfig?.gstin || '36ABCDE1234F1Z5',
+        billingAddress: svcConfig ? `${svcConfig.address}, ${svcConfig.city}, ${svcConfig.state} ${svcConfig.pincode}` : 'Commercial Billing Address',
         invoiceType,
         billingPeriod,
         lineItems: [
@@ -211,7 +219,7 @@ export const invoiceService = {
             timestamp: new Date().toISOString(),
             event: 'Invoice Generated & Issued',
             actor: createdBy,
-            description: `Invoice ${newId} generated for ${entityName}. Taxable: ₹${breakdown.taxableAmount}, Net: ₹${breakdown.netReceivable}`,
+            description: `Invoice ${newId} generated for ${entityName} for service ${svcConfig?.serviceName || serviceCode}. Taxable: ₹${breakdown.taxableAmount}, Net: ₹${breakdown.netReceivable}`,
             status: 'COMPLETED',
           },
         ],
@@ -243,6 +251,7 @@ export const invoiceService = {
     return apiClient.post<ApiResponse<Invoice>>('/invoices', {
       entityId,
       invoiceType,
+      serviceCode,
       ...calcInput,
     });
   },
@@ -402,5 +411,75 @@ export const invoiceService = {
       return { success: true, data: inMemoryTds, timestamp: new Date().toISOString() };
     }
     return apiClient.get('/invoices/tds');
+  },
+
+  /**
+   * Fetch Service Invoice Configurations.
+   */
+  async getServiceConfigs(): Promise<ApiResponse<ServiceInvoiceConfig[]>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 150));
+      return { success: true, data: [...inMemoryServiceConfigs], timestamp: new Date().toISOString() };
+    }
+    return apiClient.get('/invoices/service-configs');
+  },
+
+  /**
+   * Fetch Service Invoice Configuration by Service Code.
+   */
+  async getServiceConfigByCode(serviceCode: ServiceCode): Promise<ApiResponse<ServiceInvoiceConfig>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 100));
+      const config = inMemoryServiceConfigs.find((s) => s.serviceCode === serviceCode) || inMemoryServiceConfigs[0]!;
+      return { success: true, data: config, timestamp: new Date().toISOString() };
+    }
+    return apiClient.get(`/invoices/service-configs/${serviceCode}`);
+  },
+
+  /**
+   * Save or Update Service Invoice Configuration.
+   */
+  async saveServiceConfig(config: Partial<ServiceInvoiceConfig> & { serviceCode: ServiceCode }): Promise<ApiResponse<ServiceInvoiceConfig>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 250));
+      const idx = inMemoryServiceConfigs.findIndex((s) => s.serviceCode === config.serviceCode);
+      let updated: ServiceInvoiceConfig;
+      if (idx >= 0) {
+        updated = { ...inMemoryServiceConfigs[idx]!, ...config, updatedAt: new Date().toISOString() };
+        inMemoryServiceConfigs[idx] = updated;
+      } else {
+        updated = {
+          id: `SIC_${Date.now()}`,
+          serviceCode: config.serviceCode,
+          serviceName: config.serviceName || config.serviceCode,
+          templateStyle: config.templateStyle || 'STANDARD_TAX',
+          templateName: config.templateName || 'Standard Layout',
+          businessName: config.businessName || 'Qin Star Pay',
+          legalName: config.legalName || 'Qin Star Pay Pvt Ltd',
+          gstin: config.gstin || '36QSPAY9981P1Z0',
+          pan: config.pan || 'QSPAY9981P',
+          sacCode: config.sacCode || '998311',
+          email: config.email || 'billing@qinstarpay.com',
+          mobile: config.mobile || '+91 9876543210',
+          address: config.address || 'Hitec City',
+          city: config.city || 'Hyderabad',
+          state: config.state || 'Telangana',
+          pincode: config.pincode || '500081',
+          beneficiaryName: config.beneficiaryName || 'Qin Star Pay',
+          bankName: config.bankName || 'State Bank of India',
+          accountNumber: config.accountNumber || '38291029384',
+          ifscCode: config.ifscCode || 'SBIN0009981',
+          branchName: config.branchName || 'Main Branch',
+          primaryColor: config.primaryColor || '#0f172a',
+          termsAndConditions: config.termsAndConditions || 'Standard payment terms apply.',
+          footerDeclaration: config.footerDeclaration || 'Authorized tax document.',
+          isActive: config.isActive ?? true,
+          updatedAt: new Date().toISOString(),
+        };
+        inMemoryServiceConfigs.push(updated);
+      }
+      return { success: true, data: updated, timestamp: new Date().toISOString() };
+    }
+    return apiClient.post('/invoices/service-configs', config);
   },
 };

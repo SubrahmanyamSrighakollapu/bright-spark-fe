@@ -109,6 +109,7 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
     roles: ['SUPER_ADMIN', 'ACCOUNTS'],
     children: [
       { id: 'invoices-list', label: 'Invoices', path: '/admin/invoices' },
+      { id: 'service-templates', label: 'Service Templates', path: '/admin/invoices/service-templates' },
       { id: 'notes', label: 'Credit / Debit Notes', path: '/admin/invoices/notes' },
       { id: 'tax-summary', label: 'GST & Tax Summary', path: '/admin/invoices/tax-summary' },
       { id: 'tds', label: 'TDS Management', path: '/admin/invoices/tds' },
