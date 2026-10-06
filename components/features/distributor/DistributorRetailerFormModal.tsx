@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Retailer, KYCStatus, RetailerPlan } from '@/types/domain';
 import { CreateRetailerInput, UpdateRetailerInput } from '@/services/retailerService';
 import { retailerPlanService } from '@/services/retailerPlanService';
-import { Modal, Button, Input, Select, FormField } from '@/components/ui';
+import { Modal, Button, Input, Select, FormField, MobileInput } from '@/components/ui';
 import { User, ShieldCheck, Tag, Info, AlertTriangle } from 'lucide-react';
 
 interface DistributorRetailerFormModalProps {
@@ -239,12 +239,12 @@ export const DistributorRetailerFormModal: React.FC<DistributorRetailerFormModal
               error={errors.email}
             />
 
-            <Input
+            <MobileInput
               label="Mobile Number *"
               value={formData.mobile}
-              onChange={(e) => handleChange('mobile', e.target.value)}
-              placeholder="9876543210"
+              onChange={(e: any) => handleChange('mobile', typeof e === 'string' ? e : e?.target?.value || '')}
               error={errors.mobile}
+              required
             />
           </div>
         </div>

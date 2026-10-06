@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Distributor, AccountStatus, KYCStatus } from '@/types/domain';
 import { CreateDistributorInput, UpdateDistributorInput } from '@/services/distributorService';
-import { Modal, Button, Input, Select, FormField } from '@/components/ui';
+import { Modal, Button, Input, Select, FormField, MobileInput } from '@/components/ui';
 import { User, Building2, Mail, Phone, MapPin, ShieldCheck, Tag } from 'lucide-react';
 
 interface DistributorFormModalProps {
@@ -180,12 +180,12 @@ export const DistributorFormModal: React.FC<DistributorFormModalProps> = ({
               error={errors.email}
             />
 
-            <Input
+            <MobileInput
               label="Mobile Number *"
               value={formData.mobile}
-              onChange={(e) => handleChange('mobile', e.target.value)}
-              placeholder="9876543210"
+              onChange={(e: any) => handleChange('mobile', typeof e === 'string' ? e : e?.target?.value || '')}
               error={errors.mobile}
+              required
             />
           </div>
         </div>

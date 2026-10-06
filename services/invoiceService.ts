@@ -346,7 +346,7 @@ export const invoiceService = {
         noteId: `CDN_20260903_${String(inMemoryNotes.length + 1).padStart(3, '0')}`,
         invoiceId,
         entityId: inv?.entityId || 'ent_mch_01',
-        entityName: inv?.entityName || 'Merchant',
+        entityName: inv?.entityName || 'Retailer',
         entityCode: inv?.entityCode || 'QSP-MCH',
         entityType: inv?.entityType || 'MERCHANT',
         noteType,

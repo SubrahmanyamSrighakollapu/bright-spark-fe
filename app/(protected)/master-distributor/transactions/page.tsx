@@ -179,7 +179,7 @@ function MasterDistributorTransactionsContent() {
               leftIcon={<Download className="w-4 h-4" />}
               disabled={transactions.length === 0}
             >
-              Export CSV
+              Export
             </Button>
           }
         />

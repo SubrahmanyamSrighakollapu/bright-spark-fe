@@ -12,6 +12,7 @@ import { LedgerEntry, LedgerFilters } from '@/types/domain';
 import { formatCurrency, formatDateTime } from '@/utils/formatters';
 import { LedgerDetailsDrawer } from '@/components/features/wallet/LedgerDetailsDrawer';
 import { Pagination } from '@/components/ui/Pagination';
+import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
 
 // Financial Foundation Components
 import { FinancialPageHeader } from '@/components/features/financial/FinancialPageHeader';
@@ -52,6 +53,7 @@ export default function RetailerLedgerPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [directionFilter, setDirectionFilter] = useState<'ALL' | 'CREDIT' | 'DEBIT'>('ALL');
   const [movementFilter, setMovementFilter] = useState('ALL');
+  const [dateRange, setDateRange] = useState<any>({ preset: '7d' });
 
   // Detail Drawer State
   const [selectedLedger, setSelectedLedger] = useState<LedgerEntry | null>(null);
@@ -137,7 +139,7 @@ export default function RetailerLedgerPage() {
               leftIcon={<Download className="w-4 h-4" />}
               disabled={entries.length === 0}
             >
-              Export CSV
+              Export
             </Button>
           }
         />
@@ -239,6 +241,16 @@ export default function RetailerLedgerPage() {
                 <option value="REVERSAL">REVERSAL</option>
                 <option value="SETTLEMENT">SETTLEMENT</option>
               </select>
+
+              {/* Date Filter */}
+              <DateRangeDropdown
+                value={dateRange}
+                onChange={(val) => {
+                  setDateRange(val);
+                  setPage(1);
+                }}
+                size="sm"
+              />
             </div>
 
             <div className="flex items-center gap-2">

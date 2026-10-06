@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { AppShell } from '@/components/layout';
 import { useAuth } from '@/context/AuthContext';
 import { AccessDeniedView } from '@/components/features/auth/AccessDeniedView';
+import { isRouteAuthorizedForRole } from '@/config/roles';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { session, isAuthenticated, isLoading } = useAuth();
@@ -35,26 +36,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   }
 
   // Cross-Role Route Authorization Check
-  let isAuthorized = true;
-
-  if (pathname) {
-    if (pathname.startsWith('/admin') || pathname.startsWith('/administration')) {
-      const allowedAdminRoles = ['ADMIN', 'SUPER_ADMIN', 'OPERATIONS', 'ACCOUNTS', 'KYC', 'SUPPORT', 'SALES'];
-      if (!allowedAdminRoles.includes(session?.role || '')) {
-        isAuthorized = false;
-      }
-    } else if (pathname.startsWith('/master-distributor')) {
-      const allowedMDRoles = ['ADMIN', 'SUPER_ADMIN', 'MASTER_DISTRIBUTOR'];
-      if (!allowedMDRoles.includes(session?.role || '')) {
-        isAuthorized = false;
-      }
-    } else if (pathname.startsWith('/distributor')) {
-      const allowedDistRoles = ['ADMIN', 'SUPER_ADMIN', 'MASTER_DISTRIBUTOR', 'DISTRIBUTOR'];
-      if (!allowedDistRoles.includes(session?.role || '')) {
-        isAuthorized = false;
-      }
-    }
-  }
+  const isAuthorized = session ? isRouteAuthorizedForRole(session.role, pathname || '') : false;
 
   return (
     <AppShell>

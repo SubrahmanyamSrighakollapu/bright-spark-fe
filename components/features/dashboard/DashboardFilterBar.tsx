@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import { FilterBar } from '@/components/ui/FilterBar';
 import { Select } from '@/components/ui/Select';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { RotateCcw, Filter } from 'lucide-react';
 import { DashboardFilters, TransactionTypeFilter, StatusFilter } from '@/types/dashboard';
+import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
 
 export interface DashboardFilterBarProps {
   onApplyFilters: (filters: DashboardFilters) => void;
@@ -70,10 +70,10 @@ export const DashboardFilterBar: React.FC<DashboardFilterBarProps> = ({
       />
 
       <Select
-        label="Merchant"
+        label="Retailer"
         value={filters.merchantId || ''}
         onChange={(e) => setFilters((prev) => ({ ...prev, merchantId: e.target.value }))}
-        placeholder="All Merchants"
+        placeholder="All Retailers"
         options={[
           { value: 'mch_01', label: 'Apex Pay Solutions' },
           { value: 'mch_02', label: 'Zenith Retail' },
@@ -93,12 +93,21 @@ export const DashboardFilterBar: React.FC<DashboardFilterBarProps> = ({
         ]}
       />
 
-      <Input
-        label="Date Range"
-        type="date"
-        value={filters.dateRange || ''}
-        onChange={(e) => setFilters((prev) => ({ ...prev, dateRange: e.target.value }))}
-      />
+      <div className="space-y-1 sm:col-span-1">
+        <label className="block text-xs font-semibold text-slate-700">Date Range Filter</label>
+        <DateRangeDropdown
+          value={filters.dateRange ? 'custom' : 'today'}
+          onChange={(val) =>
+            setFilters((prev) => ({
+              ...prev,
+              dateRange: val.startDate ? `${val.startDate}_to_${val.endDate || ''}` : val.preset,
+            }))
+          }
+          align="left"
+          size="md"
+          className="w-44 max-w-full"
+        />
+      </div>
 
       {/* Action Buttons Side-by-Side */}
       <div className="flex items-end gap-2">

@@ -95,24 +95,33 @@ class ApprovalService {
   }
 
   getApprovalItems(
-    statusTab: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING',
+    statusTab: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'BLOCKED' = 'ALL',
     typeFilter: 'ALL' | 'DISTRIBUTOR' | 'RETAILER' = 'ALL'
   ): PendingApprovalItem[] {
-    const targetStatus: ApprovalStatus =
-      statusTab === 'PENDING'
-        ? 'PENDING_APPROVAL'
-        : statusTab === 'APPROVED'
-        ? 'APPROVED'
-        : 'REJECTED';
-
     const items: PendingApprovalItem[] = [];
 
     // Process Distributors
     if (typeFilter === 'ALL' || typeFilter === 'DISTRIBUTOR') {
       const distributors = hierarchyService.getAllDistributors();
-      distributors
-        .filter((d) => (d.approvalStatus || 'APPROVED') === targetStatus)
-        .forEach((d) => {
+      distributors.forEach((d) => {
+        const approvalStat = d.approvalStatus || 'APPROVED';
+        const kycStat = d.kycStatus || 'APPROVED';
+        const accountStat = d.status || 'ACTIVE';
+
+        let matchesStatus = false;
+        if (statusTab === 'ALL') {
+          matchesStatus = true;
+        } else if (statusTab === 'PENDING') {
+          matchesStatus = approvalStat === 'PENDING_APPROVAL' || kycStat === 'PROCESSING' || kycStat === 'PENDING' || kycStat === 'UNDER_REVIEW';
+        } else if (statusTab === 'APPROVED') {
+          matchesStatus = approvalStat === 'APPROVED' && kycStat === 'APPROVED' && accountStat !== 'SUSPENDED';
+        } else if (statusTab === 'REJECTED') {
+          matchesStatus = approvalStat === 'REJECTED' || kycStat === 'REJECTED';
+        } else if (statusTab === 'BLOCKED') {
+          matchesStatus = kycStat === 'BLOCKED' || accountStat === 'SUSPENDED';
+        }
+
+        if (matchesStatus) {
           const parentMD = hierarchyService.getMasterDistributorById(d.masterDistributorId);
           items.push({
             id: d.id,
@@ -122,9 +131,9 @@ class ApprovalService {
             businessName: d.businessName,
             email: d.email,
             mobile: d.mobile,
-            kycStatus: d.kycStatus || 'APPROVED',
-            approvalStatus: d.approvalStatus || 'APPROVED',
-            accountStatus: d.status,
+            kycStatus: kycStat,
+            approvalStatus: approvalStat,
+            accountStatus: accountStat,
             parentMasterDistributorName: parentMD?.name || 'Apex National Network',
             parentMasterDistributorCode: parentMD?.code || 'MD001',
             createdByUserId: d.createdByUserId || 'usr_md_01',
@@ -133,15 +142,32 @@ class ApprovalService {
             createdAt: d.createdAt,
             rawEntity: d,
           });
-        });
+        }
+      });
     }
 
     // Process Retailers
     if (typeFilter === 'ALL' || typeFilter === 'RETAILER') {
       const retailers = hierarchyService.getAllRetailers();
-      retailers
-        .filter((r) => r.approvalStatus === targetStatus)
-        .forEach((r) => {
+      retailers.forEach((r) => {
+        const approvalStat = r.approvalStatus || 'APPROVED';
+        const kycStat = r.kycStatus || 'APPROVED';
+        const accountStat = r.accountStatus || 'ACTIVE';
+
+        let matchesStatus = false;
+        if (statusTab === 'ALL') {
+          matchesStatus = true;
+        } else if (statusTab === 'PENDING') {
+          matchesStatus = approvalStat === 'PENDING_APPROVAL' || kycStat === 'PROCESSING' || kycStat === 'PENDING' || kycStat === 'UNDER_REVIEW';
+        } else if (statusTab === 'APPROVED') {
+          matchesStatus = approvalStat === 'APPROVED' && kycStat === 'APPROVED' && accountStat !== 'SUSPENDED';
+        } else if (statusTab === 'REJECTED') {
+          matchesStatus = approvalStat === 'REJECTED' || kycStat === 'REJECTED';
+        } else if (statusTab === 'BLOCKED') {
+          matchesStatus = kycStat === 'BLOCKED' || accountStat === 'SUSPENDED';
+        }
+
+        if (matchesStatus) {
           const parentMD = hierarchyService.getMasterDistributorById(r.masterDistributorId);
           const parentDst = hierarchyService.getDistributorById(r.distributorId);
           items.push({
@@ -152,9 +178,9 @@ class ApprovalService {
             businessName: r.businessName,
             email: r.email,
             mobile: r.mobile,
-            kycStatus: r.kycStatus,
-            approvalStatus: r.approvalStatus,
-            accountStatus: r.accountStatus,
+            kycStatus: kycStat,
+            approvalStatus: approvalStat,
+            accountStatus: accountStat,
             parentMasterDistributorName: parentMD?.name || 'Apex National Network',
             parentMasterDistributorCode: parentMD?.code || 'MD001',
             parentDistributorName: parentDst?.name || 'North Zone Distributor',
@@ -166,7 +192,8 @@ class ApprovalService {
             planId: r.planId,
             rawEntity: r,
           });
-        });
+        }
+      });
     }
 
     // Sort by created date descending
@@ -319,6 +346,54 @@ class ApprovalService {
       data: updated,
       timestamp: new Date().toISOString(),
     };
+  }
+  async blockEntity(
+    entityId: string,
+    entityType: 'DISTRIBUTOR' | 'RETAILER',
+    reason: string = 'Security Compliance Hold',
+    adminUserId: string = 'usr_admin_01'
+  ): Promise<ApiResponse<any>> {
+    if (entityType === 'DISTRIBUTOR') {
+      const updated = hierarchyService.updateDistributorRecord(entityId, {
+        kycStatus: 'BLOCKED',
+        status: 'SUSPENDED',
+        rejectionReason: reason,
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: !!updated, data: updated, timestamp: new Date().toISOString() };
+    } else {
+      const updated = hierarchyService.updateRetailerRecord(entityId, {
+        kycStatus: 'BLOCKED',
+        accountStatus: 'SUSPENDED',
+        rejectionReason: reason,
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: !!updated, data: updated, timestamp: new Date().toISOString() };
+    }
+  }
+
+  async unblockEntity(
+    entityId: string,
+    entityType: 'DISTRIBUTOR' | 'RETAILER',
+    adminUserId: string = 'usr_admin_01'
+  ): Promise<ApiResponse<any>> {
+    if (entityType === 'DISTRIBUTOR') {
+      const updated = hierarchyService.updateDistributorRecord(entityId, {
+        kycStatus: 'APPROVED',
+        status: 'ACTIVE',
+        approvalStatus: 'APPROVED',
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: !!updated, data: updated, timestamp: new Date().toISOString() };
+    } else {
+      const updated = hierarchyService.updateRetailerRecord(entityId, {
+        kycStatus: 'APPROVED',
+        accountStatus: 'ACTIVE',
+        approvalStatus: 'APPROVED',
+        updatedAt: new Date().toISOString(),
+      });
+      return { success: !!updated, data: updated, timestamp: new Date().toISOString() };
+    }
   }
 }
 

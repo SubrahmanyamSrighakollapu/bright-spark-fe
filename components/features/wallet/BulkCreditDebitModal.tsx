@@ -28,7 +28,7 @@ export const BulkCreditDebitModal: React.FC<BulkCreditDebitModalProps> = ({
       operationType: 'CREDIT',
       amount: 25000,
       reference: 'BULK_COMM_001',
-      reason: 'Batch merchant bonus',
+      reason: 'Batch retailer bonus',
       isValid: true,
     },
     {

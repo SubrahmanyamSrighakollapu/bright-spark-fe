@@ -40,6 +40,7 @@ export const PayOutReceipt: React.FC<PayOutReceiptProps> = ({
     const text = `
 === QIN STAR PAY - PAY-OUT DISBURSEMENT RECEIPT ===
 Txn ID: ${transaction.transactionRef}
+Disbursement Reference: ${transaction.orderId}
 Date: ${formatDateTime(transaction.createdAt)}
 Status: ${transaction.status}
 Retailer: ${retailerName} (${retailerCode})
@@ -160,6 +161,10 @@ ${transaction.utr ? `UTR / Ref: ${transaction.utr}` : ''}
           <div className="flex justify-between py-1 border-b border-slate-200">
             <span className="text-slate-500">Transaction ID:</span>
             <span className="font-bold text-indigo-600">{transaction.transactionRef}</span>
+          </div>
+          <div className="flex justify-between py-1 border-b border-slate-200">
+            <span className="text-slate-500">Disbursement Reference:</span>
+            <span className="font-bold text-[#0F4C81]">{transaction.orderId}</span>
           </div>
           {transaction.utr && (
             <div className="flex justify-between py-1 border-b border-slate-200">

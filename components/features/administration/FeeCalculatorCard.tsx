@@ -86,7 +86,7 @@ export const FeeCalculatorCard: React.FC<FeeCalculatorCardProps> = ({ feeRules }
           </div>
 
           <div className="flex justify-between pt-2 text-base font-sans font-extrabold bg-slate-800/80 p-2 rounded">
-            <span className="text-emerald-400">Net Merchant Settlement:</span>
+            <span className="text-emerald-400">Net Retailer Settlement:</span>
             <span className="text-emerald-300">{formatCurrency(preview.netSettlement)}</span>
           </div>
         </div>

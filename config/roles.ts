@@ -48,12 +48,12 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   MASTER_DISTRIBUTOR: 'Master Distributor',
   DISTRIBUTOR: 'Distributor',
   RETAILER: 'Retailer',
-  SALES: 'Sales Executive',
-  KYC: 'KYC Analyst',
-  ACCOUNTS: 'Accounts Manager',
-  OPERATIONS: 'Operations Lead',
+  SALES: 'Sales Lead',
+  KYC: 'KYC & Onboarding Approval',
+  ACCOUNTS: 'Accountant',
+  OPERATIONS: 'Operations (Support Tickets)',
   SUPPORT: 'Support Executive',
-  MERCHANT: 'Merchant',
+  MERCHANT: 'Retailer',
 };
 
 export interface UserContext {
@@ -62,7 +62,23 @@ export interface UserContext {
   email: string;
   role: UserRole;
   permissions: string[];
+  entityId?: string;
+  mappedParentRole?: string;
 }
+
+export const ROLE_MAPPED_PARENTS: Record<UserRole, string> = {
+  ADMIN: 'Qin Star Pay Admin',
+  SUPER_ADMIN: 'Qin Star Pay Platform',
+  MASTER_DISTRIBUTOR: 'Master Distributor Network',
+  DISTRIBUTOR: 'Distributor Network',
+  RETAILER: 'Retailer Operations',
+  SALES: 'Sales & Business Development',
+  KYC: 'KYC & Onboarding Desk',
+  ACCOUNTS: 'Operations & Finance Control',
+  OPERATIONS: 'Operations & Finance Control',
+  SUPPORT: 'Support & Operations Desk',
+  MERCHANT: 'Retailer Network',
+};
 
 export const MOCK_CURRENT_USER: UserContext = {
   id: 'usr_admin_01',
@@ -70,6 +86,7 @@ export const MOCK_CURRENT_USER: UserContext = {
   email: 'admin@qinstarpay.com',
   role: 'SUPER_ADMIN',
   permissions: ['*'],
+  mappedParentRole: 'Qin Star Pay Admin',
 };
 
 /**
@@ -106,3 +123,88 @@ export function canAccessRoute(
   return true;
 }
 
+/**
+ * Evaluates whether a route pathname is authorized for a given user role.
+ */
+export function isRouteAuthorizedForRole(role: UserRole | string, pathname: string): boolean {
+  if (!pathname || pathname === '/' || pathname === '/login') return true;
+
+  // 1. Super Admin & Admin have platform-wide access
+  if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
+    return true;
+  }
+
+  // Universal account-level routes
+  if (pathname === '/dashboard' || pathname.startsWith('/profile') || pathname.startsWith('/notifications')) {
+    return true;
+  }
+
+  // 2. KYC & Onboarding Approval
+  if (role === 'KYC') {
+    return (
+      pathname.startsWith('/kyc') ||
+      pathname.startsWith('/admin/kyc') ||
+      pathname.startsWith('/admin/users/merchants') ||
+      pathname.startsWith('/admin/notifications')
+    );
+  }
+
+  // 3. Sales Lead
+  if (role === 'SALES') {
+    return (
+      pathname.startsWith('/sales') ||
+      pathname.startsWith('/admin/sales') ||
+      pathname.startsWith('/admin/network/approvals') ||
+      pathname.startsWith('/admin/users/distributors') ||
+      pathname.startsWith('/admin/users/retailers') ||
+      pathname.startsWith('/admin/users/merchants') ||
+      pathname.startsWith('/admin/users/mapping') ||
+      pathname.startsWith('/admin/reports/transactions') ||
+      pathname.startsWith('/admin/reports/balance') ||
+      pathname.startsWith('/admin/notifications')
+    );
+  }
+
+  // 4. Accountant (Finance & Settlements)
+  if (role === 'ACCOUNTS') {
+    return (
+      pathname.startsWith('/accounts') ||
+      pathname.startsWith('/admin/accounts') ||
+      pathname.startsWith('/admin/wallet') ||
+      pathname.startsWith('/admin/settlements') ||
+      pathname.startsWith('/admin/invoices') ||
+      pathname.startsWith('/admin/reports') ||
+      pathname.startsWith('/admin/notifications')
+    );
+  }
+
+  // 5. Operations & Support Executive
+  if (role === 'OPERATIONS' || role === 'SUPPORT') {
+    return (
+      pathname.startsWith('/operations') ||
+      pathname.startsWith('/admin/operations') ||
+      pathname.startsWith('/admin/transactions') ||
+      pathname.startsWith('/admin/chargebacks') ||
+      pathname.startsWith('/admin/integrations') ||
+      pathname.startsWith('/admin/logs') ||
+      pathname.startsWith('/admin/notifications')
+    );
+  }
+
+  // 6. Master Distributor
+  if (role === 'MASTER_DISTRIBUTOR') {
+    return pathname.startsWith('/master-distributor');
+  }
+
+  // 7. Distributor
+  if (role === 'DISTRIBUTOR') {
+    return pathname.startsWith('/distributor');
+  }
+
+  // 8. Retailer
+  if (role === 'RETAILER') {
+    return pathname.startsWith('/retailer');
+  }
+
+  return false;
+}

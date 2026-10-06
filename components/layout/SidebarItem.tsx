@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { NavigationItem } from '@/config/navigation';
 import { IconRenderer } from './IconRenderer';
@@ -20,6 +20,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   onNavigate,
 }) => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const hasChildren = !!(item.children && item.children.length > 0);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -30,18 +31,46 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   const isChildActive = useCallback(
     (child: NavigationItem) => {
       if (!child.path) return false;
-      const cleanPath = child.path.split('?')[0];
-      if (cleanPath === '/invoices') {
-        return pathname === '/invoices' || pathname === '/invoices/list';
+      const [cleanPath, childQuery = ''] = child.path.split('?');
+      const requiredParams = new URLSearchParams(childQuery);
+      const queryMatches = Array.from(requiredParams.entries()).every(
+        ([key, value]) => searchParams.get(key) === value
+      );
+
+      if (pathname === cleanPath) {
+        if (childQuery) return queryMatches;
+
+        const matchingQuerySibling = item.children?.some((sibling) => {
+          if (!sibling.path || sibling.id === child.id) return false;
+          const [siblingPath, siblingQuery = ''] = sibling.path.split('?');
+          if (siblingPath !== cleanPath || !siblingQuery) return false;
+          return Array.from(new URLSearchParams(siblingQuery).entries()).every(
+            ([key, value]) => searchParams.get(key) === value
+          );
+        });
+        return !matchingQuerySibling;
       }
-      return pathname === cleanPath || (cleanPath !== '/dashboard' && pathname.startsWith(`${cleanPath}/`));
+
+      if (cleanPath !== '/dashboard' && pathname.startsWith(`${cleanPath}/`)) {
+        const hasMoreSpecificSiblingMatch = item.children?.some((sibling) => {
+          if (!sibling.path || sibling.id === child.id) return false;
+          const siblingCleanPath = sibling.path.split('?')[0];
+          return (
+            siblingCleanPath.length > cleanPath.length &&
+            (pathname === siblingCleanPath || pathname.startsWith(`${siblingCleanPath}/`))
+          );
+        });
+        return !hasMoreSpecificSiblingMatch;
+      }
+
+      return false;
     },
-    [pathname]
+    [pathname, searchParams, item.children]
   );
 
   const isParentActive = !!(hasChildren && item.children?.some(isChildActive));
   const isDirectActive = item.path
-    ? pathname === item.path.split('?')[0] || (item.path !== '/dashboard' && pathname.startsWith(`${item.path.split('?')[0]}/`))
+    ? pathname === item.path.split('?')[0]
     : false;
   const isActive = isDirectActive || isParentActive;
 

@@ -15,7 +15,7 @@ import { CreditDebitFormModal } from '@/components/features/wallet/CreditDebitFo
 import { Layers, Download } from 'lucide-react';
 
 export default function AvailableBalancesPage() {
-  const [activeTab, setActiveTab] = useState<'MASTER' | 'DISTRIBUTOR' | 'RETAILER' | 'MERCHANT'>('MASTER');
+  const [activeTab, setActiveTab] = useState<'MASTER' | 'DISTRIBUTOR' | 'RETAILER'>('MASTER');
   const [data, setData] = useState<WalletListResult | null>(null);
   const [filters, setFilters] = useState<WalletFilters>({ entityType: 'MASTER' });
   const [pagination, setPagination] = useState<PaginationState>({
@@ -65,7 +65,7 @@ export default function AvailableBalancesPage() {
     };
   }, [activeTab, filters, pagination.page, pagination.pageSize]);
 
-  const handleTabChange = (tab: 'MASTER' | 'DISTRIBUTOR' | 'RETAILER' | 'MERCHANT') => {
+  const handleTabChange = (tab: 'MASTER' | 'DISTRIBUTOR' | 'RETAILER') => {
     setActiveTab(tab);
     setFilters({ entityType: tab });
     setPagination((prev) => ({ ...prev, page: 1 }));
@@ -109,7 +109,7 @@ export default function AvailableBalancesPage() {
   return (
     <PageContainer
       title="Available Balances"
-      description="Monitor available, ledger, hold, and pending settlement balances across Master, Distributors, Retailers, and Merchants."
+      description="Monitor available, ledger, hold, and pending settlement balances across Master Distributors, Distributors, and Retailers."
       actions={
         <Button
           variant="outline"
@@ -117,7 +117,7 @@ export default function AvailableBalancesPage() {
           onClick={handleExportCSV}
           leftIcon={<Download className="w-4 h-4" />}
         >
-          Export CSV
+          Export
         </Button>
       }
       className="space-y-6"
@@ -132,7 +132,6 @@ export default function AvailableBalancesPage() {
             { id: 'MASTER', label: 'Master Treasury' },
             { id: 'DISTRIBUTOR', label: 'Distributors' },
             { id: 'RETAILER', label: 'Retailers' },
-            { id: 'MERCHANT', label: 'Merchants' },
           ] as const
         ).map((tab) => (
           <button
@@ -151,7 +150,7 @@ export default function AvailableBalancesPage() {
         ))}
       </div>
 
-      {/* 3. Filter Bar (Show distributor filter for Retailers & Merchants) */}
+      {/* 3. Filter Bar (Show distributor filter for retailer records) */}
       {activeTab !== 'MASTER' && (
         <WalletFilterBar
           onApplyFilters={(f) => {
@@ -164,7 +163,7 @@ export default function AvailableBalancesPage() {
             setFilters({ entityType: activeTab });
             setPagination((prev) => ({ ...prev, page: 1 }));
           }}
-          showDistributorFilter={activeTab === 'RETAILER' || activeTab === 'MERCHANT'}
+          showDistributorFilter={activeTab === 'RETAILER'}
           isLoading={isLoading}
         />
       )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { dashboardService } from '@/services/dashboardService';
 import { hierarchyService } from '@/services/hierarchyService';
@@ -8,33 +8,59 @@ import { approvalService, PendingApprovalItem } from '@/services/approvalService
 import { FullDashboardData, DashboardFilters } from '@/types/dashboard';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
-
-import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
-import { DashboardFilterBar } from '@/components/features/dashboard/DashboardFilterBar';
-import { DashboardKPIGrid } from '@/components/features/dashboard/DashboardKPIGrid';
-import { DashboardCharts } from '@/components/features/dashboard/DashboardCharts';
-import { RecentTransactionsTable } from '@/components/features/dashboard/RecentTransactionsTable';
-import { ProviderHealthCard } from '@/components/features/dashboard/ProviderHealthCard';
-import { BalanceOverviewCard } from '@/components/features/dashboard/BalanceOverviewCard';
-import { QuickActionsCard } from '@/components/features/dashboard/QuickActionsCard';
-import { OperationalAlertsCard } from '@/components/features/dashboard/OperationalAlertsCard';
-import { NetworkHierarchyScaleCard } from '@/components/features/dashboard/NetworkHierarchyScaleCard';
-import { AdminApprovalQueueCard } from '@/components/features/dashboard/AdminApprovalQueueCard';
-import { PlatformActivityTimelineCard } from '@/components/features/dashboard/PlatformActivityTimelineCard';
-import { ApprovalDetailDrawer, RejectionReasonModal } from '@/components/features/admin/network';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
 
+import { AdminHeroGreetingCard } from '@/components/features/dashboard/AdminHeroGreetingCard';
+import { DashboardFilterDrawer } from '@/components/features/dashboard/DashboardFilterDrawer';
+import { PayInDashboardView } from '@/components/features/dashboard/PayInDashboardView';
+import { PayOutDashboardView } from '@/components/features/dashboard/PayOutDashboardView';
+import { NetworkKYCDashboardView } from '@/components/features/dashboard/NetworkKYCDashboardView';
+import { AddMemberModal, MemberType } from '@/components/features/users/AddMemberModal';
+import { ApprovalDetailDrawer, RejectionReasonModal } from '@/components/features/admin/network';
+
+import KYCDashboardPage from '@/app/(protected)/kyc/dashboard/page';
+import SalesDashboardPage from '@/app/(protected)/sales/dashboard/page';
+import AccountsDashboardPage from '@/app/(protected)/accounts/dashboard/page';
+import OperationsDashboardPage from '@/app/(protected)/operations/dashboard/page';
+
+import { ArrowDownLeft, ArrowUpRight, Store } from 'lucide-react';
+
 export default function AdminDashboardPage() {
   const { session } = useAuth();
+
+  if (session?.role === 'KYC') {
+    return <KYCDashboardPage />;
+  }
+  if (session?.role === 'SALES') {
+    return <SalesDashboardPage />;
+  }
+  if (session?.role === 'ACCOUNTS') {
+    return <AccountsDashboardPage />;
+  }
+  if (session?.role === 'OPERATIONS' || session?.role === 'SUPPORT') {
+    return <OperationsDashboardPage />;
+  }
+
+  return <AdminDashboardContent />;
+}
+
+function AdminDashboardContent() {
+  const { session } = useAuth();
   const { toastSuccess, toastError } = useToast();
+
+  // Dashboard View Tab State: PAY_IN | PAY_OUT | NETWORK_KYC
+  const [activeTab, setActiveTab] = useState<'PAY_IN' | 'PAY_OUT' | 'NETWORK_KYC'>('PAY_IN');
 
   const [data, setData] = useState<FullDashboardData | null>(null);
   const [filters, setFilters] = useState<DashboardFilters>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Real Network counts
+  // Filter Drawer Offcanvas State (Requirement 3)
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState<boolean>(false);
+
+  // Network Hierarchy counts
   const [mdCount, setMdCount] = useState<number>(0);
   const [distributorCount, setDistributorCount] = useState<number>(0);
   const [retailerCount, setRetailerCount] = useState<number>(0);
@@ -43,7 +69,11 @@ export default function AdminDashboardPage() {
   // Approval Workload
   const [approvalItems, setApprovalItems] = useState<PendingApprovalItem[]>([]);
 
-  // Approval Drawer & Rejection Modal State
+  // Add Member Modal State
+  const [addMemberModalOpen, setAddMemberModalOpen] = useState<boolean>(false);
+  const [addMemberType, setAddMemberType] = useState<MemberType>('RETAILER');
+
+  // Approval Detail Drawer & Rejection Modal State
   const [detailItem, setDetailItem] = useState<PendingApprovalItem | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState<boolean>(false);
   const [rejectingItem, setRejectingItem] = useState<PendingApprovalItem | null>(null);
@@ -68,7 +98,8 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    loadNetworkAndApprovalData();
+    const timeoutId = window.setTimeout(loadNetworkAndApprovalData, 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -112,6 +143,16 @@ export default function AdminDashboardPage() {
     setIsLoading(true);
     loadNetworkAndApprovalData();
     setFilters((prev) => ({ ...prev }));
+  };
+
+  // Add Member Modal Handler
+  const handleOpenAddMember = (role: MemberType) => {
+    setAddMemberType(role);
+    setAddMemberModalOpen(true);
+  };
+
+  const handleMemberAddedSuccess = () => {
+    loadNetworkAndApprovalData();
   };
 
   // Approval Drawer Action Handlers
@@ -178,27 +219,21 @@ export default function AdminDashboardPage() {
   };
 
   const pendingApprovalsCount = approvalItems.filter((i) => i.approvalStatus === 'PENDING_APPROVAL').length;
-  const suspendedCount = 0; // Derived from actual suspended accounts if any
+  const activeFilterCount = Object.values(filters).filter((val) => val && val !== 'ALL' && val !== '').length;
 
   return (
     <PageContainer fullWidth className="space-y-6 pb-12">
-      {/* 1. Platform Command Header */}
-      <DashboardHeader
-        title="Operations Command Center"
-        subtitle="Platform Governance, Financial Operations & Multi-Tenant Network Control"
-        lastRefreshedAt={data?.lastRefreshedAt || new Date().toISOString()}
+      {/* 1. Theme Executive Dashboard Header */}
+      <AdminHeroGreetingCard
+        adminName={session?.name || 'Admin'}
+        lastLoginAt={session?.loggedInAt}
         onRefresh={handleRefresh}
         isLoading={isLoading}
-        networkCount={mdCount + distributorCount + retailerCount}
         pendingApprovalsCount={pendingApprovalsCount}
-        todayTxnCount={data?.metrics.totalTransactions || 0}
-      />
-
-      {/* 2. Filter Bar Container */}
-      <DashboardFilterBar
-        onApplyFilters={handleApplyFilters}
-        onResetFilters={handleResetFilters}
-        isLoading={isLoading}
+        activeFilterCount={activeFilterCount}
+        onOpenAddMember={handleOpenAddMember}
+        onOpenFilterDrawer={() => setFilterDrawerOpen(true)}
+        onSelectTab={(tab) => setActiveTab(tab)}
       />
 
       {/* Error State Fallback */}
@@ -209,7 +244,6 @@ export default function AdminDashboardPage() {
           onRetry={handleRefresh}
         />
       ) : !isLoading && data && data.metrics.totalTransactions === 0 ? (
-        /* Empty State Fallback */
         <EmptyState
           title="No Transactions Found"
           description="There are no transaction records matching your selected filter criteria."
@@ -217,80 +251,149 @@ export default function AdminDashboardPage() {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-semibold rounded-md hover:bg-[var(--primary-hover)] transition-colors"
+              className="px-4 py-2 bg-[#155EEF] text-white text-xs font-semibold rounded-lg hover:bg-[#1149B8] transition-colors cursor-pointer"
             >
               Reset All Filters
             </button>
           }
         />
       ) : (
-        /* Operational Dashboard Content */
+        /* 2. Primary Analytical Workspace with Enterprise Segmented Switcher */
         <div className="space-y-6">
-          {/* 3. Platform Network Hierarchy Scale Visual */}
-          <NetworkHierarchyScaleCard
-            mdCount={mdCount}
-            distributorCount={distributorCount}
-            retailerCount={retailerCount}
-            activeRetailersCount={activeRetailersCount}
-            pendingApprovalsCount={pendingApprovalsCount}
-            suspendedCount={suspendedCount}
-          />
+          {/* Segmented Navigation Control */}
+          <div className="bg-white p-1.5 rounded-xl border border-[#E5EAF1] shadow-xs flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 p-1 bg-[#F8FAFC] rounded-lg border border-[#E5EAF1] w-full sm:w-auto">
+              {/* Pay-In Tab */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('PAY_IN')}
+                className={`px-3.5 py-2 rounded-md font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'PAY_IN'
+                    ? 'bg-[#155EEF] text-white shadow-xs'
+                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60'
+                }`}
+              >
+                <ArrowDownLeft className={`w-3.5 h-3.5 ${activeTab === 'PAY_IN' ? 'text-white' : 'text-[#155EEF]'}`} />
+                <span>Pay-In</span>
+                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                  activeTab === 'PAY_IN' ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-[#475569]'
+                }`}>
+                  Collection
+                </span>
+              </button>
 
-          {/* 4. Financial KPI Metric Cards (8 KPIs) */}
-          {data ? (
-            <DashboardKPIGrid metrics={data.metrics} isLoading={isLoading} />
-          ) : null}
+              {/* Pay-Out Tab */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('PAY_OUT')}
+                className={`px-3.5 py-2 rounded-md font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'PAY_OUT'
+                    ? 'bg-[#155EEF] text-white shadow-xs'
+                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60'
+                }`}
+              >
+                <ArrowUpRight className={`w-3.5 h-3.5 ${activeTab === 'PAY_OUT' ? 'text-white' : 'text-[#155EEF]'}`} />
+                <span>Pay-Out</span>
+                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                  activeTab === 'PAY_OUT' ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-[#475569]'
+                }`}>
+                  Settlements
+                </span>
+              </button>
 
-          {/* 5. Approval Workload Queue & Provider Health Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <AdminApprovalQueueCard
-                items={approvalItems}
-                onReviewItem={handleReviewItem}
-              />
+              {/* Retailers, Dist & KYCs Tab */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('NETWORK_KYC')}
+                className={`px-3.5 py-2 rounded-md font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === 'NETWORK_KYC'
+                    ? 'bg-[#155EEF] text-white shadow-xs'
+                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60'
+                }`}
+              >
+                <Store className={`w-3.5 h-3.5 ${activeTab === 'NETWORK_KYC' ? 'text-white' : 'text-[#155EEF]'}`} />
+                <span>Network & KYC</span>
+                {pendingApprovalsCount > 0 && (
+                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono font-bold ${
+                    activeTab === 'NETWORK_KYC' ? 'bg-amber-400 text-amber-950' : 'bg-amber-100 text-amber-900'
+                  }`}>
+                    {pendingApprovalsCount} pending
+                  </span>
+                )}
+              </button>
             </div>
-            <div>
-              {data && <ProviderHealthCard providers={data.providerHealth} />}
+
+            <div className="text-xs text-[#64748B] font-medium px-3 hidden md:block">
+              {activeTab === 'PAY_IN' && 'Retailer acquiring collection streams & gateway SLAs'}
+              {activeTab === 'PAY_OUT' && 'Settlement disbursements, nodal escrow & bank channels'}
+              {activeTab === 'NETWORK_KYC' && 'Retailer, Distributor hierarchy & onboarding verifications'}
             </div>
           </div>
 
-          {/* 6. Analytics Charts Section (5 Charts: Trend, Channels, Status, PayIn vs PayOut) */}
-          {data ? (
-            <DashboardCharts
-              statusDistribution={data.statusDistribution}
-              payInVsPayOut={data.payInVsPayOut}
+          {/* Render Active View Tab Content */}
+          {activeTab === 'PAY_IN' && data && (
+            <PayInDashboardView
+              metrics={data.metrics}
+              trendData={data.trendData}
               channelStats={data.channelStats}
               providerStats={data.providerStats}
-              trendData={data.trendData}
               isLoading={isLoading}
             />
-          ) : null}
+          )}
 
-          {/* 7. Financial Operations Snapshot & Quick Shortcuts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data && <BalanceOverviewCard balance={data.balanceOverview} />}
-            <QuickActionsCard />
-            {data && <OperationalAlertsCard alerts={data.alerts} />}
-          </div>
+          {activeTab === 'PAY_OUT' && data && (
+            <PayOutDashboardView
+              metrics={data.metrics}
+              trendData={data.trendData}
+              balanceOverview={data.balanceOverview}
+              isLoading={isLoading}
+            />
+          )}
 
-          {/* 8. Recent Platform Transactions Table */}
-          <RecentTransactionsTable isLoading={isLoading} />
-
-          {/* 9. Platform Activity & Governance Audit Stream */}
-          <PlatformActivityTimelineCard />
+          {activeTab === 'NETWORK_KYC' && (
+            <NetworkKYCDashboardView
+              mdCount={mdCount}
+              distributorCount={distributorCount}
+              retailerCount={retailerCount}
+              activeRetailersCount={activeRetailersCount}
+              pendingApprovalsCount={pendingApprovalsCount}
+              approvalItems={approvalItems}
+              onReviewItem={handleReviewItem}
+              onRefreshData={handleRefresh}
+              isLoading={isLoading}
+            />
+          )}
         </div>
       )}
 
-      {/* Approval Detail Drawer */}
+      {/* Offcanvas Operational Filter Drawer (Requirement 3) */}
+      <DashboardFilterDrawer
+        isOpen={filterDrawerOpen}
+        onClose={() => setFilterDrawerOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        onResetFilters={handleResetFilters}
+        isLoading={isLoading}
+      />
+
+      {/* Global Add Member Modal Dialog */}
+      <AddMemberModal
+        isOpen={addMemberModalOpen}
+        onClose={() => setAddMemberModalOpen(false)}
+        defaultType={addMemberType}
+        onSuccess={handleMemberAddedSuccess}
+      />
+
+      {/* Global KYC Approval Detail Drawer */}
       <ApprovalDetailDrawer
         item={detailItem}
         isOpen={detailDrawerOpen}
         onClose={() => setDetailDrawerOpen(false)}
         onApprove={handleApprove}
         onReject={handlePromptReject}
+        onRefresh={handleRefresh}
       />
 
-      {/* Rejection Reason Modal */}
+      {/* Global Rejection Reason Modal */}
       {rejectingItem && (
         <RejectionReasonModal
           isOpen={rejectionModalOpen}
@@ -304,4 +407,3 @@ export default function AdminDashboardPage() {
     </PageContainer>
   );
 }
-

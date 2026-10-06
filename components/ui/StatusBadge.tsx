@@ -1,4 +1,7 @@
+"use client";
+
 import React from 'react';
+import { Tag } from 'primereact/tag';
 import { STATUS_META, StatusMeta } from '@/constants/statuses';
 import { cn } from '@/utils/cn';
 
@@ -44,7 +47,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   const displayLabel = customLabel || meta.label;
 
   return (
-    <span
+    <Tag
+      rounded
       className={cn(
         'inline-flex items-center font-semibold rounded-full border border-solid select-none tracking-tight',
         size === 'sm' ? 'px-2 py-0.5 text-[11px] gap-1' : 'px-2.5 py-0.5 text-xs gap-1.5',
@@ -62,6 +66,6 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
         />
       )}
       <span>{displayLabel}</span>
-    </span>
+    </Tag>
   );
 };

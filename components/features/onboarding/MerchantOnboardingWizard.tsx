@@ -1,12 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Button } from '@/components/ui/Button';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { MerchantOnboardingInput } from '@/types/domain';
+import { Card, Input, Select, Button, StatusBadge, MobileInput } from '@/components/ui';
+import { KYCDocument, MerchantOnboardingInput } from '@/types/domain';
 import { onboardingService } from '@/services/onboardingService';
 import { CheckCircle2, ArrowRight, ArrowLeft, ShieldCheck, Building2, User, MapPin, FileCheck, Landmark } from 'lucide-react';
 import Link from 'next/link';
@@ -39,9 +35,14 @@ export const MerchantOnboardingWizard: React.FC = () => {
   const [accountMismatchError, setAccountMismatchError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedAppId, setSubmittedAppId] = useState<string | null>(null);
+  const [documentError, setDocumentError] = useState('');
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
+    if (step === 4 && (!formData.documents || formData.documents.length < 3)) {
+      setDocumentError('Upload PAN, business proof and cancelled cheque before continuing.');
+      return;
+    }
     if (step === 5) {
       if (formData.accountNumber !== confirmAccount) {
         setAccountMismatchError(true);
@@ -50,6 +51,24 @@ export const MerchantOnboardingWizard: React.FC = () => {
       setAccountMismatchError(false);
     }
     setStep((prev) => Math.min(prev + 1, 6));
+  };
+
+  const handleDocumentUpload = (type: KYCDocument['type'], file?: File) => {
+    if (!file) return;
+    const document: KYCDocument = {
+      id: `doc_${type.toLowerCase()}_${file.lastModified}_${file.size}`,
+      type,
+      title: file.name,
+      documentNumberMasked: type === 'PAN' ? formData.panNumber : 'Submitted for verification',
+      fileUrl: URL.createObjectURL(file),
+      uploadedAt: new Date().toISOString(),
+      status: 'PENDING',
+    };
+    setFormData((prev) => ({
+      ...prev,
+      documents: [...(prev.documents || []).filter((item) => item.type !== type), document],
+    }));
+    setDocumentError('');
   };
 
   const handleBack = () => {
@@ -77,7 +96,7 @@ export const MerchantOnboardingWizard: React.FC = () => {
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs">
-              <span className="font-bold text-emerald-950 text-sm block">Merchant Onboarding Application Created</span>
+              <span className="font-bold text-emerald-950 text-sm block">Retailer Onboarding Application Created</span>
               <p className="text-emerald-800">
                 Application reference <strong>{submittedAppId}</strong> for <strong>{formData.businessName}</strong> has been submitted.
               </p>
@@ -156,7 +175,7 @@ export const MerchantOnboardingWizard: React.FC = () => {
 
       <Card
         title={`Step ${step} of 6: ${stepsList[step - 1].title}`}
-        subtitle="Complete the merchant onboarding requirements"
+        subtitle="Complete the retailer onboarding requirements"
       >
         <form onSubmit={handleNext} className="space-y-4 text-xs">
           {/* Step 1: Business Information */}
@@ -227,29 +246,31 @@ export const MerchantOnboardingWizard: React.FC = () => {
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input
+                <MobileInput
                   label="Mobile Number *"
-                  placeholder="10-digit mobile number"
                   value={formData.mobile}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, mobile: e.target.value }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setFormData((prev) => ({ ...prev, mobile: e.target.value }));
+                  }}
                   required
                 />
 
                 <Input
                   label="Email Address *"
                   type="email"
-                  placeholder="merchant@example.com"
+                  placeholder="retailer@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                   required
                 />
               </div>
 
-              <Input
+              <MobileInput
                 label="Alternate Contact Mobile (Optional)"
-                placeholder="10-digit mobile"
                 value={formData.altMobile || ''}
-                onChange={(e) => setFormData((prev) => ({ ...prev, altMobile: e.target.value }))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setFormData((prev) => ({ ...prev, altMobile: e.target.value }));
+                }}
               />
             </div>
           )}
@@ -304,34 +325,33 @@ export const MerchantOnboardingWizard: React.FC = () => {
           {step === 4 && (
             <div className="space-y-4">
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900">
-                Mock Document Upload Step: Document slots are pre-filled with demo copies for review.
+                Upload clear PDF, JPG or PNG copies. These documents will be available to the KYC reviewer before approval.
               </div>
 
-              <div className="space-y-3">
-                <div className="p-3 border border-slate-200 rounded-lg flex justify-between items-center bg-slate-50">
-                  <div>
-                    <span className="font-bold block">1. Business PAN Card</span>
-                    <span className="text-slate-500 font-mono">{formData.panNumber || 'ABCDE1234F'}</span>
-                  </div>
-                  <StatusBadge status="APPROVED" size="sm" />
-                </div>
-
-                <div className="p-3 border border-slate-200 rounded-lg flex justify-between items-center bg-slate-50">
-                  <div>
-                    <span className="font-bold block">2. Certificate of Incorporation / Business Proof</span>
-                    <span className="text-slate-500 font-mono">REG_DOC_9912.pdf</span>
-                  </div>
-                  <StatusBadge status="PENDING" size="sm" />
-                </div>
-
-                <div className="p-3 border border-slate-200 rounded-lg flex justify-between items-center bg-slate-50">
-                  <div>
-                    <span className="font-bold block">3. Bank Cancelled Cheque</span>
-                    <span className="text-slate-500 font-mono">CHEQUE_PROOF.jpg</span>
-                  </div>
-                  <StatusBadge status="PENDING" size="sm" />
-                </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {[
+                  ['PAN', 'Business PAN Card *'],
+                  ['BUSINESS_PROOF', 'Incorporation / Business Proof *'],
+                  ['CANCELLED_CHEQUE', 'Cancelled Cheque / Passbook *'],
+                  ['GST_CERTIFICATE', 'GST Certificate'],
+                ].map(([type, label]) => {
+                  const uploaded = formData.documents?.find((item) => item.type === type);
+                  return (
+                    <label key={type} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
+                      <span className="mb-2 block font-bold text-slate-800">{label}</span>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,application/pdf"
+                        required={type !== 'GST_CERTIFICATE'}
+                        onChange={(e) => handleDocumentUpload(type as KYCDocument['type'], e.target.files?.[0])}
+                        className="block w-full text-[11px] file:mr-2 file:rounded-md file:border-0 file:bg-blue-100 file:px-2 file:py-1 file:font-bold file:text-blue-700"
+                      />
+                      {uploaded && <span className="mt-2 block truncate font-medium text-emerald-700">Uploaded: {uploaded.title}</span>}
+                    </label>
+                  );
+                })}
               </div>
+              {documentError && <p className="text-xs font-semibold text-rose-600">{documentError}</p>}
             </div>
           )}
 

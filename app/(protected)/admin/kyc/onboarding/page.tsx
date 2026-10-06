@@ -93,18 +93,18 @@ export default function MerchantOnboardingListPage() {
 
   return (
     <PageContainer
-      title="Merchant Onboarding Applications"
-      description="Track and manage merchant onboarding requests and KYC submission status."
+      title="Retailer Onboarding Applications"
+      description="Track and manage retailer onboarding requests and KYC submission status."
       actions={
         <Link href="/admin/kyc/onboarding/new">
           <Button variant="primary" size="sm" leftIcon={<UserPlus className="w-4 h-4" />}>
-            New Merchant Onboarding
+            New Retailer Onboarding
           </Button>
         </Link>
       }
       className="space-y-6"
     >
-      <Card title="Onboarding Queue" subtitle="Submitted merchant applications">
+      <Card title="Onboarding Queue" subtitle="Submitted retailer applications">
         <div className="space-y-4">
           <div className="overflow-x-auto border border-[var(--border)] rounded-[var(--radius-xl)] bg-white shadow-xs">
             <Table

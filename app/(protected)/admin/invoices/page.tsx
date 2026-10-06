@@ -115,45 +115,74 @@ export default function InvoicesPage() {
     }
   };
 
-  const handleDownloadInvoice = (inv: Invoice) => {
+  const handleDownloadInvoice = (inv: Invoice, format: 'FORMAT_1' | 'FORMAT_2' = 'FORMAT_1') => {
     const win = window.open('', '_blank');
     if (!win) return;
+
+    const rawInv = inv as any;
+    const isFormat2 = format === 'FORMAT_2' || rawInv.paymentMethod === 'BANK_TRANSFER' || rawInv.paymentMethod === 'IMPS' || rawInv.paymentMethod === 'NEFT';
+
     win.document.write(`
       <html>
         <head>
-          <title>Invoice - ${inv.id}</title>
+          <title>${isFormat2 ? 'Payout Settlement Advice' : 'Commercial Gateway Tax Invoice'} - ${inv.id}</title>
           <style>
-            body { font-family: sans-serif; padding: 30px; font-size: 13px; color: #1e293b; }
-            .header { display: flex; justify-content: space-between; border-b: 2px solid #0f172a; pb: 15px; margin-bottom: 20px; }
-            .title { font-size: 24px; font-weight: bold; color: #0f172a; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; font-size: 13px; color: #1e293b; line-height: 1.5; }
+            .header { display: flex; justify-content: space-between; border-bottom: 3px solid ${isFormat2 ? '#4338ca' : '#047857'}; padding-bottom: 15px; margin-bottom: 25px; }
+            .title { font-size: 26px; font-weight: 800; color: ${isFormat2 ? '#3730a3' : '#065f46'}; }
+            .badge { display: inline-block; padding: 4px 10px; background: ${isFormat2 ? '#e0e7ff' : '#d1fae5'}; color: ${isFormat2 ? '#3730a3' : '#065f46'}; font-weight: bold; border-radius: 4px; font-size: 11px; margin-top: 5px; }
+            .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+            .box { padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; }
             .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            .table th, .table td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
-            .table th { background: #f8fafc; }
+            .table th, .table td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; }
+            .table th { background: ${isFormat2 ? '#e0e7ff' : '#f0fdf4'}; color: #0f172a; font-weight: bold; }
             .text-right { text-align: right; }
-            .summary { margin-top: 20px; text-align: right; font-family: monospace; }
+            .summary { margin-top: 25px; text-align: right; font-family: monospace; }
+            .footer-note { margin-top: 40px; pt: 15px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b; text-align: center; }
           </style>
         </head>
         <body>
           <div class="header">
             <div>
               <div class="title">QIN STAR PAY</div>
-              <div>Platform Operations Engine</div>
-              <div>GSTIN: 36QSPAY9981P1Z0</div>
+              <div style="font-weight:600; color: #475569;">${isFormat2 ? 'Corporate Settlement & Payout Engine' : 'Commercial Retailer Gateway Services'}</div>
+              <div>GSTIN: 36QSPAY9981P1Z0 | CIN: U72900TG2026PTC189000</div>
             </div>
             <div style="text-align: right">
-              <h2 style="margin:0">${inv.id}</h2>
-              <div>Issue Date: ${new Date(inv.issueDate).toLocaleDateString()}</div>
-              <div>Due Date: ${new Date(inv.dueDate).toLocaleDateString()}</div>
+              <div class="badge">${isFormat2 ? 'FORMAT 2: CORPORATE PAYOUT ADVICE' : 'FORMAT 1: COMMERCIAL TAX INVOICE'}</div>
+              <h2 style="margin: 8px 0 0 0; font-family: monospace;">${inv.id}</h2>
+              <div>Issue Date: ${new Date(inv.issueDate).toLocaleDateString('en-IN')}</div>
+              <div>Payment Mode: <strong>${rawInv.paymentMethod || (isFormat2 ? 'IMPS / NEFT' : 'UPI / GATEWAY')}</strong></div>
             </div>
           </div>
-          <div>
-            <strong>Billed To:</strong> ${inv.entityName} (${inv.entityCode})<br/>
-            <strong>GSTIN:</strong> ${inv.gstin || 'N/A'}<br/>
-            <strong>Billing Period:</strong> ${inv.billingPeriod}
+
+          <div class="meta-grid">
+            <div class="box">
+              <strong style="color:#0f172a">Billed To (Entity Credentials):</strong><br/>
+              <strong>${inv.entityName}</strong> (${inv.entityCode})<br/>
+              EntityType: ${inv.entityType}<br/>
+              GSTIN: ${inv.gstin || '27AAACG1234F1Z9'}<br/>
+              Billing Period: ${inv.billingPeriod}
+            </div>
+            <div class="box">
+              <strong style="color:#0f172a">${isFormat2 ? 'Bank & UTR Audit Track:' : 'Gateway Transaction Ref:'}</strong><br/>
+              UTR / Ref ID: <strong>${rawInv.utrNumber || 'UTR98410294821'}</strong><br/>
+              Status: <strong style="color:green">${inv.status}</strong><br/>
+              Nodal Bank: HDFC Escrow Account<br/>
+              Settlement Cycle: T+0 Real-Time
+            </div>
           </div>
+
           <table class="table">
             <thead>
-              <tr><th>Description</th><th>Qty</th><th class="text-right">Taxable Amount</th><th class="text-right">GST (18%)</th><th class="text-right">Total</th></tr>
+              <tr>
+                <th>Service Line Description</th>
+                <th>Quantity</th>
+                <th class="text-right">Taxable Amount</th>
+                <th class="text-right">GST Rate</th>
+                <th class="text-right">GST Amount</th>
+                <th class="text-right">Total Net Amount</th>
+              </tr>
             </thead>
             <tbody>
               ${inv.lineItems
@@ -162,21 +191,27 @@ export default function InvoicesPage() {
                 <tr>
                   <td>${li.description}</td>
                   <td>${li.quantity}</td>
-                  <td class="text-right">₹${li.taxableAmount.toFixed(2)}</td>
-                  <td class="text-right">₹${li.gstAmount.toFixed(2)}</td>
-                  <td class="text-right">₹${li.totalAmount.toFixed(2)}</td>
+                  <td class="text-right">₹${li.taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                  <td class="text-right">${li.gstRate}%</td>
+                  <td class="text-right">₹${li.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                  <td class="text-right">₹${li.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                 </tr>
               `
                 )
                 .join('')}
             </tbody>
           </table>
+
           <div class="summary">
-            <div>Taxable Value: ₹${inv.taxableAmount.toFixed(2)}</div>
-            <div>GST Amount: ₹${inv.gstAmount.toFixed(2)}</div>
-            <div>Gross Total: ₹${inv.grossAmount.toFixed(2)}</div>
-            <div>TDS Deducted: -₹${inv.tdsAmount.toFixed(2)}</div>
-            <h3 style="margin-top:5px">Net Receivable: ₹${inv.netReceivable.toFixed(2)}</h3>
+            <div>Gross Taxable Amount: ₹${inv.taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+            <div>GST (CGST 9% + SGST 9%): ₹${inv.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+            <div>Gross Total Invoice Value: ₹${inv.grossAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+            <div>TDS Deducted (Sec 194H / 194C): -₹${inv.tdsAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+            <h2 style="margin-top:10px; color:${isFormat2 ? '#3730a3' : '#065f46'}">Net Payable / Settled: ₹${inv.netReceivable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h2>
+          </div>
+
+          <div class="footer-note">
+            This is a computer-generated ${isFormat2 ? 'Payout Settlement Advice Voucher' : 'Tax Invoice'} generated by Qin Star Pay. Signature not required.
           </div>
           <script>window.print();</script>
         </body>

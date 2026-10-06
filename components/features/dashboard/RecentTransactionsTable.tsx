@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Eye, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Table } from '@/components/ui/Table';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
 import { Drawer } from '@/components/ui/Drawer';
 import { MaskedValue } from '@/components/ui/MaskedValue';
@@ -17,21 +16,67 @@ import { useModal } from '@/hooks/useModal';
 
 export interface RecentTransactionsTableProps {
   isLoading?: boolean;
+  transactionType: 'PAY_IN' | 'PAY_OUT';
 }
 
 export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
   isLoading = false,
+  transactionType,
 }) => {
   const detailDrawer = useModal<Transaction>();
+  const transactions = mockTransactions
+    .filter((transaction) => transaction.type === transactionType)
+    .slice(0, 6);
+  const isPayIn = transactionType === 'PAY_IN';
+  const listPath = isPayIn ? '/admin/transactions/payin' : '/admin/transactions/payout';
+  const transactionLabel = isPayIn ? 'Pay-In' : 'Pay-Out';
+
+  const renderStatusDot = (status: string) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'SUCCESS' || s === 'COMPLETED' || s === 'SETTLED') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          Success
+        </span>
+      );
+    }
+    if (s === 'PROCESSING' || s === 'IN_PROGRESS') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+          Processing
+        </span>
+      );
+    }
+    if (s === 'PENDING' || s === 'INITIATED') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          Pending
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-700">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+        {status}
+      </span>
+    );
+  };
 
   const columns: ColumnDefinition<Transaction>[] = [
     {
       key: 'transactionRef',
       header: 'Transaction ID',
       render: (row) => (
-        <span className="font-mono font-bold text-[var(--primary)] text-xs">
+        <button
+          type="button"
+          onClick={() => detailDrawer.open(row)}
+          className="font-mono font-semibold text-[#155EEF] hover:underline text-xs cursor-pointer text-left"
+        >
           {row.transactionRef}
-        </span>
+        </button>
       ),
     },
     {
@@ -40,12 +85,12 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
       align: 'center',
       render: (row) => (
         <span
-          className={`px-2 py-0.5 rounded-sm text-[11px] font-bold ${
+          className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
             row.type === 'PAY_IN'
-              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+              ? 'bg-blue-50 text-[#155EEF] border border-blue-100'
               : row.type === 'PAY_OUT'
-              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-              : 'bg-purple-50 text-purple-700 border border-purple-200'
+              ? 'bg-slate-100 text-[#334155] border border-slate-200'
+              : 'bg-indigo-50 text-indigo-700 border border-indigo-100'
           }`}
         >
           {row.type}
@@ -54,11 +99,11 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
     },
     {
       key: 'merchantName',
-      header: 'Merchant / Retailer',
+      header: 'Retailer',
       render: (row) => (
         <div>
-          <div className="font-semibold text-xs text-[var(--text-primary)]">{row.merchantName}</div>
-          <div className="text-[11px] text-[var(--text-muted)]">{row.distributorName || 'Direct'}</div>
+          <div className="font-semibold text-xs text-[#0F172A]">{row.merchantName}</div>
+          <div className="text-[11px] text-[#64748B]">{row.distributorName || 'Direct Retailer'}</div>
         </div>
       ),
     },
@@ -67,7 +112,7 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
       header: 'Amount',
       align: 'right',
       render: (row) => (
-        <span className="font-bold text-[var(--text-primary)] tabular-nums">
+        <span className="font-mono font-bold text-[#0F172A] tabular-nums">
           {formatCurrency(row.amount)}
         </span>
       ),
@@ -76,7 +121,7 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
       key: 'provider',
       header: 'Provider',
       render: (row) => (
-        <span className="text-xs text-slate-700 font-medium whitespace-nowrap">
+        <span className="text-xs text-[#334155] font-medium whitespace-nowrap">
           {row.provider || 'Provider A'}
         </span>
       ),
@@ -85,13 +130,13 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
       key: 'status',
       header: 'Status',
       align: 'center',
-      render: (row) => <StatusBadge status={row.status} size="sm" />,
+      render: (row) => renderStatusDot(row.status),
     },
     {
       key: 'createdAt',
       header: 'Date & Time',
       render: (row) => (
-        <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
+        <span className="text-xs text-[#64748B] whitespace-nowrap font-mono">
           {formatDateTime(row.createdAt)}
         </span>
       ),
@@ -101,13 +146,17 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
   return (
     <>
       <Card
-        title="Recent Transactions"
-        subtitle="Latest live operations across Pay-In & Pay-Out switches"
+        title={`Recent ${transactionLabel} Transactions`}
+        subtitle={
+          isPayIn
+            ? 'Latest collection transactions received through Pay-In channels'
+            : 'Latest disbursement transactions submitted through Pay-Out channels'
+        }
         noPadding
         action={
-          <Link href="/transactions/all">
+          <Link href={listPath}>
             <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-              View All
+              View All {transactionLabel}
             </Button>
           </Link>
         }
@@ -115,24 +164,23 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
         <div className="overflow-x-auto">
           <Table
             columns={columns}
-            data={mockTransactions}
+            data={transactions}
             keyExtractor={(row) => row.id}
             isLoading={isLoading}
             renderActions={(row) => (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => detailDrawer.open(row)}
-                leftIcon={<Eye className="w-3.5 h-3.5" />}
+              <Link
+                href={`/admin/transactions/${row.id}`}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#334155] hover:text-[#0F172A] bg-white hover:bg-[#F8FAFC] border border-[#E5EAF1] rounded-md transition-colors cursor-pointer"
               >
-                View
-              </Button>
+                <Eye className="w-3.5 h-3.5 text-[#64748B]" />
+                <span>View</span>
+              </Link>
             )}
           />
         </div>
       </Card>
 
-      {/* Transaction Quick Detail Drawer (Placeholder Preview) */}
+      {/* Transaction Quick Detail Drawer */}
       <Drawer
         isOpen={detailDrawer.isOpen}
         onClose={detailDrawer.close}
@@ -140,9 +188,9 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
         description="Operational audit details and raw logs"
         footer={
           <div className="flex items-center justify-between w-full">
-            <Link href="/transactions/all">
+            <Link href={`/admin/transactions/${detailDrawer.data?.id || ''}`}>
               <Button variant="outline" size="sm" onClick={detailDrawer.close}>
-                Open in Transactions Module
+                Open Full Details
               </Button>
             </Link>
             <Button variant="primary" size="sm" onClick={detailDrawer.close}>
@@ -153,64 +201,64 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
       >
         {detailDrawer.data && (
           <div className="space-y-4 text-xs">
-            <div className="p-3.5 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border)] space-y-1">
-              <span className="text-[var(--text-muted)]">Reference Number:</span>
-              <div className="font-mono font-bold text-sm text-[var(--primary)]">
+            <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E5EAF1] space-y-1">
+              <span className="text-[#64748B]">Reference Number:</span>
+              <div className="font-mono font-extrabold text-sm text-[#155EEF]">
                 {detailDrawer.data.transactionRef}
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Transaction Type:</span>
-                <span className="font-bold">{detailDrawer.data.type}</span>
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Transaction Type:</span>
+                <span className="font-bold text-[#0F172A]">{detailDrawer.data.type}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Merchant Name:</span>
-                <span className="font-semibold">{detailDrawer.data.merchantName}</span>
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Retailer Name:</span>
+                <span className="font-semibold text-[#0F172A]">{detailDrawer.data.merchantName}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Provider Gateway:</span>
-                <span className="font-semibold">{detailDrawer.data.provider || 'Provider A'}</span>
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Provider Gateway:</span>
+                <span className="font-semibold text-[#0F172A]">{detailDrawer.data.provider || 'Provider A'}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Amount:</span>
-                <span className="font-bold text-[var(--primary)]">
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Amount:</span>
+                <span className="font-mono font-bold text-[#155EEF]">
                   {formatCurrency(detailDrawer.data.amount)}
                 </span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Platform Fee:</span>
-                <span>{formatCurrency(detailDrawer.data.fee)}</span>
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Platform Fee:</span>
+                <span className="font-mono">{formatCurrency(detailDrawer.data.fee)}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Net Settlement:</span>
-                <span className="font-semibold">{formatCurrency(detailDrawer.data.netAmount)}</span>
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Net Settlement:</span>
+                <span className="font-mono font-semibold text-[#0F172A]">{formatCurrency(detailDrawer.data.netAmount)}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Status:</span>
-                <StatusBadge status={detailDrawer.data.status} size="sm" />
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Status:</span>
+                {renderStatusDot(detailDrawer.data.status)}
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Payment Mode:</span>
-                <span className="font-semibold">{detailDrawer.data.paymentMode}</span>
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Payment Mode:</span>
+                <span className="font-semibold text-[#0F172A]">{detailDrawer.data.paymentMode}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                <span className="text-[var(--text-muted)]">Masked Account:</span>
+              <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
+                <span className="text-[#64748B]">Masked Account:</span>
                 <MaskedValue value={detailDrawer.data.accountNumberMasked || '123456784582'} type="bankAccount" />
               </div>
 
               <div className="flex justify-between py-1.5">
-                <span className="text-[var(--text-muted)]">Created At:</span>
-                <span>{formatDateTime(detailDrawer.data.createdAt)}</span>
+                <span className="text-[#64748B]">Created At:</span>
+                <span className="font-mono">{formatDateTime(detailDrawer.data.createdAt)}</span>
               </div>
             </div>
           </div>
@@ -219,3 +267,4 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
     </>
   );
 };
+

@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
-import { RefreshCw, Clock, Building2, Store } from 'lucide-react';
+import React, { useState } from 'react';
+import { RefreshCw, Building2, Store, Waypoints, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { DateRangeDropdown, DateRangeValue } from '@/components/ui/DateRangeDropdown';
 import { formatDateTime } from '@/utils/formatters';
 
 export interface DistributorHeaderProps {
@@ -27,11 +28,15 @@ export const DistributorHeader: React.FC<DistributorHeaderProps> = ({
   onRefresh,
   isLoading = false,
 }) => {
+  const [selectedRange, setSelectedRange] = useState<DateRangeValue>({ preset: 'today' });
+
   return (
-    <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
+    <div className="relative isolate overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-white to-blue-50/60 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-7">
+      <div className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full bg-blue-400/10 blur-3xl" />
+      <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0F4C81] to-indigo-700 text-white font-extrabold flex items-center justify-center text-sm shadow-xs shrink-0 ring-4 ring-indigo-50">
-          DST
+        <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F4C81] to-indigo-700 text-white shadow-lg shadow-blue-900/20">
+          <Waypoints className="h-6 w-6" />
         </div>
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -43,7 +48,7 @@ export const DistributorHeader: React.FC<DistributorHeaderProps> = ({
             </span>
             <StatusBadge status="ACTIVE" label="Distributor Portal Active" size="sm" />
           </div>
-          <p className="text-xs text-slate-500 flex items-center gap-2 flex-wrap">
+          <p className="text-sm text-slate-500 flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-slate-700 flex items-center gap-1">
               <Store className="w-3.5 h-3.5 text-slate-400" /> {businessName}
             </span>
@@ -55,11 +60,11 @@ export const DistributorHeader: React.FC<DistributorHeaderProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-mono">
-          <Clock className="w-3.5 h-3.5" />
-          <span>Refreshed: {formatDateTime(lastRefreshedAt)}</span>
-        </div>
+      <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 flex-wrap">
+        <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+          <Clock className="h-3.5 w-3.5" /> Updated {formatDateTime(lastRefreshedAt)}
+        </span>
+        <DateRangeDropdown value={selectedRange} onChange={setSelectedRange} size="sm" />
 
         <Button
           variant="outline"
@@ -70,6 +75,7 @@ export const DistributorHeader: React.FC<DistributorHeaderProps> = ({
         >
           Refresh Data
         </Button>
+      </div>
       </div>
     </div>
   );

@@ -128,47 +128,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               <Settings className="w-4 h-4 text-[var(--text-muted)]" />
               <span>System Settings</span>
             </button>
-
-            {/* Dev Role Switcher Helper — Displays only approved 6 functional roles */}
-            {DEV_FEATURES.showRolePreviewSwitcher && onRoleChange && (
-              <div className="border-t border-[var(--border-subtle)] my-1 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowRoleSwitcher((prev) => !prev)}
-                  className="w-full px-4 py-2 flex items-center justify-between hover:bg-slate-50 transition-colors text-left cursor-pointer text-blue-700 font-semibold"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Shield className="w-4 h-4 text-blue-600" />
-                    <span>Dev Role Switcher</span>
-                  </div>
-                  <RefreshCw className="w-3.5 h-3.5" />
-                </button>
-
-                {showRoleSwitcher && (
-                  <div className="px-3 py-2 bg-slate-50 flex flex-col gap-1 text-[11px]">
-                    {DISPLAYED_DEV_ROLES.map((role) => (
-                      <button
-                        key={role}
-                        type="button"
-                        onClick={() => {
-                          onRoleChange(role);
-                          setIsOpen(false);
-                          setShowRoleSwitcher(false);
-                        }}
-                        className={cn(
-                          'px-2.5 py-1.5 rounded text-left font-medium transition-colors cursor-pointer flex items-center justify-between',
-                          currentUser.role === role
-                            ? 'bg-[var(--primary)] text-white font-bold shadow-2xs'
-                            : 'hover:bg-slate-200 text-slate-700'
-                        )}
-                      >
-                        <span>{USER_ROLE_LABELS[role] || role}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Logout Button */}

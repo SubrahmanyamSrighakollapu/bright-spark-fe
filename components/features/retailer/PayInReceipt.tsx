@@ -28,7 +28,8 @@ export const PayInReceipt: React.FC<PayInReceiptProps> = ({
   const isSuccess = transaction.status === 'SUCCESS';
   const charges = transaction.fee || preview?.charges || 0;
   const gst = transaction.gst || preview?.gst || 0;
-  const totalAmount = transaction.netAmount || preview?.totalAmount || transaction.amount + charges + gst;
+  const totalDeductions = preview?.totalDeductions || charges + gst;
+  const netCredit = preview?.actualCreditAmount || transaction.netAmount || Math.max(0, transaction.amount - totalDeductions);
   const commission = preview?.retailerCommissionAmount || +(transaction.amount * 0.0025).toFixed(2);
 
   const handlePrint = () => {
@@ -47,9 +48,11 @@ Service: ${transaction.service || 'UPI Pay-In Collection'}
 Payment Mode: ${transaction.paymentMode || 'UPI'}
 ------------------------------------
 Amount: ${formatCurrency(transaction.amount)}
-Charges: ${formatCurrency(charges)}
-GST (18%): ${formatCurrency(gst)}
-Total Paid: ${formatCurrency(totalAmount)}
+Configured Charge (${preview?.chargeRateLabel || 'applicable rate'}): -${formatCurrency(charges)}
+GST (18%): -${formatCurrency(gst)}
+Total Deductions: -${formatCurrency(totalDeductions)}
+Net Settlement Credit: ${formatCurrency(netCredit)}
+Final Wallet Credit: ${formatCurrency(preview?.retailerWalletCredit || netCredit)}
 ${transaction.utr ? `UTR: ${transaction.utr}` : ''}
 ====================================
     `.trim();
@@ -182,34 +185,29 @@ ${transaction.utr ? `UTR: ${transaction.utr}` : ''}
             <span className="font-mono font-semibold text-slate-900">{formatCurrency(transaction.amount)}</span>
           </div>
           <div className="flex justify-between text-slate-600">
-            <span>Platform Charges:</span>
-            <span className="font-mono">{formatCurrency(charges)}</span>
+            <span>Configured Charge ({preview?.chargeRateLabel || 'applicable rate'}):</span>
+            <span className="font-mono text-rose-600">− {formatCurrency(charges)}</span>
           </div>
           <div className="flex justify-between text-slate-600">
             <span>GST (18%):</span>
-            <span className="font-mono">{formatCurrency(gst)}</span>
+            <span className="font-mono text-rose-600">− {formatCurrency(gst)}</span>
           </div>
-
+          <div className="flex justify-between text-rose-700 font-semibold">
+            <span>Total Deductions:</span>
+            <span className="font-mono">− {formatCurrency(totalDeductions)}</span>
+          </div>
           <div className="flex justify-between items-center text-sm font-extrabold text-slate-900 pt-3 border-t border-slate-300">
-            <span>Total Amount Paid:</span>
-            <span className="font-mono text-lg text-indigo-700">{formatCurrency(totalAmount)}</span>
+            <span>Net Settlement Credit:</span>
+            <span className="font-mono text-lg text-indigo-700">{formatCurrency(netCredit)}</span>
           </div>
-
-          {/* Retailer Copy Margin Highlight */}
-          {copyType === 'RETAILER' && isSuccess && (
-            <div className="mt-3 p-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 flex items-center justify-between text-xs">
-              <span className="font-semibold flex items-center gap-1.5">
-                <ArrowDownLeft className="w-4 h-4 text-emerald-600" /> Retailer Commission Margin:
-              </span>
-              <span className="font-mono font-bold text-emerald-700 text-sm">+{formatCurrency(commission)}</span>
-            </div>
-          )}
+          <div className="flex justify-between text-emerald-700"><span>Commission Credit:</span><span className="font-mono">+ {formatCurrency(commission)}</span></div>
+          <div className="flex justify-between rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-sm font-bold text-emerald-900"><span>Final Wallet Credit:</span><span className="font-mono">{formatCurrency(preview?.retailerWalletCredit || netCredit)}</span></div>
         </div>
 
         {/* Footer Guarantee */}
         <div className="pt-3 border-t border-slate-200 text-center text-[10px] text-slate-400 space-y-0.5">
           <p className="flex items-center justify-center gap-1 font-semibold text-slate-500">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Authorized Qin Star Pay Merchant Receipt
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Authorized Qin Star Pay Retailer Receipt
           </p>
           <p>Thank you for using Qin Star Pay collection switch services.</p>
         </div>

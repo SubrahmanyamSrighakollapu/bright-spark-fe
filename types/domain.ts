@@ -1367,6 +1367,7 @@ export interface MerchantOnboardingInput {
   bankName: string;
   accountNumber: string;
   ifscCode: string;
+  documents?: KYCDocument[];
 }
 
 export interface MerchantOnboardingApplication {
@@ -1379,6 +1380,7 @@ export interface MerchantOnboardingApplication {
   submittedAt: string;
   kycStatus: KYCStatus;
   onboardingStatus: 'DRAFT' | 'SUBMITTED' | 'KYC_PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+  documents?: KYCDocument[];
 }
 
 export interface UserFilters {
@@ -1647,6 +1649,7 @@ export interface MasterDistributor {
   status: AccountStatus;
   walletId: string;
   commissionConfig?: Record<string, any>;
+  documents?: KYCDocument[];
   createdAt: string;
   updatedAt?: string;
 }
@@ -1671,7 +1674,8 @@ export interface Distributor {
   address?: string;
   city?: string;
   state?: string;
-  pincode?: string;
+    pincode?: string;
+    documents?: KYCDocument[];
   commissionConfig?: Record<string, any>;
   createdByUserId?: string;
   createdByRole?: UserRole;
@@ -1704,7 +1708,8 @@ export interface Retailer {
   address?: string;
   city?: string;
   state?: string;
-  pincode?: string;
+    pincode?: string;
+    documents?: KYCDocument[];
   createdByUserId: string;
   createdByRole: UserRole;
   createdByEntityId: string;

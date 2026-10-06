@@ -182,7 +182,6 @@ function DistributorTransactionsContent() {
       CreatedAt: t.createdAt,
     }));
     reportService.exportToCsv('distributor_transactions', exportRows);
-    toastSuccess('Transaction report exported to CSV successfully.');
   };
 
   const columns: ColumnDefinition<Transaction>[] = [
@@ -253,7 +252,7 @@ function DistributorTransactionsContent() {
       statusBadge={<StatusBadge status="ACTIVE" label="Retailer Network Scoped" />}
       actions={
         <Button variant="outline" size="sm" leftIcon={<Download className="w-4 h-4" />} onClick={handleExportCsv}>
-          Export CSV
+          Export
         </Button>
       }
     >

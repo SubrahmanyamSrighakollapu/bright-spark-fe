@@ -97,7 +97,7 @@ export const ChargebackDetailsDrawer: React.FC<ChargebackDetailsDrawerProps> = (
               </span>
             </div>
             <div className="text-xs text-[var(--text-muted)] mt-0.5">
-              Merchant: <strong>{chargeback.entityName}</strong> | Disputed Amount: <strong className="text-rose-700 font-mono">{formatCurrency(chargeback.disputedAmount)}</strong>
+              Retailer: <strong>{chargeback.entityName}</strong> | Disputed Amount: <strong className="text-rose-700 font-mono">{formatCurrency(chargeback.disputedAmount)}</strong>
             </div>
           </div>
 
@@ -345,7 +345,7 @@ export const ChargebackDetailsDrawer: React.FC<ChargebackDetailsDrawerProps> = (
                   />
 
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Merchant Detailed Explanation</label>
+                    <label className="block font-semibold text-slate-700 mb-1">Retailer Detailed Explanation</label>
                     <textarea
                       placeholder="State detailed transaction history, delivery carrier tracking URL, customer interaction log..."
                       value={merchantExplanation}
@@ -372,7 +372,7 @@ export const ChargebackDetailsDrawer: React.FC<ChargebackDetailsDrawerProps> = (
                   </div>
                   {chargeback.merchantExplanation && (
                     <div>
-                      <span className="text-[11px] font-semibold text-slate-500">Merchant Explanation:</span>
+                      <span className="text-[11px] font-semibold text-slate-500">Retailer Explanation:</span>
                       <p className="text-slate-700 mt-0.5">{chargeback.merchantExplanation}</p>
                     </div>
                   )}

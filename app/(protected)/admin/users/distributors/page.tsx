@@ -11,10 +11,14 @@ import { UserTable } from '@/components/features/users/UserTable';
 import { BlockUserModal } from '@/components/features/users/BlockUserModal';
 import { PasswordResetModal } from '@/components/features/users/PasswordResetModal';
 import { UserDetailsDrawer } from '@/components/features/users/UserDetailsDrawer';
+import { AddMemberModal } from '@/components/features/users/AddMemberModal';
+import { Button } from '@/components/ui/Button';
+import { UserPlus } from 'lucide-react';
 
 export default function DistributorsPage() {
   const [data, setData] = useState<EntityListResult | null>(null);
   const [filters, setFilters] = useState<UserFilters>({});
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     pageSize: 10,
@@ -71,6 +75,17 @@ export default function DistributorsPage() {
     <PageContainer
       title="Distributors"
       description="Manage distributor accounts and commercial business relationships."
+      actions={
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => setAddModalOpen(true)}
+          leftIcon={<UserPlus className="w-4 h-4" />}
+          className="font-bold shadow-xs"
+        >
+          + Add Distributor
+        </Button>
+      }
       className="space-y-6"
     >
       {/* 1. Summary Cards */}
@@ -134,6 +149,14 @@ export default function DistributorsPage() {
         isOpen={resetPasswordModal.isOpen}
         onClose={resetPasswordModal.close}
         entity={resetPasswordModal.data}
+      />
+
+      {/* Add Member Modal */}
+      <AddMemberModal
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        defaultType="DISTRIBUTOR"
+        onSuccess={() => fetchDistributors(filters, pagination.page, pagination.pageSize)}
       />
     </PageContainer>
   );

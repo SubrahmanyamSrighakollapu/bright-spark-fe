@@ -15,6 +15,39 @@ import { hierarchyService } from './hierarchyService';
 
 const inMemoryTransactions: Transaction[] = [...mockTransactions];
 
+function filterTransactionsByDateRange(items: Transaction[], dateRange?: string): Transaction[] {
+  if (!dateRange) return items;
+
+  const now = new Date();
+  let start: Date | null = null;
+  let end: Date = new Date(now);
+  end.setHours(23, 59, 59, 999);
+
+  if (dateRange.includes('_to_')) {
+    const [startValue, endValue] = dateRange.split('_to_');
+    start = startValue ? new Date(`${startValue}T00:00:00`) : null;
+    end = endValue ? new Date(`${endValue}T23:59:59.999`) : end;
+  } else {
+    start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    if (dateRange === 'yesterday') {
+      start.setDate(start.getDate() - 1);
+      end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+    } else if (dateRange === '7d') {
+      start.setDate(start.getDate() - 6);
+    } else if (dateRange === '30d') {
+      start.setDate(start.getDate() - 29);
+    }
+  }
+
+  if (!start || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return items;
+  return items.filter((transaction) => {
+    const createdAt = new Date(transaction.createdAt).getTime();
+    return createdAt >= start!.getTime() && createdAt <= end.getTime();
+  });
+}
+
 export interface TransactionListResult {
   items: Transaction[];
   pagination: PaginationState;
@@ -79,6 +112,8 @@ export const transactionService = {
       if (filters?.status && filters.status !== 'ALL') {
         filtered = filtered.filter((t) => t.status === filters.status);
       }
+
+      filtered = filterTransactionsByDateRange(filtered, filters?.dateRange);
 
       if (filters?.distributorId && filters.distributorId !== 'ALL') {
         const targetDst = hierarchyService.getDistributorById(filters.distributorId);
@@ -389,6 +424,8 @@ export const transactionService = {
       if (filters?.providerId && filters.providerId !== '') {
         filtered = filtered.filter((t) => t.provider?.toLowerCase().includes(filters.providerId!.toLowerCase()));
       }
+
+      filtered = filterTransactionsByDateRange(filtered, filters?.dateRange);
 
       if (filters?.searchQuery && filters.searchQuery.trim() !== '') {
         const q = filters.searchQuery.trim().toLowerCase();

@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/context/AuthContext";
+import { QinStarPrimeReactProvider } from "@/components/providers/PrimeReactProvider";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,9 +28,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ToastProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </ToastProvider>
+        <QinStarPrimeReactProvider>
+          <ToastProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ToastProvider>
+        </QinStarPrimeReactProvider>
       </body>
     </html>
   );

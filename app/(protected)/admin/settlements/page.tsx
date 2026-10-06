@@ -28,6 +28,7 @@ import { BatchDetailsModal } from '@/components/features/settlements/BatchDetail
 import { ReconciliationTable } from '@/components/features/settlements/ReconciliationTable';
 import { ReconciliationDetailsModal } from '@/components/features/settlements/ReconciliationDetailsModal';
 import { Download, RefreshCw } from 'lucide-react';
+import { reportService } from '@/services/reportService';
 
 export default function SettlementsPage() {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'QUEUE' | 'BATCHES' | 'HISTORY' | 'RECONCILIATION'>('OVERVIEW');
@@ -144,8 +145,20 @@ export default function SettlementsPage() {
 
   const exportActions = (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" leftIcon={<Download className="w-3.5 h-3.5" />}>
-        Export CSV
+      <Button
+        variant="outline"
+        size="sm"
+        leftIcon={<Download className="w-3.5 h-3.5" />}
+        onClick={() => {
+          const rows = activeTab === 'BATCHES'
+            ? (batchData?.items || [])
+            : activeTab === 'RECONCILIATION'
+            ? (reconcileData?.items || [])
+            : (settlementData?.items || []);
+          reportService.exportToCsv(`Settlements_${activeTab}`, rows as unknown as Record<string, unknown>[]);
+        }}
+      >
+        Export
       </Button>
       <Button variant="outline" size="sm" onClick={loadSettlements} leftIcon={<RefreshCw className="w-3.5 h-3.5" />}>
         Refresh

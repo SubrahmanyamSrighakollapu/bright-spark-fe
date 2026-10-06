@@ -68,11 +68,11 @@ export default function KYCPage() {
   return (
     <PageContainer
       title="KYC Applications & Verification"
-      description="Review merchant & distributor KYC documents, identity proofs and risk profiles."
+      description="Review retailer and distributor KYC documents, identity proofs and risk profiles."
       actions={
         <Link href="/admin/kyc/onboarding">
           <Button variant="primary" size="sm" leftIcon={<UserPlus className="w-4 h-4" />}>
-            Merchant Onboarding Module
+            Retailer Onboarding Module
           </Button>
         </Link>
       }

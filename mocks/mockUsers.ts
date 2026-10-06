@@ -237,7 +237,7 @@ export const mockEntities: BusinessEntity[] = [
     name: 'Rajesh Nair',
     type: 'BACK_OFFICE',
     role: 'SALES_LEAD',
-    businessName: 'Merchant Sales & Growth',
+    businessName: 'Retailer Sales & Growth',
     businessType: 'Internal Team',
     email: 'rajesh.sales@qinstarpay.com',
     mobile: '99002XXXXX',

@@ -14,7 +14,7 @@ export interface SearchInputProps {
 }
 
 export const SearchInput: React.FC<SearchInputProps> = ({
-  placeholder = 'Search by Reference, Merchant, ID...',
+  placeholder = 'Search by Reference, Retailer, ID...',
   value: externalValue,
   onChange,
   onDebouncedSearch,

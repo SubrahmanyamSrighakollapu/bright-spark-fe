@@ -28,7 +28,7 @@ export const mockTransactions: Transaction[] = [
     updatedAt: '2026-09-03T14:45:12Z',
     accountNumberMasked: 'XXXXXX4582',
     timeline: [
-      { timestamp: '14:45:00', event: 'Transaction Created', description: 'Pay-In request initiated by merchant Apex Pay', status: 'COMPLETED' },
+      { timestamp: '14:45:00', event: 'Transaction Created', description: 'Pay-In request initiated by retailer Apex Pay', status: 'COMPLETED' },
       { timestamp: '14:45:01', event: 'Sent to Provider A', description: 'Routed to Provider A UPI Collection switch', status: 'COMPLETED' },
       { timestamp: '14:45:05', event: 'Payer Approved UPI', description: 'Collect request accepted on VPA', status: 'COMPLETED' },
       { timestamp: '14:45:10', event: 'Callback Received', description: 'Provider callback returned SUCCESS with UTR991823101', status: 'COMPLETED' },
@@ -266,7 +266,7 @@ export const mockTransactions: Transaction[] = [
     gst: 2.61,
     tds: 0.0,
     netAmount: 14482.89,
-    status: 'REFUNDED',
+    status: 'REVERSED',
     paymentMode: 'UPI',
     provider: 'Provider A',
     service: 'UPI Collection API',

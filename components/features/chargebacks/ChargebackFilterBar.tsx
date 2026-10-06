@@ -43,7 +43,7 @@ export const ChargebackFilterBar: React.FC<ChargebackFilterBarProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Input
             label="Search Dispute"
-            placeholder="Search Chargeback ID, Txn ID, Merchant, Order..."
+            placeholder="Search Chargeback ID, Txn ID, Retailer, Order..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Search className="w-4 h-4 text-slate-400" />}
@@ -94,7 +94,7 @@ export const ChargebackFilterBar: React.FC<ChargebackFilterBarProps> = ({
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-          <span className="text-[11px] text-slate-500">Filter disputes across merchant accounts and provider gateways.</span>
+          <span className="text-[11px] text-slate-500">Filter disputes across retailer accounts and provider gateways.</span>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

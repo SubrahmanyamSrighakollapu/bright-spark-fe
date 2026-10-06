@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Filter, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { TransactionFilters } from '@/types/domain';
+import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
 
 export interface TransactionFilterBarProps {
   onApplyFilters: (filters: TransactionFilters) => void;
@@ -82,12 +83,21 @@ export const TransactionFilterBar: React.FC<TransactionFilterBarProps> = ({
           onChange={(e) => setFilters((prev) => ({ ...prev, searchQuery: e.target.value }))}
         />
 
-        <Input
-          label="Date Range"
-          type="date"
-          value={filters.dateRange || ''}
-          onChange={(e) => setFilters((prev) => ({ ...prev, dateRange: e.target.value }))}
-        />
+        <div className="space-y-1">
+          <label className="block text-xs font-semibold text-slate-700">Date Range Filter</label>
+          <DateRangeDropdown
+            value={filters.dateRange ? 'custom' : 'today'}
+            onChange={(val) =>
+              setFilters((prev) => ({
+                ...prev,
+                dateRange: val.startDate ? `${val.startDate}_to_${val.endDate || ''}` : val.preset,
+              }))
+            }
+            align="left"
+            size="md"
+            className="w-full"
+          />
+        </div>
 
         <div className="flex items-end gap-2">
           <Button
@@ -126,10 +136,10 @@ export const TransactionFilterBar: React.FC<TransactionFilterBarProps> = ({
       {showAdvanced && (
         <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[var(--radius-lg)] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 animate-in fade-in duration-150">
           <Select
-            label="Merchant"
+            label="Retailer"
             value={filters.merchantId || ''}
             onChange={(e) => setFilters((prev) => ({ ...prev, merchantId: e.target.value }))}
-            placeholder="All Merchants"
+            placeholder="All Retailers"
             options={[
               { value: 'Apex Pay Solutions', label: 'Apex Pay Solutions' },
               { value: 'Zenith Retail', label: 'Zenith Retail' },

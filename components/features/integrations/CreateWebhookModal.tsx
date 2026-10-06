@@ -78,7 +78,7 @@ export const CreateWebhookModal: React.FC<CreateWebhookModalProps> = ({
             onChange={(e) => setDirection(e.target.value as WebhookDirection)}
             options={[
               { value: 'INBOUND', label: 'Inbound (From Provider)' },
-              { value: 'OUTBOUND', label: 'Outbound (To Merchant)' },
+              { value: 'OUTBOUND', label: 'Outbound (To Retailer)' },
             ]}
           />
         </div>

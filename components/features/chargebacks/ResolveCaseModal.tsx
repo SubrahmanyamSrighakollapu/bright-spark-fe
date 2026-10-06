@@ -41,7 +41,7 @@ export const ResolveCaseModal: React.FC<ResolveCaseModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
           <div className="font-semibold text-slate-900">Case ID: {chargeback.chargebackId}</div>
-          <div className="text-[11px] text-slate-500">Merchant: {chargeback.entityName}</div>
+          <div className="text-[11px] text-slate-500">Retailer: {chargeback.entityName}</div>
           <div className="text-[11px] font-mono text-rose-700 font-bold">Disputed Amount: {formatCurrency(chargeback.disputedAmount)}</div>
         </div>
 

@@ -45,7 +45,7 @@ export const ChargebackTable: React.FC<ChargebackTableProps> = ({
     },
     {
       key: 'entityName',
-      header: 'Merchant / Entity',
+      header: 'Retailer / Entity',
       render: (row: Chargeback) => (
         <div>
           <div className="font-semibold text-xs text-slate-900">{row.entityName}</div>

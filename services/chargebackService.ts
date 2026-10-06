@@ -187,7 +187,7 @@ export const chargebackService = {
     documentType: string,
     fileName: string,
     fileSize = '500 KB',
-    uploadedBy = 'Merchant Admin'
+    uploadedBy = 'Retailer Admin'
   ): Promise<ApiResponse<Chargeback>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 300));
@@ -316,7 +316,7 @@ export const chargebackService = {
             timestamp: new Date().toISOString(),
             event: 'Case Won & Closed',
             actor: resolvedBy,
-            description: `Dispute ruled in favor of merchant. Lien hold released back to wallet. Reason: ${resolutionReason}`,
+            description: `Dispute ruled in favor of retailer. Lien hold released back to wallet. Reason: ${resolutionReason}`,
             status: 'COMPLETED',
           });
         } else if (resolution === 'LOST') {
@@ -351,7 +351,7 @@ export const chargebackService = {
             timestamp: new Date().toISOString(),
             event: 'Case Lost & Closed',
             actor: resolvedBy,
-            description: `Dispute lost. Chargeback financial loss booked against merchant. Reason: ${resolutionReason}`,
+            description: `Dispute lost. Chargeback financial loss booked against retailer. Reason: ${resolutionReason}`,
             status: 'FAILED',
           });
         }

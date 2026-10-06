@@ -73,7 +73,7 @@ export const UserHierarchyView: React.FC<UserHierarchyViewProps> = ({ entity }) 
             {/* Merchant Node */}
             <div className="w-full p-2.5 bg-amber-50 border border-amber-500 ring-1 ring-amber-500 rounded-lg text-center shadow-2xs">
               <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">
-                Merchant / Business User
+                Retailer / Business User
               </span>
               <span className="font-semibold text-slate-900">{merchantNode}</span>
             </div>

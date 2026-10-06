@@ -72,7 +72,7 @@ export const SettlementFilterBar: React.FC<SettlementFilterBarProps> = ({
               { value: 'MASTER', label: 'Master Treasury' },
               { value: 'DISTRIBUTOR', label: 'Distributor' },
               { value: 'RETAILER', label: 'Retailer' },
-              { value: 'MERCHANT', label: 'Merchant' },
+              { value: 'MERCHANT', label: 'Retailer' },
             ]}
           />
 

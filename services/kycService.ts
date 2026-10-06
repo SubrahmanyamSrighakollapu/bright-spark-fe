@@ -21,7 +21,11 @@ export const kycService = {
       await new Promise((res) => setTimeout(res, 200));
       let filtered = [...inMemoryKYC];
       if (status !== 'ALL') {
-        filtered = filtered.filter((a) => a.status === status);
+        if (status === 'PROCESSING') {
+          filtered = filtered.filter((a) => a.status === 'PROCESSING' || a.status === 'PENDING' || a.status === 'UNDER_REVIEW');
+        } else {
+          filtered = filtered.filter((a) => a.status === status);
+        }
       }
       const totalItems = filtered.length;
       const totalPages = Math.ceil(totalItems / pageSize) || 1;
@@ -142,5 +146,49 @@ export const kycService = {
       return { success: false, data: null as unknown as KYCApplication, timestamp: new Date().toISOString() };
     }
     return apiClient.post<ApiResponse<KYCApplication>>(`/kyc/applications/${appId}/reject`, { reason });
+  },
+
+  async blockKYC(appId: string, reason: string): Promise<ApiResponse<KYCApplication>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 300));
+      const app = inMemoryKYC.find((a) => a.id === appId);
+      if (app) {
+        app.status = 'BLOCKED';
+        app.reviewedAt = new Date().toISOString();
+        app.reviewedBy = 'Anjali Sharma';
+        app.remarks = `BLOCKED: ${reason}`;
+        app.timeline.push({
+          timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+          event: 'Entity KYC Blocked',
+          user: 'Anjali Sharma',
+          remarks: reason,
+        });
+        return { success: true, data: { ...app }, timestamp: new Date().toISOString() };
+      }
+      return { success: false, data: null as unknown as KYCApplication, timestamp: new Date().toISOString() };
+    }
+    return apiClient.post<ApiResponse<KYCApplication>>(`/kyc/applications/${appId}/block`, { reason });
+  },
+
+  async unblockKYC(appId: string): Promise<ApiResponse<KYCApplication>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 300));
+      const app = inMemoryKYC.find((a) => a.id === appId);
+      if (app) {
+        app.status = 'PROCESSING';
+        app.reviewedAt = new Date().toISOString();
+        app.reviewedBy = 'Anjali Sharma';
+        app.remarks = 'Unblocked and moved back to Processing';
+        app.timeline.push({
+          timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+          event: 'Entity Unblocked',
+          user: 'Anjali Sharma',
+          remarks: 'Status set back to Processing',
+        });
+        return { success: true, data: { ...app }, timestamp: new Date().toISOString() };
+      }
+      return { success: false, data: null as unknown as KYCApplication, timestamp: new Date().toISOString() };
+    }
+    return apiClient.post<ApiResponse<KYCApplication>>(`/kyc/applications/${appId}/unblock`);
   },
 };

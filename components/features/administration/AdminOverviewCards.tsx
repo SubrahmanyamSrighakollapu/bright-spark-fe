@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { AdminSummary } from '@/types/domain';
-import { Users, ShieldCheck, Gauge, Percent, Settings, Palette, Lock, ChevronRight, UserCheck, Key, SlidersHorizontal } from 'lucide-react';
+import { Users, ShieldCheck, Gauge, Percent, Settings, Palette, Lock, ChevronRight, UserCheck, Key, SlidersHorizontal, ShoppingBag, Megaphone } from 'lucide-react';
 
 export interface AdminOverviewCardsProps {
   summary: AdminSummary;
@@ -12,6 +12,22 @@ export interface AdminOverviewCardsProps {
 
 export const AdminOverviewCards: React.FC<AdminOverviewCardsProps> = ({ summary }) => {
   const quickLinks = [
+    {
+      title: 'Headline & Ticker Alerts',
+      description: 'Configure continuous scrolling announcements, promotional margin offers, and security alerts for Retailers',
+      href: '/admin/administration/headlines',
+      icon: Megaphone,
+      badge: 'Live Marquee',
+      color: 'bg-amber-50 text-amber-800 border-amber-200',
+    },
+    {
+      title: 'Service Categories & Products',
+      description: 'Configure applications (Grocery, Tourism, Fashion, etc.), product details, and preset collection prices',
+      href: '/admin/administration/service-categories',
+      icon: ShoppingBag,
+      badge: 'Catalog Master',
+      color: 'bg-teal-50 text-teal-700 border-teal-200',
+    },
     {
       title: 'Admin User Management',
       description: 'Manage internal operational staff accounts, status, and role assignments',

@@ -6,7 +6,7 @@ export default function PushNotificationsPage() {
     <ModulePlaceholder
       title="Push Notifications"
       moduleCode="/notifications/push"
-      description="Operational push notifications, merchant mobile alerts, and web push configuration."
+      description="Operational push notifications, retailer mobile alerts, and web push configuration."
     />
   );
 }

@@ -132,6 +132,27 @@ class HierarchyService {
     };
     return this.retailers[idx];
   }
+
+  // Daily Onboarding Summary Helper
+  getDailyOnboardingCounts(): {
+    masterDistributorsToday: number;
+    distributorsToday: number;
+    retailersToday: number;
+    totalToday: number;
+    masterDistributorsYesterday: number;
+    distributorsYesterday: number;
+    retailersYesterday: number;
+  } {
+    return {
+      masterDistributorsToday: 10,
+      distributorsToday: 20,
+      retailersToday: 50,
+      totalToday: 80,
+      masterDistributorsYesterday: 8,
+      distributorsYesterday: 16,
+      retailersYesterday: 42,
+    };
+  }
 }
 
 export const hierarchyService = new HierarchyService();

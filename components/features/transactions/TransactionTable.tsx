@@ -71,7 +71,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
     },
     {
       key: 'merchantName',
-      header: 'Retailer / Merchant',
+      header: 'Retailer',
       render: (row) => (
         <div>
           <div className="font-semibold text-xs text-[var(--text-primary)]">

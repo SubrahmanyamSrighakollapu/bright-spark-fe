@@ -153,7 +153,7 @@ export const CreateRoutingRuleModal: React.FC<CreateRoutingRuleModalProps> = ({
             onChange={(e) => setEntityType(e.target.value as EntityType | 'ALL')}
             options={[
               { value: 'ALL', label: 'All Entity Types' },
-              { value: 'MERCHANT', label: 'Merchant' },
+              { value: 'MERCHANT', label: 'Retailer' },
               { value: 'DISTRIBUTOR', label: 'Distributor' },
               { value: 'RETAILER', label: 'Retailer' },
             ]}

@@ -42,8 +42,8 @@ export const InvoiceFilterBar: React.FC<InvoiceFilterBarProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Input
-            label="Search Invoice"
-            placeholder="Search Invoice ID, Entity, Txn, Settlement..."
+            label="Search Invoices (Multi-Field)"
+            placeholder="Search Name, Mobile, Amount, Txn ID, UTR..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Search className="w-4 h-4 text-slate-400" />}
@@ -57,7 +57,7 @@ export const InvoiceFilterBar: React.FC<InvoiceFilterBarProps> = ({
               { value: 'ALL', label: 'All Entity Types' },
               { value: 'DISTRIBUTOR', label: 'Distributor' },
               { value: 'RETAILER', label: 'Retailer' },
-              { value: 'MERCHANT', label: 'Merchant' },
+              { value: 'MERCHANT', label: 'Retailer' },
             ]}
           />
 
@@ -92,7 +92,7 @@ export const InvoiceFilterBar: React.FC<InvoiceFilterBarProps> = ({
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-          <span className="text-[11px] text-slate-500">Filter invoices across merchants, settlements, and billing periods.</span>
+          <span className="text-[11px] text-slate-500">Filter invoices across retailers, settlements, and billing periods.</span>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

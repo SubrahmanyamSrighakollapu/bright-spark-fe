@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
-import { Drawer } from '@/components/ui/Drawer';
 import { useModal } from '@/hooks/useModal';
 import { transactionService, TransactionListResult } from '@/services/transactionService';
 import { reportService } from '@/services/reportService';
@@ -12,9 +11,8 @@ import { TransactionSummaryCards } from '@/components/features/transactions/Tran
 import { TransactionFilterBar } from '@/components/features/transactions/TransactionFilterBar';
 import { TransactionTable } from '@/components/features/transactions/TransactionTable';
 import { TransactionDetailsDrawer } from '@/components/features/transactions/TransactionDetailsDrawer';
-import { CreatePayInModal } from '@/components/features/transactions/CreatePayInModal';
-import { CreatePayoutForm } from '@/components/features/transactions/CreatePayoutForm';
-import { Send, ArrowDownLeft, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
+import { getExportPeriodLabel } from '@/utils/exportPeriod';
 
 export default function AllTransactionsPage() {
   const [data, setData] = useState<TransactionListResult | null>(null);
@@ -30,8 +28,6 @@ export default function AllTransactionsPage() {
 
   // Modals & Drawers
   const detailDrawer = useModal<Transaction>();
-  const [isPayInModalOpen, setIsPayInModalOpen] = useState(false);
-  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
 
   const fetchTransactions = useCallback(
     async (activeFilters?: TransactionFilters, page = 1, pageSize = 10) => {
@@ -95,13 +91,15 @@ export default function AllTransactionsPage() {
   const pendingCount = items.filter((t) => t.status === 'PENDING' || t.status === 'PROCESSING').length;
   const successRate = items.length > 0 ? (successfulCount / items.length) * 100 : 0;
 
-  const handleExportCSV = () => {
-    if (!items.length) return;
-    const exportRows = items.map((t) => ({
+  const handleExportCSV = async () => {
+    const result = await transactionService.getTransactions(filters, 1, Math.max(pagination.totalItems, 1));
+    const exportItems = result.data?.items || [];
+    if (!exportItems.length) return;
+    const exportRows = exportItems.map((t) => ({
       'Transaction ID': t.transactionRef,
       'Order ID': t.orderId || '',
       'Type': t.type,
-      'Retailer/Merchant': t.retailerName || t.merchantName || '',
+      'Retailer': t.retailerName || t.merchantName || '',
       'Distributor': t.distributorName || '',
       'Master Distributor': (t as unknown as Record<string, unknown>).masterDistributorName || t.masterDistributorId || '',
       'Payment Mode': t.paymentMode || '',
@@ -115,7 +113,7 @@ export default function AllTransactionsPage() {
       'Settlement Status': (t as unknown as Record<string, unknown>).settlementStatus || (t.status === 'SUCCESS' ? 'SETTLED' : 'PENDING'),
       'Date': t.createdAt,
     }));
-    reportService.exportToCsv(`Admin_All_Transactions_${new Date().toISOString().split('T')[0]}`, exportRows);
+    reportService.exportToCsv(`Admin_All_Transactions_${getExportPeriodLabel(filters.dateRange)}`, exportRows);
   };
 
   return (
@@ -130,26 +128,9 @@ export default function AllTransactionsPage() {
             onClick={handleExportCSV}
             leftIcon={<Download className="w-4 h-4" />}
           >
-            Export CSV
+            Export
           </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsPayInModalOpen(true)}
-            leftIcon={<ArrowDownLeft className="w-4 h-4 text-emerald-600" />}
-          >
-            Create Pay-In
-          </Button>
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsPayoutModalOpen(true)}
-            leftIcon={<Send className="w-4 h-4" />}
-          >
-            Create Payout
-          </Button>
         </div>
       }
       className="space-y-6"
@@ -192,23 +173,6 @@ export default function AllTransactionsPage() {
         onRefresh={() => fetchTransactions(filters, pagination.page, pagination.pageSize)}
       />
 
-      {/* Create Pay-In Request Modal */}
-      <CreatePayInModal
-        isOpen={isPayInModalOpen}
-        onClose={() => setIsPayInModalOpen(false)}
-        onSuccess={() => fetchTransactions(filters, 1, pagination.pageSize)}
-      />
-
-      {/* Create Payout Wizard Drawer */}
-      <Drawer
-        isOpen={isPayoutModalOpen}
-        onClose={() => setIsPayoutModalOpen(false)}
-        title="Create Payout Request"
-        description="Initiate merchant disbursement"
-        size="lg"
-      >
-        <CreatePayoutForm />
-      </Drawer>
     </PageContainer>
   );
 }

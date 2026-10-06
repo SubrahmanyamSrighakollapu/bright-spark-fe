@@ -11,10 +11,14 @@ import { UserTable } from '@/components/features/users/UserTable';
 import { BlockUserModal } from '@/components/features/users/BlockUserModal';
 import { PasswordResetModal } from '@/components/features/users/PasswordResetModal';
 import { UserDetailsDrawer } from '@/components/features/users/UserDetailsDrawer';
+import { AddMemberModal } from '@/components/features/users/AddMemberModal';
+import { Button } from '@/components/ui/Button';
+import { UserPlus } from 'lucide-react';
 
 export default function RetailersPage() {
   const [data, setData] = useState<EntityListResult | null>(null);
   const [filters, setFilters] = useState<UserFilters>({});
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     pageSize: 10,
@@ -71,6 +75,17 @@ export default function RetailersPage() {
     <PageContainer
       title="Retailers"
       description="Manage retailer accounts and mapped distributor relationships."
+      actions={
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => setAddModalOpen(true)}
+          leftIcon={<UserPlus className="w-4 h-4" />}
+          className="font-bold shadow-xs"
+        >
+          + Add Retailer
+        </Button>
+      }
       className="space-y-6"
     >
       {/* 1. Summary Cards */}

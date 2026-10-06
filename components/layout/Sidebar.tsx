@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronsLeft, ChevronsRight, Shield, LogOut } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Shield, LogOut, ArrowRight, HelpCircle } from 'lucide-react';
 import { filterNavigationByRole, getNavigationForRole, NavigationItem } from '@/config/navigation';
 import { UserContext } from '@/config/roles';
 import { SidebarItem } from './SidebarItem';
@@ -13,6 +13,7 @@ import { cn } from '@/utils/cn';
 
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { retailerPermissionService } from '@/services/retailerPermissionService';
 
 export interface SidebarProps {
   isCollapsed: boolean;
@@ -24,12 +25,22 @@ export interface SidebarProps {
 
 function getCategoryForNavItem(id: string): string | null {
   if (id === 'dashboard' || id === 'md-dashboard' || id === 'dst-dashboard' || id === 'ret-dashboard') return 'MAIN';
-  if (id === 'network-management' || id === 'transactions' || id === 'users' || id === 'kyc' || id === 'ret-payin' || id === 'ret-payout' || id === 'md-distributors' || id === 'dst-retailers') return 'OPERATIONS';
-  if (id === 'wallet' || id === 'settlements' || id === 'reports' || id === 'chargebacks' || id === 'invoices' || id === 'md-wallet' || id === 'dst-wallet' || id === 'ret-wallet' || id === 'md-commissions' || id === 'dst-commissions' || id === 'ret-commissions') return 'FINANCE';
-  if (id === 'integrations' || id === 'logs' || id === 'administration') return 'SYSTEM';
-  if (id === 'notifications' || id === 'dst-notifications' || id === 'ret-notifications' || id === 'dst-profile' || id === 'ret-profile') return 'ACCOUNT';
+  if (id === 'transactions' || id === 'users' || id === 'employees' || id === 'kyc' || id === 'ret-bbps' || id === 'ret-payin' || id === 'ret-qr-payin' || id === 'ret-payment-links' || id === 'ret-payout' || id === 'ret-transactions' || id === 'md-distributors' || id === 'md-retailers' || id === 'dst-retailers') return 'OPERATIONS';
+  if (id === 'wallet' || id === 'wallet-management' || id === 'topup-approvals' || id === 'settlements' || id === 'reports' || id === 'chargebacks' || id === 'invoices' || id === 'ret-topup' || id === 'md-wallet' || id === 'dst-wallet' || id === 'ret-wallet' || id === 'md-commissions' || id === 'dst-commissions' || id === 'ret-commissions' || id === 'md-reports' || id === 'dst-reports' || id === 'ret-reports') return 'FINANCE';
+  if (id === 'notifications' || id === 'md-notifications' || id === 'dst-notifications' || id === 'ret-notifications') return 'COMMUNICATIONS';
+  if (id === 'integrations' || id === 'administration' || id === 'website') return 'SYSTEM';
+  if (id === 'md-profile' || id === 'dst-profile' || id === 'ret-profile') return 'ACCOUNT';
   return null;
 }
+
+const ADMIN_CATEGORY_ORDER: Record<string, number> = {
+  MAIN: 0,
+  OPERATIONS: 1,
+  FINANCE: 2,
+  COMMUNICATIONS: 3,
+  SYSTEM: 4,
+  ACCOUNT: 5,
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
@@ -42,7 +53,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { logout } = useAuth();
 
   const baseNav = getNavigationForRole(currentUser.role);
-  const navItems = filterNavigationByRole(baseNav, currentUser);
+  const roleFilteredItems = filterNavigationByRole(baseNav, currentUser);
+  const navItems = currentUser.role === 'RETAILER' && currentUser.entityId
+    ? roleFilteredItems
+        .filter((item) => retailerPermissionService.canAccessNavigationItem(currentUser.entityId!, item.id))
+        .map((item) => ({
+          ...item,
+          children: item.children?.filter((child) => retailerPermissionService.canAccessNavigationItem(currentUser.entityId!, child.id)),
+        }))
+    : roleFilteredItems;
+
+  // Keep the administrator menu in coherent, non-repeating sections while
+  // retaining the configured order inside each section.
+  const displayedNavItems = currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN'
+    ? navItems
+        .map((item, index) => ({ item, index }))
+        .sort((a, b) => {
+          const aOrder = ADMIN_CATEGORY_ORDER[getCategoryForNavItem(a.item.id) || 'ACCOUNT'] ?? 99;
+          const bOrder = ADMIN_CATEGORY_ORDER[getCategoryForNavItem(b.item.id) || 'ACCOUNT'] ?? 99;
+          return aOrder - bOrder || a.index - b.index;
+        })
+        .map(({ item }) => item)
+    : navItems;
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { toastSuccess } = useToast();
@@ -57,13 +89,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       className={cn(
-        'bg-white text-slate-800 h-screen flex flex-col transition-all duration-200 z-40 border-r border-slate-200/80 shadow-xs shrink-0 overflow-hidden select-none',
+        'bg-white text-slate-800 h-screen flex flex-col transition-all duration-200 z-40 border-r border-[#E5EAF1] shadow-none shrink-0 overflow-hidden select-none',
         isCollapsed ? 'w-[72px]' : 'w-[260px]',
         className
       )}
     >
-      {/* Brand Header with Official Logo Asset */}
-      <div className="h-[70px] px-3.5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white shadow-2xs">
+      {/* Brand Header with Compact Branding */}
+      <div className="h-[68px] px-4 border-b border-[#E5EAF1] flex items-center justify-between shrink-0 bg-white">
         <Link
           href="/dashboard"
           onClick={onNavigate}
@@ -72,12 +104,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             isCollapsed ? 'mx-auto justify-center' : ''
           )}
         >
-          <div className="w-11 h-11 rounded-xl bg-slate-50 p-1 flex items-center justify-center shrink-0 shadow-xs border border-slate-200 group-hover:border-[var(--primary-300)] group-hover:bg-blue-50/50 transition-all duration-200">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 p-1 flex items-center justify-center shrink-0 border border-[#E5EAF1] group-hover:border-[var(--primary-300)] group-hover:bg-blue-50/50 transition-all duration-200">
             <Image
               src="/logo.jpeg"
               alt="Qin Star Pay Logo"
-              width={42}
-              height={42}
+              width={38}
+              height={38}
               className="object-contain rounded-lg w-full h-full"
               priority
             />
@@ -85,11 +117,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {!isCollapsed && (
             <div className="flex flex-col truncate">
-              <span className="font-extrabold text-sm tracking-wider text-slate-900 leading-tight group-hover:text-[var(--primary)] transition-colors">
+              <span className="font-extrabold text-sm tracking-wide text-slate-900 leading-tight group-hover:text-[#155EEF] transition-colors">
                 QIN STAR PAY
               </span>
-              <span className="text-[10px] text-[var(--secondary)] font-extrabold tracking-widest uppercase mt-0.5">
-                Fintech Workspace
+              <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase mt-0.5">
+                FINTECH WORKSPACE
               </span>
             </div>
           )}
@@ -99,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="hidden md:flex p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 rounded-md transition-colors cursor-pointer"
+            className="hidden md:flex p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
             aria-label="Collapse sidebar"
           >
             <ChevronsLeft className="w-4 h-4" />
@@ -109,7 +141,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Expand Button for Collapsed Mode */}
       {isCollapsed && (
-        <div className="hidden md:flex justify-center py-2 border-b border-slate-100 bg-slate-50/50">
+        <div className="hidden md:flex justify-center py-2 border-b border-[#E5EAF1] bg-slate-50/50">
           <button
             type="button"
             onClick={onToggleCollapse}
@@ -121,17 +153,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Navigation List with Optional Subtle Category Headings */}
-      <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-1 no-scrollbar">
-        {navItems.map((item: NavigationItem, index: number) => {
+      {/* Navigation List with Category Headings */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1 no-scrollbar">
+        {displayedNavItems.map((item: NavigationItem, index: number) => {
           const category = getCategoryForNavItem(item.id);
-          const prevCategory = index > 0 ? getCategoryForNavItem(navItems[index - 1].id) : null;
+          const prevCategory = index > 0 ? getCategoryForNavItem(displayedNavItems[index - 1].id) : null;
           const showCategoryHeader = !isCollapsed && category && category !== prevCategory;
 
           return (
             <React.Fragment key={item.id}>
               {showCategoryHeader && (
-                <div className="px-3 pt-3.5 pb-1 text-[10px] font-extrabold tracking-widest text-slate-400 uppercase select-none">
+                <div className="px-3 pt-4 pb-1.5 text-[11px] font-bold tracking-wider text-slate-400 uppercase select-none">
                   {category}
                 </div>
               )}
@@ -145,44 +177,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </div>
 
-      {/* Section 8: Support Card & App Version */}
-      {!isCollapsed && (
-        <div className="px-3 py-2 shrink-0">
-          <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-100/90 text-xs space-y-1">
-            <div className="flex items-center gap-1.5 font-extrabold text-[var(--primary)]">
-              <span>🎧 Need Help?</span>
-            </div>
-            <p className="text-[11px] text-slate-500 leading-tight">
-              Contact Operations Support for immediate assistance.
-            </p>
-            <button
-              type="button"
-              onClick={() => toastSuccess('Contact Support: support@qinstarpay.com | Helpline: 1800-103-STAR')}
-              className="mt-1 text-[11px] font-bold text-[var(--primary)] hover:underline cursor-pointer flex items-center gap-1"
-            >
-              Contact Support →
-            </button>
-          </div>
-          <div className="mt-2 text-center text-[10px] font-mono font-semibold text-slate-400">
-            Qin Star Pay v1.0.0
-          </div>
-        </div>
-      )}
 
-      {/* Persistent Bottom User Profile & Status Panel */}
-      <div className="p-3 border-t border-slate-200/80 bg-slate-50/70 shrink-0">
+
+      {/* User Profile Block at Bottom */}
+      <div className="p-3 border-t border-[#E5EAF1] bg-white shrink-0">
         <div className={cn('flex items-center gap-2.5', isCollapsed ? 'justify-center' : 'justify-between')}>
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-blue-50 text-[var(--primary)] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
-              <Shield className="w-4 h-4 text-[var(--primary)]" />
+            <div className="w-8 h-8 rounded-full bg-blue-50 text-[#155EEF] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
+              <Shield className="w-4 h-4 text-[#155EEF]" />
             </div>
 
             {!isCollapsed && (
               <div className="flex flex-col min-w-0 truncate">
-                <span className="text-xs font-semibold text-slate-800 truncate leading-tight">
+                <span className="text-xs font-semibold text-slate-900 truncate leading-tight">
                   {currentUser.name}
                 </span>
-                <span className="text-[10px] font-extrabold text-[var(--secondary)] tracking-wider">
+                <span className="text-[10px] font-medium text-slate-500 tracking-wider">
                   {currentUser.role}
                 </span>
               </div>

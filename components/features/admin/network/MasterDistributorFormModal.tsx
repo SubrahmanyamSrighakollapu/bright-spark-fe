@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MasterDistributor, AccountStatus } from '@/types/domain';
 import { hierarchyService } from '@/services/hierarchyService';
-import { Modal, Button, Input, Select, FormField } from '@/components/ui';
+import { Modal, Button, Input, Select, FormField, MobileInput } from '@/components/ui';
 import { User, Building2, ShieldCheck } from 'lucide-react';
 
 interface MasterDistributorFormModalProps {
@@ -169,12 +169,12 @@ export const MasterDistributorFormModal: React.FC<MasterDistributorFormModalProp
               error={errors.email}
             />
 
-            <Input
+            <MobileInput
               label="Mobile Number *"
               value={formData.mobile}
-              onChange={(e) => handleChange('mobile', e.target.value)}
-              placeholder="9810011111"
+              onChange={(e: any) => handleChange('mobile', typeof e === 'string' ? e : e?.target?.value || '')}
               error={errors.mobile}
+              required
             />
           </div>
         </div>

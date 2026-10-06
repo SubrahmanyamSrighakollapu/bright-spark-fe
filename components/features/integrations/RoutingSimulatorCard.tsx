@@ -69,7 +69,7 @@ export const RoutingSimulatorCard: React.FC = () => {
             value={entityType}
             onChange={(e) => setEntityType(e.target.value as EntityType | 'ALL')}
             options={[
-              { value: 'MERCHANT', label: 'Merchant' },
+              { value: 'MERCHANT', label: 'Retailer' },
               { value: 'DISTRIBUTOR', label: 'Distributor' },
               { value: 'RETAILER', label: 'Retailer' },
               { value: 'ALL', label: 'All Entity Types' },

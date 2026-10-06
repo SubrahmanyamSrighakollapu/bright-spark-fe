@@ -22,12 +22,12 @@ export const RetailerAttentionPanel: React.FC<RetailerAttentionPanelProps> = ({
   isLoading = false,
 }) => {
   if (isLoading) {
-    return <div className="h-14 bg-slate-100 rounded-xl animate-pulse" />;
+    return <div className="h-full min-h-24 bg-slate-100 rounded-xl animate-pulse" />;
   }
 
   if (attentionItems.length === 0) {
     return (
-      <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3.5 px-4 flex items-center justify-between gap-3 text-xs">
+      <div className="h-full min-h-24 bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
           <div>
@@ -44,7 +44,7 @@ export const RetailerAttentionPanel: React.FC<RetailerAttentionPanelProps> = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="h-full space-y-2">
       {attentionItems.map((item) => (
         <div
           key={item.id}
@@ -56,7 +56,7 @@ export const RetailerAttentionPanel: React.FC<RetailerAttentionPanelProps> = ({
               : 'bg-blue-50/90 border-blue-200/90 text-blue-950'
           }`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3 min-w-0">
             {item.type === 'WARNING' ? (
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
             ) : item.type === 'SUCCESS' ? (
@@ -64,21 +64,21 @@ export const RetailerAttentionPanel: React.FC<RetailerAttentionPanelProps> = ({
             ) : (
               <Info className="w-5 h-5 text-blue-600 shrink-0" />
             )}
-            <div>
+            <div className="min-w-0">
               <span className="font-extrabold block leading-tight">{item.title}</span>
               <span className="text-[11px] opacity-90 block mt-0.5">{item.description}</span>
             </div>
           </div>
 
           {item.actionText && item.actionUrl && (
-            <Link href={item.actionUrl} className="shrink-0 self-end sm:self-auto">
+            <Link href={item.actionUrl} className="shrink-0 self-stretch sm:self-auto">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs font-extrabold gap-1 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 cursor-pointer shadow-2xs"
+                className="h-8 w-full sm:w-auto whitespace-nowrap text-xs font-extrabold gap-1 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 cursor-pointer shadow-2xs"
+                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
               >
-                <span>{item.actionText}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                {item.actionText}
               </Button>
             </Link>
           )}

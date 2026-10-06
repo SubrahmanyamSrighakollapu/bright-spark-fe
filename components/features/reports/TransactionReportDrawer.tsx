@@ -119,7 +119,7 @@ export const TransactionReportDrawer: React.FC<TransactionReportDrawerProps> = (
         </Card>
 
         {/* SETTLEMENT DETAILS */}
-        <Card title="Settlement Details" subtitle="Merchant settlement clearance state">
+        <Card title="Settlement Details" subtitle="Retailer settlement clearance state">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
               <span className="text-slate-400 block text-[10px] font-semibold mb-1">Settlement Status</span>

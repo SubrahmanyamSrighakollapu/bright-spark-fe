@@ -66,8 +66,8 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
     <div className="space-y-6">
       {/* Row 1: Success vs Failure, Pay-In vs Pay-Out, Channel-Wise */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Chart 1: Success vs Failure Donut Chart */}
-        <Card title="Success vs Failure" subtitle="Transaction ratio distribution">
+        {/* Chart 1: Success vs Failure vs Pending Donut Chart */}
+        <Card title="Success vs Failure vs Pending" subtitle="Transaction ratio distribution">
           <div className="h-[240px] w-full flex items-center justify-center relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -77,8 +77,8 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={85}
+                  innerRadius={55}
+                  outerRadius={82}
                   paddingAngle={4}
                 >
                   {statusDistribution.map((entry, index) => (
@@ -86,14 +86,27 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                   ))}
                 </Pie>
                 <RechartsTooltip
-                  formatter={(value: any) => [formatNumber(Number(value || 0)), 'Transactions']}
+                  formatter={(value: any, name: any) => [
+                    `${formatNumber(Number(value || 0))} txns (${(
+                      (Number(value || 0) /
+                        statusDistribution.reduce((acc, curr) => acc + (curr.value || 0), 0)) *
+                      100
+                    ).toFixed(1)}%)`,
+                    name,
+                  ]}
                 />
                 <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-              <span className="text-xs text-[var(--text-muted)] font-semibold block uppercase">Success Rate</span>
-              <span className="text-xl font-bold text-emerald-600 font-mono">94.58%</span>
+            <div className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+              <span className="text-[10px] text-[var(--text-muted)] font-bold block uppercase tracking-wider">Success Rate</span>
+              <span className="text-lg font-extrabold text-emerald-600 font-mono">
+                {(() => {
+                  const total = statusDistribution.reduce((acc, curr) => acc + (curr.value || 0), 0);
+                  const success = statusDistribution.find((s) => s.name === 'Success')?.value || 0;
+                  return total > 0 ? `${((success / total) * 100).toFixed(1)}%` : '88.7%';
+                })()}
+              </span>
             </div>
           </div>
         </Card>

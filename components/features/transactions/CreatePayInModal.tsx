@@ -137,7 +137,7 @@ export const CreatePayInModal: React.FC<CreatePayInModalProps> = ({
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <Select
-            label="Requesting Merchant *"
+            label="Requesting Retailer *"
             value={formData.merchantId}
             onChange={(e) => setFormData((prev) => ({ ...prev, merchantId: e.target.value }))}
             options={[

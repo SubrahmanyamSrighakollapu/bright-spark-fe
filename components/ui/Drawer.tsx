@@ -1,112 +1,55 @@
-import React, { useEffect } from 'react';
+'use client';
+
+import React, { useId } from 'react';
+import { Sidebar } from 'primereact/sidebar';
 import { X } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { Button } from './Button';
 
 export type DrawerPosition = 'right' | 'left';
 export type DrawerSize = 'sm' | 'md' | 'lg' | 'xl';
+export interface DrawerProps { isOpen: boolean; onClose: () => void; title?: React.ReactNode; description?: string; children: React.ReactNode; footer?: React.ReactNode; position?: DrawerPosition; size?: DrawerSize; className?: string; contentClassName?: string; footerClassName?: string; }
+const sizeClasses: Record<DrawerSize, string> = { sm: 'sm:max-w-sm', md: 'sm:max-w-md', lg: 'sm:max-w-lg', xl: 'sm:max-w-2xl' };
 
-export interface DrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: React.ReactNode;
-  description?: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
-  position?: DrawerPosition;
-  size?: DrawerSize;
-  className?: string;
-}
-
-const sizeClasses: Record<DrawerSize, string> = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-2xl',
-};
-
-export const Drawer: React.FC<DrawerProps> = ({
-  isOpen,
-  onClose,
-  title,
-  description,
-  children,
-  footer,
-  position = 'right',
-  size = 'md',
-  className,
-}) => {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+export const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, description, children, footer, position = 'right', size = 'md', className, contentClassName, footerClassName }) => {
+  const titleId = useId();
+  const descriptionId = useId();
+  const header = title || description ? (
+    <div className="flex w-full items-start justify-between gap-4">
+      <div className="min-w-0 py-0.5">
+        {title && <h3 id={titleId} className="text-base font-bold text-[#0F172A]">{title}</h3>}
+        {description && <p id={descriptionId} className="mt-2 max-w-xl text-sm leading-5 text-[#64748B]">{description}</p>}
+      </div>
+      <Button variant="outline" size="sm" onClick={onClose} aria-label="Close panel" className="h-9 w-9 shrink-0 p-0"><X className="h-4 w-4" /></Button>
+    </div>
+  ) : undefined;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity duration-200"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      <div
-        className={cn(
-          'fixed inset-y-0 flex max-w-full z-10',
-          position === 'right' ? 'right-0' : 'left-0'
-        )}
-      >
-        <div
-          className={cn(
-            'w-screen bg-white shadow-2xl flex flex-col border-l border-[var(--border)] animate-in duration-200',
-            position === 'right' ? 'slide-in-from-right' : 'slide-in-from-left',
-            sizeClasses[size],
-            className
-          )}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] shrink-0">
-            <div>
-              {title && (
-                <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                  {title}
-                </h3>
-              )}
-              {description && (
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">{description}</p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-md hover:bg-slate-200 transition-colors cursor-pointer"
-              aria-label="Close panel"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="p-6 overflow-y-auto flex-1">{children}</div>
-
-          {footer && (
-            <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-secondary)] flex items-center justify-end gap-3 shrink-0">
-              {footer}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <Sidebar
+      visible={isOpen}
+      onHide={onClose}
+      position={position}
+      modal
+      dismissable
+      closeOnEscape
+      blockScroll
+      appendTo={typeof document !== 'undefined' ? document.body : undefined}
+      baseZIndex={1200}
+      showCloseIcon={false}
+      header={header}
+      aria-labelledby={title ? titleId : undefined}
+      aria-describedby={description ? descriptionId : undefined}
+      maskClassName="qs-drawer-mask"
+      pt={{
+        mask: { className: 'qs-drawer-mask' },
+        header: { className: 'qs-drawer-header flex shrink-0 items-start border-b border-slate-200 bg-white px-4 py-4 sm:px-6 sm:py-5' },
+        content: { className: 'qs-drawer-content flex min-h-0 flex-1 flex-col overflow-hidden' },
+      }}
+      className={cn('qs-drawer flex h-[100dvh] w-full flex-col overflow-hidden bg-white sm:w-screen', sizeClasses[size], className)}
+      unstyled
+    >
+      <div className={cn('min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6', contentClassName)}>{children}</div>
+      {footer && <div className={cn('shrink-0 border-t border-[#E5EAF1] bg-white px-4 py-3 shadow-[0_-8px_24px_-18px_rgba(15,23,42,0.4)] sm:px-6 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] [&>div]:flex-wrap', footerClassName)}>{footer}</div>}
+    </Sidebar>
   );
 };

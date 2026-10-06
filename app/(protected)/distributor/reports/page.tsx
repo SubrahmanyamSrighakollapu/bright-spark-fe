@@ -99,7 +99,6 @@ export default function DistributorReportsPage() {
       return;
     }
     reportService.exportToCsv(`Distributor_${activeTab.toUpperCase()}_Export`, reportData);
-    toastSuccess('Report CSV exported successfully!');
   };
 
   // Render Table Columns dynamically based on active tab
@@ -188,7 +187,7 @@ export default function DistributorReportsPage() {
             onClick={handleExportCsv}
             leftIcon={<Download className="w-4 h-4" />}
           >
-            Export Report CSV
+            Export
           </Button>
         </div>
       }

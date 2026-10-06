@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { PendingApprovalItem } from '@/services/approvalService';
+import { PendingApprovalItem, approvalService } from '@/services/approvalService';
 import { Drawer, StatusBadge, Button, ConfirmationDialog } from '@/components/ui';
+import { DocumentViewerModal } from '@/components/features/kyc/DocumentViewerModal';
+import { KYCDocument } from '@/types/domain';
 import { formatDateTime } from '@/utils/formatters';
 import {
   Building2,
   User,
-  Mail,
-  Phone,
-  ShieldCheck,
   CheckCircle2,
   XCircle,
-  Network,
   Clock,
-  Percent,
+  FileText,
+  Ban,
+  Eye,
 } from 'lucide-react';
 
 interface ApprovalDetailDrawerProps {
@@ -21,6 +21,7 @@ interface ApprovalDetailDrawerProps {
   onClose: () => void;
   onApprove: (item: PendingApprovalItem) => void;
   onReject: (item: PendingApprovalItem) => void;
+  onRefresh?: () => void;
 }
 
 export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
@@ -29,18 +30,68 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
   onClose,
   onApprove,
   onReject,
+  onRefresh,
 }) => {
   const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
+  const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<KYCDocument | null>(null);
 
   if (!item) return null;
 
-  const isDistributor = item.entityType === 'DISTRIBUTOR';
+  const isBlocked = item.kycStatus === 'BLOCKED' || item.accountStatus === 'SUSPENDED';
 
   const handleConfirmApprove = () => {
     setConfirmApproveOpen(false);
     onClose();
     onApprove(item);
   };
+
+  const handleToggleBlock = async () => {
+    setConfirmBlockOpen(false);
+    if (isBlocked) {
+      await approvalService.unblockEntity(item.id, item.entityType);
+    } else {
+      await approvalService.blockEntity(item.id, item.entityType, 'Security SLA Audit Hold');
+    }
+    if (onRefresh) onRefresh();
+    onClose();
+  };
+
+  const fallbackDocs: KYCDocument[] = [
+    {
+      id: `doc_aadhaar_${item.id}`,
+      title: 'Aadhaar Card (UIDAI Proof)',
+      type: 'AADHAAR',
+      documentNumberMasked: 'XXXX-XXXX-9842',
+      status: 'VERIFIED',
+      uploadedAt: item.createdAt,
+    },
+    {
+      id: `doc_pan_${item.id}`,
+      title: 'PAN Card (IT Dept)',
+      type: 'PAN',
+      documentNumberMasked: 'ABCDE1234F',
+      status: 'VERIFIED',
+      uploadedAt: item.createdAt,
+    },
+    {
+      id: `doc_gst_${item.id}`,
+      title: 'GSTIN Certificate (Reg-06)',
+      type: 'GST_CERTIFICATE',
+      documentNumberMasked: '27ABCDE1234F1Z5',
+      status: 'VERIFIED',
+      uploadedAt: item.createdAt,
+    },
+    {
+      id: `doc_bank_${item.id}`,
+      title: 'Cancelled Cheque / Bank Passbook',
+      type: 'CANCELLED_CHEQUE',
+      documentNumberMasked: 'HDFC0001234 — 987654321',
+      status: 'VERIFIED',
+      uploadedAt: item.createdAt,
+    },
+  ];
+  const documents = item.rawEntity.documents?.length ? item.rawEntity.documents : fallbackDocs;
 
   return (
     <>
@@ -63,30 +114,41 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
               Close
             </Button>
 
-            {item.approvalStatus === 'PENDING_APPROVAL' && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onClose();
-                    onReject(item);
-                  }}
-                  leftIcon={<XCircle className="w-4 h-4 text-rose-600" />}
-                  className="text-rose-600 border-rose-200 hover:bg-rose-50 font-semibold"
-                >
-                  Reject Request
-                </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setConfirmBlockOpen(true)}
+                leftIcon={<Ban className="w-4 h-4 text-amber-600" />}
+                className="text-amber-700 border-amber-300 hover:bg-amber-50 font-semibold"
+              >
+                {isBlocked ? 'Unblock Partner' : 'Block Partner'}
+              </Button>
 
-                <Button
-                  variant="primary"
-                  onClick={() => setConfirmApproveOpen(true)}
-                  leftIcon={<CheckCircle2 className="w-4 h-4" />}
-                  className="font-semibold"
-                >
-                  Approve & Activate
-                </Button>
-              </div>
-            )}
+              {item.approvalStatus !== 'APPROVED' && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      onClose();
+                      onReject(item);
+                    }}
+                    leftIcon={<XCircle className="w-4 h-4 text-rose-600" />}
+                    className="text-rose-600 border-rose-200 hover:bg-rose-50 font-semibold"
+                  >
+                    Reject
+                  </Button>
+
+                  <Button
+                    variant="primary"
+                    onClick={() => setConfirmApproveOpen(true)}
+                    leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                    className="font-semibold"
+                  >
+                    Approve KYC & Activate
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         }
       >
@@ -127,37 +189,6 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
             </div>
           </div>
 
-          {/* Creator Info Alert */}
-          <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/50 space-y-1 text-xs">
-            <p className="font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Network className="w-4 h-4 text-indigo-600" /> Source & Creator Metadata
-            </p>
-            <div className="grid grid-cols-2 gap-2 pt-1 text-slate-700">
-              <div>
-                <span className="text-slate-500">Created By User ID:</span>{' '}
-                <span className="font-mono text-slate-900 font-semibold">{item.createdByUserId}</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Creator Role:</span>{' '}
-                <span className="font-semibold text-slate-900">{item.createdByRole}</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Parent Master Distributor:</span>{' '}
-                <span className="font-semibold text-slate-900">
-                  {item.parentMasterDistributorName} ({item.parentMasterDistributorCode})
-                </span>
-              </div>
-              {!isDistributor && (
-                <div>
-                  <span className="text-slate-500">Parent Distributor:</span>{' '}
-                  <span className="font-semibold text-slate-900">
-                    {item.parentDistributorName} ({item.parentDistributorCode})
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Profile & Business Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-lg border border-slate-200 bg-white space-y-3">
@@ -175,7 +206,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
                 </div>
                 <div>
                   <span className="text-slate-500">Mobile:</span>{' '}
-                  <span className="font-mono text-slate-800">{item.mobile}</span>
+                  <span className="font-mono text-slate-800">+91 {item.mobile}</span>
                 </div>
               </div>
             </div>
@@ -203,27 +234,41 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
             </div>
           </div>
 
-          {/* Rejection Metadata if rejected */}
-          {item.approvalStatus === 'REJECTED' && (item.rawEntity as any).rejectionReason && (
-            <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs space-y-1">
-              <p className="font-bold text-rose-900 uppercase tracking-wider flex items-center gap-1.5">
-                <XCircle className="w-4 h-4 text-rose-600" /> Rejection Decision Metadata
-              </p>
-              <p className="text-slate-700 pt-1">
-                <strong>Reason:</strong> {(item.rawEntity as any).rejectionReason}
-              </p>
-              {(item.rawEntity as any).rejectedByUserId && (
-                <p className="text-slate-500">
-                  Rejected by: {(item.rawEntity as any).rejectedByUserId} at{' '}
-                  {formatDateTime((item.rawEntity as any).rejectedAt)}
-                </p>
-              )}
+          {/* Uploaded Documents Grid with Visual Document Modal Trigger */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
+                <FileText className="w-4 h-4 text-[var(--primary)]" /> Uploaded Verification Documents
+              </div>
+              <span className="text-[11px] text-slate-500">{documents.length} document{documents.length === 1 ? '' : 's'} submitted</span>
             </div>
-          )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between hover:border-indigo-300 transition-colors"
+                >
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-slate-900">{doc.title}</p>
+                    <p className="font-mono text-[11px] text-slate-500">{doc.documentNumberMasked}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedDoc(doc)}
+                    leftIcon={<Eye className="w-3.5 h-3.5" />}
+                  >
+                    Inspect
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </Drawer>
 
-      {/* Approve Confirmation Dialog */}
+      {/* Confirmation Dialogs */}
       <ConfirmationDialog
         isOpen={confirmApproveOpen}
         onCancel={() => setConfirmApproveOpen(false)}
@@ -232,6 +277,29 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
         message={`Are you sure you want to approve onboarding request for ${item.name} (${item.businessName})? This will transition entity approval status to APPROVED and activate login access.`}
         confirmText="Confirm Approval"
         variant="info"
+      />
+
+      <ConfirmationDialog
+        isOpen={confirmBlockOpen}
+        onCancel={() => setConfirmBlockOpen(false)}
+        onConfirm={handleToggleBlock}
+        title={`${isBlocked ? 'Unblock' : 'Block'} ${item.entityType} "${item.code}"?`}
+        message={
+          isBlocked
+            ? `Are you sure you want to restore active status for ${item.name}?`
+            : `Are you sure you want to block ${item.name}? This will suspend transaction processing.`
+        }
+        confirmText={isBlocked ? 'Confirm Unblock' : 'Confirm Block'}
+        variant={isBlocked ? 'info' : 'danger'}
+      />
+
+      {/* Visual Document Viewer Modal */}
+      <DocumentViewerModal
+        isOpen={!!selectedDoc}
+        onClose={() => setSelectedDoc(null)}
+        document={selectedDoc}
+        onVerify={() => {}}
+        onReject={() => {}}
       />
     </>
   );

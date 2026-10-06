@@ -13,6 +13,7 @@ import {
   Select,
   Pagination,
   useToast,
+  DateRangeDropdown,
 } from '@/components/ui';
 import { LedgerTable } from '@/components/features/wallet/LedgerTable';
 import { LedgerDetailsDrawer } from '@/components/features/wallet/LedgerDetailsDrawer';
@@ -33,6 +34,7 @@ export default function MasterDistributorLedgerPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [directionFilter, setDirectionFilter] = useState('ALL');
+  const [dateRange, setDateRange] = useState<any>({ preset: '7d' });
 
   // Data & Pagination
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
@@ -111,7 +113,6 @@ export default function MasterDistributorLedgerPage() {
       'Date & Time': e.createdAt,
     }));
     reportService.exportToCsv('MD_Wallet_Ledger_Report', exportRows);
-    toastSuccess('Ledger statement CSV exported successfully!');
   };
 
   const isFiltered = searchQuery || typeFilter !== 'ALL' || directionFilter !== 'ALL';
@@ -185,6 +186,12 @@ export default function MasterDistributorLedgerPage() {
               />
             </div>
 
+            <DateRangeDropdown
+              value={dateRange}
+              onChange={(val) => setDateRange(val)}
+              size="md"
+            />
+
             {isFiltered && (
               <Button
                 variant="ghost"
@@ -193,6 +200,7 @@ export default function MasterDistributorLedgerPage() {
                   setSearchQuery('');
                   setTypeFilter('ALL');
                   setDirectionFilter('ALL');
+                  setDateRange({ preset: '7d' });
                 }}
                 className="text-xs text-slate-500 hover:text-slate-900"
               >

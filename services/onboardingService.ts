@@ -51,6 +51,7 @@ export const onboardingService = {
         submittedAt: new Date().toISOString(),
         kycStatus: 'PENDING',
         onboardingStatus: 'SUBMITTED',
+        documents: input.documents,
       };
 
       inMemoryOnboarding.unshift(newApp);

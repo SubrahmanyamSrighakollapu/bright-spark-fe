@@ -1,8 +1,11 @@
+"use client";
+
 import React, { InputHTMLAttributes, forwardRef, useId } from 'react';
+import { InputText } from 'primereact/inputtext';
 import { cn } from '@/utils/cn';
 import { FormField } from './FormField';
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -24,6 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className,
       containerClassName,
       id: customId,
+      value,
       ...props
     },
     ref
@@ -39,11 +43,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           </div>
         )}
 
-        <input
+        <InputText
           ref={ref}
           id={inputId}
           disabled={disabled}
           required={required}
+          aria-invalid={Boolean(error)}
+          value={value == null ? value : String(value)}
           className={cn(
             'w-full h-[40px] px-3.5 bg-white text-sm text-[var(--text-primary)] border border-[var(--border)] rounded-[var(--radius-md)] transition-colors placeholder:text-[var(--text-disabled)] focus:outline-hidden focus:border-[var(--border-focus)] focus:ring-1 focus:ring-[var(--border-focus)] disabled:bg-[var(--bg-secondary)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed',
             leftIcon ? 'pl-9' : '',
