@@ -49,7 +49,7 @@ export class AuthService {
   async login(
     identifier: string,
     password?: string
-  ): Promise<{ success: boolean; session?: AuthSession; error?: string; defaultRoute?: string }> {
+  ): Promise<{ success: boolean; session?: AuthSession; error?: string; defaultRoute?: string; isNetworkError?: boolean }> {
     try {
       const response = await apiClient.post<LoginApiResponse>('/auth/login', {
         identifier,
@@ -79,10 +79,11 @@ export class AuthService {
         return { success: true, session, defaultRoute };
       }
 
-      return { success: false, error: 'Authentication failed' };
+      return { success: false, error: 'Authentication failed', isNetworkError: false };
     } catch (err: unknown) {
       const message = (err as Error)?.message || 'Invalid credentials or server unavailable';
-      return { success: false, error: message };
+      const isNetworkError = message === 'Failed to fetch' || message.includes('Network request failed');
+      return { success: false, error: message, isNetworkError };
     }
   }
 

@@ -90,7 +90,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true, defaultRoute: realRes.defaultRoute };
       }
 
-      // 2. Fallback to mock auth if real login failed due to offline/mock mode
+      // If backend was reached and explicitly rejected credentials, return backend error directly
+      if (realRes.error && !realRes.isNetworkError && realRes.error !== 'Failed to fetch') {
+        return { success: false, error: realRes.error };
+      }
+
+      // 2. Fallback to mock auth ONLY if backend server is unreachable
       const res = await mockAuthService.authenticate(identifier);
 
       if (res.success && res.data) {

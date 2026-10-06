@@ -87,7 +87,11 @@ class ApiClient {
         } catch {
           errorData = await response.text();
         }
-        const message = (errorData as { message?: string })?.message || response.statusText || 'API Request Failed';
+        const message =
+          (errorData as { error?: { message?: string }; message?: string })?.error?.message ||
+          (errorData as { message?: string })?.message ||
+          response.statusText ||
+          'API Request Failed';
         throw new ApiError(message, response.status, errorData);
       }
 
