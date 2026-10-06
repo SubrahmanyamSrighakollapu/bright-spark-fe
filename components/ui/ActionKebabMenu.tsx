@@ -26,7 +26,19 @@ export const ActionKebabMenu: React.FC<ActionKebabMenuProps> = ({
   align = 'right',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handleToggle = () => {
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // If space below is less than 160px (or near bottom of table container), flip menu upwards
+      setDropUp(spaceBelow < 160);
+    }
+    setIsOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,8 +69,9 @@ export const ActionKebabMenu: React.FC<ActionKebabMenuProps> = ({
   return (
     <div className={cn('relative inline-block text-left', className)} ref={containerRef}>
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={handleToggle}
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-transparent text-slate-500 transition-colors',
           'hover:border-slate-200 hover:bg-slate-100 hover:text-slate-900',
@@ -75,8 +88,9 @@ export const ActionKebabMenu: React.FC<ActionKebabMenuProps> = ({
       {isOpen && (
         <div
           className={cn(
-            'absolute z-50 mt-1 min-w-[170px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10 ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95',
-            align === 'right' ? 'right-0 origin-top-right' : 'left-0 origin-top-left'
+            'absolute z-50 min-w-[170px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10 ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95',
+            dropUp ? 'bottom-full mb-1.5 origin-bottom-right' : 'top-full mt-1.5 origin-top-right',
+            align === 'right' ? 'right-0' : 'left-0'
           )}
         >
           {items.map((item) => {
