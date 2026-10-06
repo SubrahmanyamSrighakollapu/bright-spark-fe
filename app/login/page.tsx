@@ -16,14 +16,14 @@ import { FormField } from '@/components/ui/FormField';
 import { Modal } from '@/components/ui/Modal';
 
 const demoAccounts = [
-  ['Platform Admin', 'admin@qinstarpay.com'],
-  ['KYC Manager', 'kyc.manager@qinstarpay.com'],
-  ['Sales Lead', 'sales.lead@qinstarpay.com'],
-  ['Accountant', 'accountant@qinstarpay.com'],
-  ['Operations', 'operations@qinstarpay.com'],
-  ['Master Distributor', 'md001@qinstarpay.com'],
-  ['Distributor', 'dst001@qinstarpay.com'],
-  ['Retailer', 'ret001@qinstarpay.com'],
+  ['Platform Admin', 'admin@qinstarpay.com', 'Admin@1234567'],
+  ['KYC Manager', 'kyc@qinstarpay.com', 'Demo@123456'],
+  ['Sales Lead', 'sales@qinstarpay.com', 'Demo@123456'],
+  ['Accountant', 'accounts@qinstarpay.com', 'Demo@123456'],
+  ['Operations', 'ops@qinstarpay.com', 'Demo@123456'],
+  ['Master Distributor', 'md@qinstarpay.com', 'Demo@123456'],
+  ['Distributor', 'distributor@qinstarpay.com', 'Demo@123456'],
+  ['Retailer', 'retailer@qinstarpay.com', 'Demo@123456'],
 ] as const;
 
 export default function LoginPage() {
@@ -61,9 +61,9 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemoAccount = (email: string) => {
+  const fillDemoAccount = (email: string, pass: string) => {
     setIdentifier(email);
-    setPassword('demo1234');
+    setPassword(pass);
     setErrorMessage(null);
     setFieldErrors({});
   };
@@ -104,7 +104,7 @@ export default function LoginPage() {
             <div className="my-6 flex items-center gap-3"><span className="h-px flex-1 bg-slate-200" /><span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">New partner?</span><span className="h-px flex-1 bg-slate-200" /></div>
             <Link href="/signup" className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-700 transition-colors hover:border-[#0F4C81] hover:bg-blue-50 hover:text-[#0F4C81]">Apply for an account <ArrowRight className="h-4 w-4" /></Link>
 
-            {DEV_FEATURES.showDemoCredentials && <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/70 p-3"><button type="button" onClick={() => setShowDemoAccounts((value) => !value)} className="flex w-full cursor-pointer items-center justify-between text-xs font-bold text-slate-600"><span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#0F4C81]" />Demo workspaces</span>{showDemoAccounts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</button>{showDemoAccounts && <div className="mt-3 grid max-h-52 grid-cols-2 gap-2 overflow-y-auto">{demoAccounts.map(([label, email]) => <button key={email} type="button" onClick={() => fillDemoAccount(email)} className="cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:border-blue-200 hover:bg-blue-50"><span className="block text-[11px] font-bold text-slate-800">{label}</span><span className="mt-0.5 block truncate text-[9px] text-slate-500">{email}</span></button>)}</div>}</div>}
+             {DEV_FEATURES.showDemoCredentials && <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/70 p-3"><button type="button" onClick={() => setShowDemoAccounts((value) => !value)} className="flex w-full cursor-pointer items-center justify-between text-xs font-bold text-slate-600"><span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#0F4C81]" />Demo workspaces</span>{showDemoAccounts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</button>{showDemoAccounts && <div className="mt-3 grid max-h-52 grid-cols-2 gap-2 overflow-y-auto">{demoAccounts.map(([label, email, pass]) => <button key={email} type="button" onClick={() => fillDemoAccount(email, pass)} className="cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:border-blue-200 hover:bg-blue-50"><span className="block text-[11px] font-bold text-slate-800">{label}</span><span className="mt-0.5 block truncate text-[9px] text-slate-500">{email}</span></button>)}</div>}</div>}
             <p className="mt-7 text-center text-[11px] text-slate-400">Protected by Qin Star Pay security and access controls.</p>
           </div>
         </section>
