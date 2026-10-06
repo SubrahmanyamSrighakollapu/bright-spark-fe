@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -8,189 +8,200 @@ import { Table } from '@/components/ui/Table';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { ColumnDefinition } from '@/types/common';
-import { Shield, Plus, Edit, Trash2, CheckCircle2, UserCheck, Lock } from 'lucide-react';
-
-export interface SystemRole {
-  id: string;
-  roleName: string;
-  isEmployee: boolean;
-  permissions: {
-    orders: boolean;
-    wallet: boolean;
-    reports: boolean;
-    kycs: boolean;
-    integrations: boolean;
-    settings: boolean;
-  };
-  userCount: number;
-}
-
-const INITIAL_ROLES: SystemRole[] = [
-  {
-    id: 'role_1',
-    roleName: 'Super Admin',
-    isEmployee: true,
-    permissions: { orders: true, wallet: true, reports: true, kycs: true, integrations: true, settings: true },
-    userCount: 2,
-  },
-  {
-    id: 'role_2',
-    roleName: 'Super Distributor',
-    isEmployee: false,
-    permissions: { orders: true, wallet: true, reports: true, kycs: false, integrations: false, settings: false },
-    userCount: 14,
-  },
-  {
-    id: 'role_3',
-    roleName: 'Master Distributor',
-    isEmployee: false,
-    permissions: { orders: true, wallet: true, reports: true, kycs: false, integrations: false, settings: false },
-    userCount: 48,
-  },
-  {
-    id: 'role_4',
-    roleName: 'Distributor',
-    isEmployee: false,
-    permissions: { orders: true, wallet: true, reports: true, kycs: false, integrations: false, settings: false },
-    userCount: 182,
-  },
-  {
-    id: 'role_5',
-    roleName: 'Retailer',
-    isEmployee: false,
-    permissions: { orders: true, wallet: true, reports: false, kycs: false, integrations: false, settings: false },
-    userCount: 1240,
-  },
-  {
-    id: 'role_6',
-    roleName: 'Employee',
-    isEmployee: true,
-    permissions: { orders: true, wallet: false, reports: true, kycs: true, integrations: false, settings: false },
-    userCount: 9,
-  },
-];
-
-const MODULE_LIST = [
-  { key: 'orders', label: 'Orders & Crops' },
-  { key: 'wallet', label: 'Wallet Operations' },
-  { key: 'reports', label: 'Reports & Audit' },
-  { key: 'kycs', label: 'KYC Verifications' },
-  { key: 'integrations', label: 'Integrations PG' },
-  { key: 'settings', label: 'Admin Settings' },
-] as const;
+import { Shield, Plus, Edit, Lock, CheckCircle2, RefreshCw } from 'lucide-react';
+import { roleService, BackendRole, BackendPermission } from '@/services/roleService';
 
 export const RolesManagementView: React.FC = () => {
-  const { toastSuccess, toastInfo } = useToast();
-  const [roles, setRoles] = useState<SystemRole[]>(INITIAL_ROLES);
+  const { toastSuccess, toastError, toastInfo } = useToast();
+  const [roles, setRoles] = useState<BackendRole[]>([]);
+  const [permissionsCatalog, setPermissionsCatalog] = useState<BackendPermission[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Form & Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState<SystemRole | null>(null);
+  const [editingRole, setEditingRole] = useState<BackendRole | null>(null);
+  const [roleCode, setRoleCode] = useState('');
   const [roleName, setRoleName] = useState('');
-  const [isEmployee, setIsEmployee] = useState(false);
-  const [permissions, setPermissions] = useState<SystemRole['permissions']>({
-    orders: true,
-    wallet: true,
-    reports: false,
-    kycs: false,
-    integrations: false,
-    settings: false,
-  });
+  const [roleDescription, setRoleDescription] = useState('');
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchRolesAndPermissions = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [rolesRes, permsRes] = await Promise.all([
+        roleService.getRoles(),
+        roleService.getPermissions(),
+      ]);
+
+      if (rolesRes.success && rolesRes.data) {
+        setRoles(rolesRes.data);
+      }
+      if (permsRes.success && permsRes.data) {
+        setPermissionsCatalog(permsRes.data);
+      }
+    } catch (err) {
+      console.error('Failed to load roles/permissions:', err);
+      toastError('Failed to fetch role permissions from backend server');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toastError]);
+
+  useEffect(() => {
+    fetchRolesAndPermissions();
+  }, [fetchRolesAndPermissions]);
 
   const handleOpenAdd = () => {
     setEditingRole(null);
+    setRoleCode('');
     setRoleName('');
-    setIsEmployee(false);
-    setPermissions({ orders: true, wallet: true, reports: false, kycs: false, integrations: false, settings: false });
+    setRoleDescription('');
+    setSelectedPermissions(['PARTY_READ', 'USER_READ']);
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (role: SystemRole) => {
+  const handleOpenEdit = (role: BackendRole) => {
     setEditingRole(role);
-    setRoleName(role.roleName);
-    setIsEmployee(role.isEmployee);
-    setPermissions(role.permissions);
+    setRoleCode(role.code);
+    setRoleName(role.name);
+    setRoleDescription(role.description || '');
+    setSelectedPermissions(role.permissions || []);
     setIsModalOpen(true);
   };
 
-  const handleSaveRole = (e: React.FormEvent) => {
+  const handleTogglePermission = (code: string) => {
+    setSelectedPermissions((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+    );
+  };
+
+  const handleSaveRole = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roleName.trim()) return;
 
-    if (editingRole) {
-      setRoles((prev) =>
-        prev.map((r) => (r.id === editingRole.id ? { ...r, roleName, isEmployee, permissions } : r))
-      );
-      toastSuccess(`Role "${roleName}" updated successfully!`);
-    } else {
-      const newRole: SystemRole = {
-        id: `role_${Date.now()}`,
-        roleName,
-        isEmployee,
-        permissions,
-        userCount: 0,
-      };
-      setRoles([...roles, newRole]);
-      toastSuccess(`Role "${roleName}" created successfully!`);
+    setIsSubmitting(true);
+    try {
+      if (editingRole) {
+        const res = await roleService.updateRole(editingRole.id, {
+          name: roleName,
+          description: roleDescription,
+          permissionCodes: selectedPermissions,
+        });
+
+        if (res.success && res.data) {
+          toastSuccess(`Role "${roleName}" updated successfully!`);
+          fetchRolesAndPermissions();
+          setIsModalOpen(false);
+        } else {
+          toastError(res.message || 'Failed to update role');
+        }
+      } else {
+        const codeClean = roleCode.trim().toUpperCase().replace(/\s+/g, '_') || `EMP_${Date.now()}`;
+        const res = await roleService.createRole({
+          code: codeClean,
+          name: roleName,
+          description: roleDescription,
+          permissionCodes: selectedPermissions,
+        });
+
+        if (res.success && res.data) {
+          toastSuccess(`Role "${roleName}" created successfully!`);
+          fetchRolesAndPermissions();
+          setIsModalOpen(false);
+        } else {
+          toastError(res.message || 'Failed to create role');
+        }
+      }
+    } catch (err: unknown) {
+      const msg = (err as Error)?.message || 'An error occurred while saving the role';
+      toastError(msg);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string, name: string) => {
-    setRoles((prev) => prev.filter((r) => r.id !== id));
-    toastInfo(`Role "${name}" removed.`);
-  };
+  const modulesGrouped = permissionsCatalog.reduce<Record<string, BackendPermission[]>>((acc, perm) => {
+    const mod = perm.module || 'GENERAL';
+    if (!acc[mod]) acc[mod] = [];
+    acc[mod].push(perm);
+    return acc;
+  }, {});
 
-  const columns: ColumnDefinition<SystemRole>[] = [
+  const columns: ColumnDefinition<BackendRole>[] = [
     {
-      key: 'roleName',
-      header: 'Role Name',
+      key: 'name',
+      header: 'Role Title & Code',
       render: (row) => (
-        <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-[#155EEF]" />
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-blue-50 text-[#155EEF]">
+            <Shield className="w-4 h-4" />
+          </div>
           <div>
-            <div className="font-semibold text-[#0F172A]">{row.roleName}</div>
-            <div className="text-xs text-[#64748B]">{row.userCount} Active Users</div>
+            <div className="font-bold text-[#0F172A] text-xs flex items-center gap-1.5">
+              {row.name}
+              {row.isSystem && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                  <Lock className="w-3 h-3" /> System Protected
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] text-[#64748B] font-mono mt-0.5">Code: {row.code}</div>
           </div>
         </div>
       ),
     },
     {
-      key: 'roleType',
-      header: 'Role Type',
+      key: 'category',
+      header: 'Category & Sub-Type',
       render: (row) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-            row.isEmployee
-              ? 'bg-purple-50 text-purple-700 border-purple-200'
-              : 'bg-blue-50 text-blue-700 border-blue-200'
-          }`}
-        >
-          {row.isEmployee ? 'Operational Employee' : 'Network Downline'}
+        <div>
+          <span
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
+              row.category === 'SYSTEM'
+                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                : row.category === 'NETWORK'
+                ? 'bg-blue-50 text-blue-800 border-blue-200'
+                : 'bg-purple-50 text-purple-800 border-purple-200'
+            }`}
+          >
+            {row.category === 'EMPLOYEE' ? 'Employee Role' : `${row.category} Role`}
+          </span>
+          {row.category === 'EMPLOYEE' && (
+            <div className="text-[10px] text-slate-500 font-medium mt-1">
+              Departments: Operations, Accounts, KYC, Sales
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'assignedUserCount',
+      header: 'Active Users',
+      render: (row) => (
+        <span className="text-xs font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+          {row.assignedUserCount} Accounts
         </span>
       ),
     },
     {
       key: 'permissions',
-      header: 'Permission Matrix',
+      header: 'Permission Matrix Summary',
       render: (row) => (
         <div className="flex flex-wrap gap-1 max-w-md">
-          {MODULE_LIST.map((m) => {
-            const hasPerm = row.permissions[m.key];
-            return (
-              <span
-                key={m.key}
-                className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                  hasPerm
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-slate-100 text-slate-400 border border-slate-200 line-through'
-                }`}
-              >
-                {m.label}
-              </span>
-            );
-          })}
+          {row.permissions.slice(0, 6).map((code) => (
+            <span
+              key={code}
+              className="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
+            >
+              {code}
+            </span>
+          ))}
+          {row.permissions.length > 6 && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-slate-100 text-slate-600 border border-slate-200">
+              +{row.permissions.length - 6} more
+            </span>
+          )}
         </div>
       ),
     },
@@ -203,22 +214,12 @@ export const RolesManagementView: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => handleOpenEdit(row)}
-            className="h-8 px-2 text-[#155EEF] hover:bg-[#F1F5F9]"
+            disabled={row.isSystem}
+            className="h-8 px-2 text-[#155EEF] hover:bg-[#F1F5F9] disabled:opacity-40"
           >
             <Edit className="w-3.5 h-3.5 mr-1" />
-            Edit
+            Configure Permissions
           </Button>
-          {row.roleName !== 'Super Admin' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleDelete(row.id, row.roleName)}
-              className="h-8 px-2 text-rose-600 hover:bg-rose-50"
-            >
-              <Trash2 className="w-3.5 h-3.5 mr-1" />
-              Delete
-            </Button>
-          )}
         </div>
       ),
     },
@@ -226,86 +227,121 @@ export const RolesManagementView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
+      {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
             <Shield className="w-6 h-6 text-[#155EEF]" />
             Roles & Permission Matrix Management
           </h1>
-          <p className="text-sm text-[#64748B] mt-0.5">
-            Configure system user roles and module visibility permissions across network downlines and staff.
+          <p className="text-xs text-[#64748B] mt-1">
+            Manage system roles (Admin, Master Distributor, Distributor, Retailer) and configurable Employee staff roles (Operations, Accounts, KYC, Sales).
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenAdd}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Role
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={fetchRolesAndPermissions} isLoading={isLoading}>
+            <RefreshCw className="w-4 h-4 mr-1.5" />
+            Refresh
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleOpenAdd}>
+            <Plus className="w-4 h-4 mr-1.5" />
+            Create Employee Sub-Role
+          </Button>
+        </div>
       </div>
 
-      {/* Table */}
+      {/* Roles Table */}
       <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-4">
-        <Table columns={columns} data={roles} keyExtractor={(r) => r.id} />
+        <Table columns={columns} data={roles} keyExtractor={(r) => String(r.id)} isLoading={isLoading} />
       </Card>
 
-      {/* Modal */}
+      {/* Role Config Modal */}
       {isModalOpen && (
         <Modal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          title={editingRole ? `Edit Role: ${editingRole.roleName}` : 'Create System Role'}
+          title={editingRole ? `Configure Role: ${editingRole.name}` : 'Create Employee Sub-Role'}
         >
-          <form onSubmit={handleSaveRole} className="space-y-4">
+          <form onSubmit={handleSaveRole} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
+            {!editingRole && (
+              <div>
+                <label className="block text-xs font-semibold text-[#334155] mb-1">
+                  Role Unique Code <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="e.g. EMP_SENIOR_OPS"
+                  value={roleCode}
+                  onChange={(e) => setRoleCode(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Role Name (roleName) <span className="text-rose-500">*</span>
+                Role Display Name <span className="text-rose-500">*</span>
               </label>
               <Input
-                placeholder="e.g. Regional Manager"
+                placeholder="e.g. Senior Operations Officer"
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 required
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isEmp"
-                checked={isEmployee}
-                onChange={(e) => setIsEmployee(e.target.checked)}
-                className="w-4 h-4 text-[#155EEF] rounded focus:ring-[#155EEF]"
+            <div>
+              <label className="block text-xs font-semibold text-[#334155] mb-1">Description</label>
+              <Input
+                placeholder="Operational scope & responsibilities"
+                value={roleDescription}
+                onChange={(e) => setRoleDescription(e.target.value)}
               />
-              <label htmlFor="isEmp" className="text-xs font-medium text-[#0F172A]">
-                Is Operational Staff / Employee Role (isEmployee)
-              </label>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-2">Module Access Permissions</label>
-              <div className="grid grid-cols-2 gap-2 p-3 bg-[#F8FAFC] rounded-lg border border-[#E2E8F0]">
-                {MODULE_LIST.map((m) => (
-                  <label key={m.key} className="flex items-center gap-2 text-xs text-[#0F172A] cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={permissions[m.key]}
-                      onChange={(e) =>
-                        setPermissions({ ...permissions, [m.key]: e.target.checked })
-                      }
-                      className="w-3.5 h-3.5 text-[#155EEF] rounded"
-                    />
-                    {m.label}
-                  </label>
+              <label className="block text-xs font-semibold text-[#334155] mb-2">
+                Module Permission Assignments ({selectedPermissions.length} selected)
+              </label>
+              <div className="space-y-3 p-3 bg-[#F8FAFC] rounded-lg border border-[#E2E8F0]">
+                {Object.entries(modulesGrouped).map(([moduleName, perms]) => (
+                  <div key={moduleName} className="space-y-1.5">
+                    <span className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 border-b border-slate-200 pb-1">
+                      {moduleName} Module
+                    </span>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      {perms.map((p) => {
+                        const isChecked = selectedPermissions.includes(p.code);
+                        return (
+                          <label
+                            key={p.code}
+                            className={`flex items-center gap-2 p-2 rounded-md border text-xs cursor-pointer transition-colors ${
+                              isChecked
+                                ? 'bg-blue-50/70 border-blue-200 text-blue-900 font-semibold'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleTogglePermission(p.code)}
+                              className="w-3.5 h-3.5 text-[#155EEF] rounded"
+                            />
+                            <span className="truncate">{p.code}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary">
-                {editingRole ? 'Update Role' : 'Save Role'}
+              <Button type="submit" variant="primary" isLoading={isSubmitting}>
+                {editingRole ? 'Update Role Permissions' : 'Create Role'}
               </Button>
             </div>
           </form>
