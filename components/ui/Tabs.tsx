@@ -13,7 +13,7 @@ export const Tabs: React.FC<TabsProps> = ({ items, activeTab, onChange, variant 
   const model: MenuItem[] = items.map((tab) => ({
     label: tab.label,
     disabled: tab.disabled,
-    template: (_item, options) => {
+    template: (_item: MenuItem, options: { onClick: (event: React.MouseEvent<HTMLElement>) => void }) => {
       const selected = activeTab === tab.id;
       return (
         <button
