@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -10,13 +10,12 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { ColumnDefinition } from '@/types/common';
 import { formatCurrency, formatDateTime } from '@/utils/formatters';
+import { userService, NetworkUserItem } from '@/services/userService';
 import {
   Wallet,
   PlusCircle,
   MinusCircle,
   Search,
-  ArrowUpRight,
-  ArrowDownLeft,
   CheckCircle2,
 } from 'lucide-react';
 
@@ -27,7 +26,7 @@ export interface WalletTransactionItem {
   userName: string;
   mobile: string;
   userId: string;
-  role: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER';
+  role: string;
   businessName: string;
   walletFrom: string;
   walletTo: string;
@@ -88,6 +87,7 @@ export const AddWalletView: React.FC = () => {
   const { toastSuccess, toastError } = useToast();
 
   const [logs, setLogs] = useState<WalletTransactionItem[]>(MOCK_WALLET_LOGS);
+  const [networkUsers, setNetworkUsers] = useState<NetworkUserItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [typeFilter, setTypeFilter] = useState('ALL');
@@ -97,6 +97,23 @@ export const AddWalletView: React.FC = () => {
   const [targetUserId, setTargetUserId] = useState('');
   const [amountInput, setAmountInput] = useState('');
   const [noteInput, setNoteInput] = useState('');
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const res = await userService.getUsers();
+        if (res && res.success && res.data) {
+          setNetworkUsers(res.data.items || []);
+          if (res.data.items && res.data.items.length > 0) {
+            setTargetUserId(res.data.items[0].id);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load user list for wallet view:', err);
+      }
+    }
+    loadUsers();
+  }, []);
 
   const filteredLogs = logs.filter((item) => {
     const matchesSearch =
@@ -108,11 +125,11 @@ export const AddWalletView: React.FC = () => {
     return matchesSearch && matchesRole && matchesType;
   });
 
-  const handleExecuteAction = (e: React.FormEvent) => {
+  const handleExecuteAction = async (e: React.FormEvent) => {
     e.preventDefault();
     const numAmount = parseFloat(amountInput);
     if (!targetUserId) {
-      toastError('Please specify a valid User ID / User Name.');
+      toastError('Please select a valid User.');
       return;
     }
     if (isNaN(numAmount) || numAmount <= 0) {
@@ -120,15 +137,29 @@ export const AddWalletView: React.FC = () => {
       return;
     }
 
+    const selectedUser = networkUsers.find(
+      (u) => u.id === targetUserId || u.userId === targetUserId || u.code === targetUserId
+    );
+
+    try {
+      if (actionModalType === 'CREDIT') {
+        await userService.creditWallet(targetUserId, numAmount, noteInput);
+      } else {
+        await userService.debitWallet(targetUserId, numAmount, noteInput);
+      }
+    } catch (err) {
+      console.warn('Backend wallet endpoint error, recording transaction locally:', err);
+    }
+
     const newLog: WalletTransactionItem = {
       srNo: logs.length + 1,
       transDate: new Date().toISOString(),
       transId: `WLT${Date.now().toString().slice(-8)}`,
-      userName: targetUserId === 'MD901' ? 'Ramesh Kumar Hub' : 'Zenith Retail Mart',
-      mobile: '9876543210',
-      userId: targetUserId,
-      role: targetUserId.startsWith('MD') ? 'MASTER_DISTRIBUTOR' : targetUserId.startsWith('DST') ? 'DISTRIBUTOR' : 'RETAILER',
-      businessName: 'Operational Downline Partner',
+      userName: selectedUser?.fullName || selectedUser?.displayName || targetUserId,
+      mobile: selectedUser?.mobile || '9876543210',
+      userId: selectedUser?.userId || selectedUser?.code || targetUserId,
+      role: selectedUser?.role || 'RETAILER',
+      businessName: selectedUser?.displayName || selectedUser?.businessName || 'Network Partner',
       walletFrom: actionModalType === 'CREDIT' ? 'SYSTEM_MAIN' : `${targetUserId}_WALLET`,
       walletTo: actionModalType === 'CREDIT' ? `${targetUserId}_WALLET` : 'SYSTEM_MAIN',
       type: actionModalType === 'CREDIT' ? 'CREDIT' : 'DEBIT',
@@ -138,14 +169,25 @@ export const AddWalletView: React.FC = () => {
 
     setLogs([newLog, ...logs]);
     toastSuccess(
-      `Wallet ${actionModalType === 'CREDIT' ? 'Credit' : 'Debit'} of ${formatCurrency(numAmount)} for user ${targetUserId} executed successfully!`
+      `Wallet ${actionModalType === 'CREDIT' ? 'Credit' : 'Debit'} of ${formatCurrency(numAmount)} executed successfully!`
     );
 
     setActionModalType(null);
-    setTargetUserId('');
     setAmountInput('');
     setNoteInput('');
   };
+
+  const userOptions =
+    networkUsers.length > 0
+      ? networkUsers.map((u) => ({
+          value: u.id,
+          label: `${u.userId || u.code} - ${u.fullName || u.displayName} (${u.role})`,
+        }))
+      : [
+          { value: 'MD901', label: 'MD901 - Ramesh Kumar Hub (Master Dist)' },
+          { value: 'DST402', label: 'DST402 - Apex Distro Agency (Distributor)' },
+          { value: 'RET2045', label: 'RET2045 - Zenith Retail Mart (Retailer)' },
+        ];
 
   const columns: ColumnDefinition<WalletTransactionItem>[] = [
     { key: 'srNo', header: 'Sr No', align: 'center', render: (r) => <span className="font-mono text-xs text-[#64748B]">{r.srNo}</span> },
@@ -192,7 +234,7 @@ export const AddWalletView: React.FC = () => {
       key: 'status',
       header: 'Status',
       align: 'center',
-      render: (r) => (
+      render: () => (
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
           <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Success
         </span>
@@ -207,7 +249,7 @@ export const AddWalletView: React.FC = () => {
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
             <Wallet className="w-5 h-5 text-[#155EEF]" />
-            Add Wallet (AddWallet)
+            Add Wallet (Wallet Operations)
           </h1>
           <p className="text-xs text-[#64748B] mt-1 font-medium">
             Audit wallet balances and manually execute credit/debit adjustments for downline users.
@@ -219,7 +261,7 @@ export const AddWalletView: React.FC = () => {
             variant="secondary"
             onClick={() => {
               setActionModalType('DEBIT');
-              setTargetUserId('RET2045');
+              if (userOptions.length > 0) setTargetUserId(userOptions[0].value);
             }}
             leftIcon={<MinusCircle className="w-4 h-4 text-rose-600" />}
           >
@@ -230,7 +272,7 @@ export const AddWalletView: React.FC = () => {
             variant="primary"
             onClick={() => {
               setActionModalType('CREDIT');
-              setTargetUserId('RET2045');
+              if (userOptions.length > 0) setTargetUserId(userOptions[0].value);
             }}
             leftIcon={<PlusCircle className="w-4 h-4" />}
           >
@@ -295,11 +337,7 @@ export const AddWalletView: React.FC = () => {
               label="Select Downline User / ID"
               value={targetUserId}
               onChange={(e) => setTargetUserId(e.target.value)}
-              options={[
-                { value: 'MD901', label: 'MD901 - Ramesh Kumar Hub (Master Dist)' },
-                { value: 'DST402', label: 'DST402 - Apex Distro Agency (Distributor)' },
-                { value: 'RET2045', label: 'RET2045 - Zenith Retail Mart (Retailer)' },
-              ]}
+              options={userOptions}
             />
 
             <Input

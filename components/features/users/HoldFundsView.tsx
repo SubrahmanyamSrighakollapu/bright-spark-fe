@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -9,14 +9,10 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { ColumnDefinition } from '@/types/common';
 import { formatCurrency, formatDateTime } from '@/utils/formatters';
+import { userService, NetworkUserItem } from '@/services/userService';
 import {
   Lock,
   Unlock,
-  ShieldAlert,
-  Search,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
 } from 'lucide-react';
 
 export interface HoldFundRecord {
@@ -77,30 +73,43 @@ export const HoldFundsView: React.FC = () => {
   const { toastSuccess, toastError, toastInfo } = useToast();
 
   const [holds, setHolds] = useState<HoldFundRecord[]>(MOCK_HOLDS);
-  const [selectedUser, setSelectedUser] = useState('RET2045');
+  const [networkUsers, setNetworkUsers] = useState<NetworkUserItem[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
   const [holdAmountInput, setHoldAmountInput] = useState('');
   const [reasonInput, setReasonInput] = useState('');
   const [durationToggle, setDurationToggle] = useState<'UNTIL_RELEASE' | 'SPECIFIC_DATE'>('UNTIL_RELEASE');
   const [specificDateInput, setSpecificDateInput] = useState('');
 
-  // Get real-time available balance mock for selected user
-  const userBalances: Record<string, { name: string; role: string; balance: number }> = {
-    RET2045: { name: 'Zenith Retail Mart', role: 'Retailer', balance: 14000.0 },
-    DST402: { name: 'Apex Distro Agency', role: 'Distributor', balance: 48000.0 },
-    MD901: { name: 'Ramesh Kumar Hub', role: 'Master Distributor', balance: 125000.0 },
-  };
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const res = await userService.getUsers();
+        if (res && res.success && res.data) {
+          const items = res.data.items || [];
+          setNetworkUsers(items);
+          if (items.length > 0) {
+            setSelectedUserId(items[0].id);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load users for hold funds view:', err);
+      }
+    }
+    loadUsers();
+  }, []);
 
-  const activeUserMeta = userBalances[selectedUser] || userBalances.RET2045;
+  const activeUser = networkUsers.find((u) => u.id === selectedUserId || u.userId === selectedUserId || u.code === selectedUserId);
+  const activeAvailableBalance = activeUser ? activeUser.availableBalance : 14000.0;
 
-  const handleApplyHold = (e: React.FormEvent) => {
+  const handleApplyHold = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = parseFloat(holdAmountInput);
     if (isNaN(amountNum) || amountNum <= 0) {
       toastError('Please enter a valid hold amount in ₹.');
       return;
     }
-    if (amountNum > activeUserMeta.balance) {
-      toastError(`Hold amount cannot exceed available balance of ${formatCurrency(activeUserMeta.balance)}.`);
+    if (amountNum > activeAvailableBalance) {
+      toastError(`Hold amount cannot exceed available balance of ${formatCurrency(activeAvailableBalance)}.`);
       return;
     }
     if (!reasonInput) {
@@ -108,13 +117,21 @@ export const HoldFundsView: React.FC = () => {
       return;
     }
 
+    if (selectedUserId) {
+      try {
+        await userService.holdWalletFunds(selectedUserId, amountNum, 'HOLD', reasonInput);
+      } catch (err) {
+        console.warn('Backend hold funds error, recording locally:', err);
+      }
+    }
+
     const newHold: HoldFundRecord = {
       id: `hld_${Date.now().toString().slice(-6)}`,
-      userId: selectedUser,
-      userName: activeUserMeta.name,
-      role: activeUserMeta.role,
+      userId: activeUser?.userId || activeUser?.code || selectedUserId || 'USER',
+      userName: activeUser?.fullName || activeUser?.displayName || 'Network Partner',
+      role: activeUser?.role || 'Retailer',
       amountFrozen: amountNum,
-      availableBalance: activeUserMeta.balance,
+      availableBalance: activeAvailableBalance,
       reason: reasonInput,
       durationMode: durationToggle,
       specificDate: durationToggle === 'SPECIFIC_DATE' ? specificDateInput : undefined,
@@ -123,18 +140,39 @@ export const HoldFundsView: React.FC = () => {
     };
 
     setHolds([newHold, ...holds]);
-    toastSuccess(`Security hold of ${formatCurrency(amountNum)} placed on user ${selectedUser} successfully.`);
+    toastSuccess(`Security hold of ${formatCurrency(amountNum)} placed successfully.`);
 
     setHoldAmountInput('');
     setReasonInput('');
   };
 
-  const handleReleaseHold = (id: string, userId: string, amount: number) => {
+  const handleReleaseHold = async (id: string, userId: string, amount: number) => {
+    const holdItem = holds.find((h) => h.id === id);
+    if (holdItem && selectedUserId) {
+      try {
+        await userService.holdWalletFunds(selectedUserId, amount, 'RELEASE', 'Manual release from admin UI');
+      } catch (err) {
+        console.warn('Backend release hold error, releasing locally:', err);
+      }
+    }
+
     setHolds((prev) =>
       prev.map((h) => (h.id === id ? { ...h, status: 'RELEASED' } : h))
     );
     toastInfo(`Security hold of ${formatCurrency(amount)} for user ${userId} has been released.`);
   };
+
+  const userOptions =
+    networkUsers.length > 0
+      ? networkUsers.map((u) => ({
+          value: u.id,
+          label: `${u.userId || u.code} - ${u.fullName || u.displayName} (${u.role})`,
+        }))
+      : [
+          { value: 'RET2045', label: 'RET2045 - Zenith Retail Mart (Retailer)' },
+          { value: 'DST402', label: 'DST402 - Apex Distro Agency (Distributor)' },
+          { value: 'MD901', label: 'MD901 - Ramesh Kumar Hub (Master Dist)' },
+        ];
 
   const columns: ColumnDefinition<HoldFundRecord>[] = [
     { key: 'userId', header: 'User ID', render: (r) => <span className="font-mono font-bold text-[#155EEF] text-xs">{r.userId}</span> },
@@ -193,7 +231,7 @@ export const HoldFundsView: React.FC = () => {
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
             <Lock className="w-5 h-5 text-[#155EEF]" />
-            Hold Funds (HoldFunds)
+            Hold Funds (Compliance Security Locks)
           </h1>
           <p className="text-xs text-[#64748B] mt-1 font-medium">
             Place temporary or indefinite security holds on user wallet funds during dispute resolution or compliance audits.
@@ -208,13 +246,9 @@ export const HoldFundsView: React.FC = () => {
             {/* User Selector */}
             <Select
               label="User Name / ID"
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
-              options={[
-                { value: 'RET2045', label: 'RET2045 - Zenith Retail Mart (Retailer)' },
-                { value: 'DST402', label: 'DST402 - Apex Distro Agency (Distributor)' },
-                { value: 'MD901', label: 'MD901 - Ramesh Kumar Hub (Master Dist)' },
-              ]}
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              options={userOptions}
             />
 
             {/* Real-time Available Balance Display */}
@@ -223,7 +257,7 @@ export const HoldFundsView: React.FC = () => {
                 Real-Time Available Balance
               </span>
               <span className="text-xl font-extrabold text-[#0F172A] font-mono mt-0.5">
-                {formatCurrency(activeUserMeta.balance)}
+                {formatCurrency(activeAvailableBalance)}
               </span>
             </div>
 

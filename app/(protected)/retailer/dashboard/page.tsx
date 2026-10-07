@@ -22,6 +22,7 @@ import { RetailerAnalyticsSection } from '@/components/features/retailer/Retaile
 import { RetailerRecentTransactions } from '@/components/features/retailer/RetailerRecentTransactions';
 import { RetailerCommissionSummary } from '@/components/features/retailer/RetailerCommissionSummary';
 import { RetailerPaymentMethodDrawer } from '@/components/features/retailer/RetailerPaymentMethodDrawer';
+import { RetailerTickerAndNoticeBar } from '@/components/features/retailer/RetailerTickerAndNoticeBar';
 import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
 
 import { RefreshCw, Wallet } from 'lucide-react';
@@ -169,6 +170,9 @@ export default function RetailerDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Real-time Ticker & Notice Board Bar */}
+        <RetailerTickerAndNoticeBar />
 
         {/* 2. PRIMARY DASHBOARD HERO CONTENT: Pay-In & Pay-Out Analytics Cards (Directly Visible Above Fold) */}
         <div className="relative z-0">

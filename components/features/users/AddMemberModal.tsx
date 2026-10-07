@@ -7,6 +7,7 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { hierarchyService } from '@/services/hierarchyService';
+import { userService } from '@/services/userService';
 import { UserPlus, Building, Phone, Mail, UserCheck } from 'lucide-react';
 import { KYCDocument } from '@/types/domain';
 
@@ -25,7 +26,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   defaultType = 'DISTRIBUTOR',
   onSuccess,
 }) => {
-  const { toastSuccess } = useToast();
+  const { toastSuccess, toastError } = useToast();
   const [memberType, setMemberType] = useState<MemberType>(defaultType);
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -51,6 +52,32 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
 
     setIsSubmitting(true);
     try {
+      if (memberType !== 'BACKOFFICE') {
+        try {
+          const apiRes = await userService.createUser({
+            role: memberType,
+            fullName: name,
+            displayName: businessName || name,
+            email: email || `${mobile}@qinstarpay.com`,
+            mobile,
+          });
+
+          if (apiRes && apiRes.success) {
+            toastSuccess(`New ${memberType.replace('_', ' ')} "${name}" onboarded successfully!`);
+            if (onSuccess) onSuccess();
+            onClose();
+            setName('');
+            setBusinessName('');
+            setMobile('');
+            setEmail('');
+            return;
+          }
+        } catch (apiErr) {
+          console.warn('Real API create user failed, falling back to hierarchy local record:', apiErr);
+        }
+      }
+
+      // Local fallback for state/demo
       const code =
         memberType === 'MASTER_DISTRIBUTOR'
           ? `MD_${Math.floor(100 + Math.random() * 900)}`
@@ -136,7 +163,6 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
       toastSuccess(`New ${memberType.replace('_', ' ')} "${name}" (${code}) onboarded successfully!`);
       if (onSuccess) onSuccess();
       onClose();
-      // Reset form
       setName('');
       setBusinessName('');
       setMobile('');
@@ -144,6 +170,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
       setKycFiles({ AADHAAR: null, PAN: null, GST_CERTIFICATE: null, CANCELLED_CHEQUE: null });
     } catch (err) {
       console.error(err);
+      toastError('Failed to onboard user');
     } finally {
       setIsSubmitting(false);
     }

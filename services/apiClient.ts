@@ -15,10 +15,12 @@ export class ApiError extends Error {
 export interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
   authToken?: string;
+  isRetry?: boolean;
 }
 
 class ApiClient {
   private baseUrl: string;
+  private refreshPromise: Promise<string | null> | null = null;
 
   constructor(baseUrl: string = APP_CONFIG.apiBaseUrl) {
     this.baseUrl = baseUrl;
@@ -36,20 +38,92 @@ class ApiClient {
     return url.toString();
   }
 
-  private getStoredToken(): string | null {
+  private getStoredSession(): { isLocal: boolean; session: any } | null {
     if (typeof window === 'undefined') return null;
     try {
-      const sessionRaw =
-        sessionStorage.getItem('qin-star-pay-auth-session-session') ||
-        localStorage.getItem('qin-star-pay-auth-session-local');
-      if (sessionRaw) {
-        const parsed = JSON.parse(sessionRaw);
-        return parsed.accessToken || null;
-      }
+      const sessionRaw = sessionStorage.getItem('qin-star-pay-auth-session-session');
+      if (sessionRaw) return { isLocal: false, session: JSON.parse(sessionRaw) };
+
+      const localRaw = localStorage.getItem('qin-star-pay-auth-session-local');
+      if (localRaw) return { isLocal: true, session: JSON.parse(localRaw) };
     } catch {
       return null;
     }
     return null;
+  }
+
+  private getStoredToken(): string | null {
+    const data = this.getStoredSession();
+    return data?.session?.accessToken || null;
+  }
+
+  private updateStoredTokens(accessToken: string, refreshToken?: string) {
+    if (typeof window === 'undefined') return;
+    const stored = this.getStoredSession();
+    if (!stored) return;
+
+    const updatedSession = {
+      ...stored.session,
+      accessToken,
+      ...(refreshToken ? { refreshToken } : {}),
+    };
+
+    const key = stored.isLocal ? 'qin-star-pay-auth-session-local' : 'qin-star-pay-auth-session-session';
+    const storage = stored.isLocal ? localStorage : sessionStorage;
+    storage.setItem(key, JSON.stringify(updatedSession));
+  }
+
+  private clearSessionAndRedirect() {
+    if (typeof window === 'undefined') return;
+    try {
+      sessionStorage.removeItem('qin-star-pay-auth-session-session');
+      localStorage.removeItem('qin-star-pay-auth-session-local');
+    } catch {}
+
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login?session_expired=true';
+    }
+  }
+
+  private async tryRefreshToken(): Promise<string | null> {
+    if (this.refreshPromise) return this.refreshPromise;
+
+    this.refreshPromise = (async () => {
+      try {
+        const stored = this.getStoredSession();
+        const refreshToken = stored?.session?.refreshToken;
+        if (!refreshToken) {
+          return null;
+        }
+
+        const refreshUrl = this.buildUrl('/auth/refresh');
+        const res = await fetch(refreshUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!res.ok) {
+          return null;
+        }
+
+        const data = await res.json();
+        if (data && data.success && data.data?.accessToken) {
+          const newAccess = data.data.accessToken;
+          const newRefresh = data.data.refreshToken;
+          this.updateStoredTokens(newAccess, newRefresh);
+          return newAccess;
+        }
+        return null;
+      } catch (err) {
+        console.warn('Auto token refresh failed:', err);
+        return null;
+      } finally {
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
   }
 
   private getHeaders(customHeaders?: HeadersInit, authToken?: string): HeadersInit {
@@ -71,7 +145,7 @@ class ApiClient {
   }
 
   public async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const { params, authToken, headers, ...customOptions } = options;
+    const { params, authToken, headers, isRetry, ...customOptions } = options;
     const url = this.buildUrl(endpoint, params);
 
     try {
@@ -79,6 +153,20 @@ class ApiClient {
         ...customOptions,
         headers: this.getHeaders(headers, authToken),
       });
+
+      if (response.status === 401 && !isRetry && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
+        const newToken = await this.tryRefreshToken();
+        if (newToken) {
+          return this.request<T>(endpoint, {
+            ...options,
+            authToken: newToken,
+            isRetry: true,
+          });
+        } else {
+          this.clearSessionAndRedirect();
+          throw new ApiError('Session expired. Please log in again.', 401);
+        }
+      }
 
       if (!response.ok) {
         let errorData: unknown;

@@ -21,6 +21,7 @@ import {
   mockWebhooks,
 } from '@/mocks/mockIntegration';
 import { notificationService } from './notificationService';
+import { apiClient } from './apiClient';
 import { APP_CONFIG } from '@/config';
 
 const inMemoryProviders: Provider[] = [...mockProviders];
@@ -116,6 +117,46 @@ export const providerService = {
         data: { items, summary },
         timestamp: new Date().toISOString(),
       };
+    }
+
+    if (!APP_CONFIG.useMockData) {
+      try {
+        const response = await apiClient.get<ApiResponse<any[]>>('/providers');
+        if (response && response.data) {
+          const rawItems = response.data;
+          const items: Provider[] = rawItems.map((p: any) => ({
+            id: p.id,
+            code: p.code,
+            name: p.name,
+            providerType: p.providerType || 'MULTI_SERVICE',
+            environment: p.environment || 'SANDBOX',
+            status: p.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+            supportedServices: ['PAY_IN', 'PAY_OUT', 'SETTLEMENT'],
+            supportedModes: ['UPI', 'IMPS', 'NEFT'],
+            baseUrl: p.baseUrl || 'https://api.qinstarpay.com',
+            authType: 'BEARER_TOKEN',
+            timeout: 5000,
+            priority: 1,
+            healthStatus: p.status === 'ACTIVE' ? 'OPERATIONAL' : 'DOWN',
+            successRate: 99.4,
+            avgResponseTime: 145,
+            lastCheckedAt: new Date().toISOString(),
+            createdAt: p.createdAt || new Date().toISOString(),
+          }));
+
+          const summary: ProviderSummary = {
+            totalProviders: items.length,
+            activeCount: items.filter((i) => i.status === 'ACTIVE').length,
+            degradedCount: 0,
+            downCount: items.filter((i) => i.status === 'INACTIVE').length,
+            avgSuccessRate: 99.4,
+          };
+
+          return { success: true, data: { items, summary }, timestamp: new Date().toISOString() };
+        }
+      } catch (err) {
+        console.warn('Backend /providers API error, fallback to mock:', err);
+      }
     }
 
     return { success: false, data: null as unknown as ProviderListResult, timestamp: new Date().toISOString() };

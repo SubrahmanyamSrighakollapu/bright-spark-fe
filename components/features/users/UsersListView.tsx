@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -9,127 +9,87 @@ import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
+import { ActionKebabMenu, ActionMenuItem } from '@/components/ui/ActionKebabMenu';
 import { ColumnDefinition } from '@/types/common';
+import { userService, NetworkUserItem } from '@/services/userService';
+import { formatCurrency } from '@/utils/formatters';
 import {
   Users,
   Search,
-  Filter,
   UserCheck,
   UserX,
   Edit2,
-  Trash2,
   ArrowUpDown,
-  CheckCircle2,
-  XCircle,
-  ShieldCheck,
   UserPlus,
+  PlusCircle,
+  Lock,
+  RefreshCw,
 } from 'lucide-react';
 
-export interface UserItem {
-  id: string;
-  userId: string;
-  fullName: string;
-  email: string;
-  contactNo: string;
-  roleName: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER';
-  isAadharVerify: boolean;
-  panNoVerify: boolean;
-  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'INACTIVE';
-  createdAt: string;
-}
-
-const MOCK_USERS: UserItem[] = [
-  {
-    id: 'usr_1',
-    userId: 'MD901',
-    fullName: 'Ramesh Kumar Hub',
-    email: 'ramesh.md@qinstarpay.com',
-    contactNo: '9876543210',
-    roleName: 'MASTER_DISTRIBUTOR',
-    isAadharVerify: true,
-    panNoVerify: true,
-    status: 'ACTIVE',
-    createdAt: '2026-09-01T10:30:00Z',
-  },
-  {
-    id: 'usr_2',
-    userId: 'DST402',
-    fullName: 'Apex Distro Agency',
-    email: 'apex.dist@qinstarpay.com',
-    contactNo: '9812345678',
-    roleName: 'DISTRIBUTOR',
-    isAadharVerify: true,
-    panNoVerify: true,
-    status: 'ACTIVE',
-    createdAt: '2026-09-05T14:15:00Z',
-  },
-  {
-    id: 'usr_3',
-    userId: 'RET2045',
-    fullName: 'Zenith Retail Mart',
-    email: 'zenith.retail@gmail.com',
-    contactNo: '9988776655',
-    roleName: 'RETAILER',
-    isAadharVerify: true,
-    panNoVerify: false,
-    status: 'PENDING',
-    createdAt: '2026-09-12T09:45:00Z',
-  },
-  {
-    id: 'usr_4',
-    userId: 'RET2046',
-    fullName: 'Swift Commerce Point',
-    email: 'swift.store@gmail.com',
-    contactNo: '9765432109',
-    roleName: 'RETAILER',
-    isAadharVerify: false,
-    panNoVerify: false,
-    status: 'SUSPENDED',
-    createdAt: '2026-09-15T16:20:00Z',
-  },
-];
-
 export const UsersListView: React.FC = () => {
-  const { toastSuccess, toastInfo } = useToast();
+  const { toastSuccess, toastError } = useToast();
 
-  const [users, setUsers] = useState<UserItem[]>(MOCK_USERS);
+  const [users, setUsers] = useState<NetworkUserItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   // Edit User Modal State
-  const [editingUser, setEditingUser] = useState<UserItem | null>(null);
+  const [editingUser, setEditingUser] = useState<NetworkUserItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Swap Role / Parent Modal State
-  const [swappingUser, setSwappingUser] = useState<UserItem | null>(null);
+  const [swappingUser, setSwappingUser] = useState<NetworkUserItem | null>(null);
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
   const [newRole, setNewRole] = useState<'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER'>('DISTRIBUTOR');
 
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.contactNo.includes(searchTerm);
+  // Quick Wallet Credit Modal State
+  const [creditUser, setCreditUser] = useState<NetworkUserItem | null>(null);
+  const [creditAmount, setCreditAmount] = useState('');
+  const [creditRemarks, setCreditRemarks] = useState('');
 
-    const matchesRole = roleFilter === 'ALL' || u.roleName === roleFilter;
-    const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter;
+  // Quick Hold Funds Modal State
+  const [holdUser, setHoldUser] = useState<NetworkUserItem | null>(null);
+  const [holdAmount, setHoldAmount] = useState('');
+  const [holdReason, setHoldReason] = useState('');
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await userService.getUsers({
+        role: roleFilter !== 'ALL' ? roleFilter : undefined,
+        status: statusFilter !== 'ALL' ? statusFilter : undefined,
+        search: searchTerm.trim() || undefined,
+      });
 
-  const handleToggleStatus = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === id) {
-          const nextStatus = u.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-          toastSuccess(`User ${u.userId} status flipped to ${nextStatus}.`);
-          return { ...u, status: nextStatus };
-        }
-        return u;
-      })
-    );
+      if (response && response.success && response.data) {
+        setUsers(response.data.items || []);
+      }
+    } catch (err) {
+      console.error('Failed to load users:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [roleFilter, statusFilter, searchTerm]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const handleToggleStatus = async (user: NetworkUserItem) => {
+    const nextStatus = user.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    try {
+      const res = await userService.updateUserStatus(user.id, nextStatus, 'Admin status toggle');
+      if (res && res.success) {
+        toastSuccess(`User ${user.userId || user.code} status changed to ${nextStatus}.`);
+        fetchUsers();
+      } else {
+        toastError('Failed to update user status.');
+      }
+    } catch (err) {
+      toastError('Failed to update user status.');
+    }
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
@@ -138,31 +98,76 @@ export const UsersListView: React.FC = () => {
 
     setUsers((prev) => prev.map((u) => (u.id === editingUser.id ? editingUser : u)));
     setIsEditModalOpen(false);
-    toastSuccess(`User ${editingUser.userId} updated successfully.`);
+    toastSuccess(`User ${editingUser.userId || editingUser.code} updated successfully.`);
   };
 
   const handleConfirmSwap = () => {
     if (!swappingUser) return;
 
     setUsers((prev) =>
-      prev.map((u) => (u.id === swappingUser.id ? { ...u, roleName: newRole } : u))
+      prev.map((u) => (u.id === swappingUser.id ? { ...u, role: newRole, roleName: newRole } : u))
     );
     setIsSwapModalOpen(false);
-    toastSuccess(`Role for ${swappingUser.userId} swapped to ${newRole.replace('_', ' ')}.`);
+    toastSuccess(`Role for ${swappingUser.userId || swappingUser.code} swapped to ${newRole.replace('_', ' ')}.`);
   };
 
-  const handleDeleteUser = (id: string, name: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    toastInfo(`User account "${name}" has been archived.`);
+  const handleExecuteCredit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!creditUser) return;
+    const amount = parseFloat(creditAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toastError('Please enter a valid credit amount.');
+      return;
+    }
+
+    try {
+      const res = await userService.creditWallet(creditUser.id, amount, creditRemarks);
+      if (res && res.success) {
+        toastSuccess(`Successfully credited ${formatCurrency(amount)} to ${creditUser.userId || creditUser.code}`);
+        setCreditUser(null);
+        setCreditAmount('');
+        setCreditRemarks('');
+        fetchUsers();
+      } else {
+        toastError('Wallet credit failed.');
+      }
+    } catch (err) {
+      toastError('Wallet credit failed.');
+    }
   };
 
-  const columns: ColumnDefinition<UserItem>[] = [
+  const handleExecuteHold = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!holdUser) return;
+    const amount = parseFloat(holdAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toastError('Please enter a valid hold amount.');
+      return;
+    }
+
+    try {
+      const res = await userService.holdWalletFunds(holdUser.id, amount, 'HOLD', holdReason);
+      if (res && res.success) {
+        toastSuccess(`Security hold of ${formatCurrency(amount)} placed on user ${holdUser.userId || holdUser.code}`);
+        setHoldUser(null);
+        setHoldAmount('');
+        setHoldReason('');
+        fetchUsers();
+      } else {
+        toastError('Hold funds action failed.');
+      }
+    } catch (err) {
+      toastError('Hold funds action failed.');
+    }
+  };
+
+  const columns: ColumnDefinition<NetworkUserItem>[] = [
     {
       key: 'userId',
       header: 'User ID',
       render: (row) => (
         <span className="font-mono font-bold text-[#155EEF] text-xs">
-          {row.userId}
+          {row.userId || row.code}
         </span>
       ),
     },
@@ -171,8 +176,8 @@ export const UsersListView: React.FC = () => {
       header: 'Name & Contact',
       render: (row) => (
         <div>
-          <div className="font-semibold text-xs text-[#0F172A]">{row.fullName}</div>
-          <div className="text-[11px] text-[#64748B]">{row.email} • {row.contactNo}</div>
+          <div className="font-semibold text-xs text-[#0F172A]">{row.fullName || row.displayName}</div>
+          <div className="text-[11px] text-[#64748B]">{row.email} • {row.mobile || row.contactNo}</div>
         </div>
       ),
     },
@@ -180,23 +185,43 @@ export const UsersListView: React.FC = () => {
       key: 'roleName',
       header: 'Role',
       align: 'center',
+      render: (row) => {
+        const role = row.role || row.roleName;
+        return (
+          <span
+            className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold ${
+              role === 'MASTER_DISTRIBUTOR'
+                ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                : role === 'DISTRIBUTOR'
+                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            }`}
+          >
+            {role === 'MASTER_DISTRIBUTOR' ? 'Master Dist (MD)' : role === 'DISTRIBUTOR' ? 'Distributor (DS)' : 'Retailer'}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'walletBalance',
+      header: 'Available Balance',
+      align: 'right',
       render: (row) => (
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold ${
-            row.roleName === 'MASTER_DISTRIBUTOR'
-              ? 'bg-purple-50 text-purple-700 border border-purple-200'
-              : row.roleName === 'DISTRIBUTOR'
-              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-          }`}
-        >
-          {row.roleName === 'MASTER_DISTRIBUTOR' ? 'Master Dist (MD)' : row.roleName === 'DISTRIBUTOR' ? 'Distributor (DS)' : 'Retailer'}
-        </span>
+        <div className="font-mono text-xs text-right">
+          <div className="font-extrabold text-[#0F172A] tabular-nums">
+            {formatCurrency(row.availableBalance ?? 0)}
+          </div>
+          {(row.holdBalance ?? 0) > 0 && (
+            <div className="text-[10px] text-amber-600 font-semibold">
+              Hold: {formatCurrency(row.holdBalance)}
+            </div>
+          )}
+        </div>
       ),
     },
     {
       key: 'verificationStatus',
-      header: 'Verification Badges',
+      header: 'Verification',
       align: 'center',
       render: (row) => (
         <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold">
@@ -245,18 +270,23 @@ export const UsersListView: React.FC = () => {
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
             <Users className="w-5 h-5 text-[#155EEF]" />
-            User List (UsersList)
+            User Management Directory
           </h1>
           <p className="text-xs text-[#64748B] mt-1 font-medium">
-            Master directory of all registered platform users (MD, DS, Retailer) with downline status controls.
+            Master directory of registered platform users (MD, DS, Retailer) with wallet balance & account controls.
           </p>
         </div>
 
-        <Link href="/admin/users/add">
-          <Button variant="primary" leftIcon={<UserPlus className="w-4 h-4" />}>
-            + Onboard New User
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={fetchUsers} isLoading={loading} leftIcon={<RefreshCw className="w-4 h-4" />}>
+            Refresh
           </Button>
-        </Link>
+          <Link href="/admin/users/add">
+            <Button variant="primary" leftIcon={<UserPlus className="w-4 h-4" />}>
+              + Onboard New User
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}
@@ -264,7 +294,7 @@ export const UsersListView: React.FC = () => {
         <div className="p-4 border-b border-[#E5EAF1] flex flex-wrap items-center justify-between gap-3 bg-[#F8FAFC]">
           <div className="flex-1 min-w-[240px]">
             <Input
-              placeholder="Search by Name, Email, Mobile, or User ID (USR102)..."
+              placeholder="Search by Name, Email, Mobile, or User ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               leftIcon={<Search className="w-4 h-4 text-slate-400" />}
@@ -297,62 +327,67 @@ export const UsersListView: React.FC = () => {
           </div>
         </div>
 
-        {/* Master Users Table */}
-        <div className="overflow-x-auto">
+        {/* Master Users Table with ActionKebabMenu */}
+        <div className="overflow-x-auto overflow-y-visible">
           <Table
             columns={columns}
-            data={filteredUsers}
+            data={users}
+            isLoading={loading}
             keyExtractor={(row) => row.id}
-            renderActions={(row) => (
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
+            renderActions={(row) => {
+              const menuItems: ActionMenuItem[] = [
+                {
+                  key: 'edit',
+                  label: 'Edit User Details',
+                  icon: <Edit2 className="w-4 h-4 text-slate-500" />,
+                  onClick: () => {
                     setEditingUser({ ...row });
                     setIsEditModalOpen(true);
-                  }}
-                  className="p-1.5 text-slate-600 hover:text-[#155EEF] hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-                  title="Edit User Details"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
+                  },
+                },
+                {
+                  key: 'toggleStatus',
+                  label: row.status === 'ACTIVE' ? 'Suspend Account' : 'Activate Account',
+                  icon: row.status === 'ACTIVE' ? <UserX className="w-4 h-4 text-amber-600" /> : <UserCheck className="w-4 h-4 text-emerald-600" />,
+                  danger: row.status === 'ACTIVE',
+                  onClick: () => handleToggleStatus(row),
+                },
+                {
+                  key: 'creditWallet',
+                  label: 'Top-up Wallet Credit',
+                  icon: <PlusCircle className="w-4 h-4 text-blue-600" />,
+                  divider: true,
+                  onClick: () => {
+                    setCreditUser(row);
+                    setCreditAmount('');
+                    setCreditRemarks('');
+                  },
+                },
+                {
+                  key: 'holdFunds',
+                  label: 'Hold Security Funds',
+                  icon: <Lock className="w-4 h-4 text-amber-600" />,
+                  onClick: () => {
+                    setHoldUser(row);
+                    setHoldAmount('');
+                    setHoldReason('');
+                  },
+                },
+                {
+                  key: 'swapRole',
+                  label: 'Swap Role / Parent',
+                  icon: <ArrowUpDown className="w-4 h-4 text-purple-600" />,
+                  divider: true,
+                  onClick: () => {
                     setSwappingUser(row);
-                    setNewRole(row.roleName);
+                    setNewRole((row.role as any) || 'DISTRIBUTOR');
                     setIsSwapModalOpen(true);
-                  }}
-                  className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors cursor-pointer"
-                  title="Swap User Role / Parent"
-                >
-                  <ArrowUpDown className="w-3.5 h-3.5" />
-                </button>
+                  },
+                },
+              ];
 
-                <button
-                  type="button"
-                  onClick={() => handleToggleStatus(row.id)}
-                  className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                    row.status === 'ACTIVE'
-                      ? 'text-emerald-600 hover:text-amber-600 hover:bg-amber-50'
-                      : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
-                  }`}
-                  title={row.status === 'ACTIVE' ? 'Deactivate Account' : 'Activate Account'}
-                >
-                  {row.status === 'ACTIVE' ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDeleteUser(row.id, row.fullName)}
-                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
-                  title="Delete User Account"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+              return <ActionKebabMenu items={menuItems} align="right" />;
+            }}
           />
         </div>
       </Card>
@@ -362,14 +397,14 @@ export const UsersListView: React.FC = () => {
         <Modal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          title={`Edit User Details (${editingUser.userId})`}
+          title={`Edit User Details (${editingUser.userId || editingUser.code})`}
           size="md"
         >
           <form onSubmit={handleSaveEdit} className="space-y-4 text-xs pt-2">
             <Input
               label="Full Name"
-              value={editingUser.fullName}
-              onChange={(e) => setEditingUser({ ...editingUser, fullName: e.target.value })}
+              value={editingUser.fullName || editingUser.name}
+              onChange={(e) => setEditingUser({ ...editingUser, fullName: e.target.value, name: e.target.value })}
               required
             />
 
@@ -382,14 +417,14 @@ export const UsersListView: React.FC = () => {
 
             <Input
               label="Contact Mobile"
-              value={editingUser.contactNo}
-              onChange={(e) => setEditingUser({ ...editingUser, contactNo: e.target.value })}
+              value={editingUser.mobile || editingUser.contactNo}
+              onChange={(e) => setEditingUser({ ...editingUser, mobile: e.target.value, contactNo: e.target.value })}
             />
 
             <Select
               label="Account Status"
               value={editingUser.status}
-              onChange={(e) => setEditingUser({ ...editingUser, status: e.target.value as any })}
+              onChange={(e) => setEditingUser({ ...editingUser, status: e.target.value })}
               options={[
                 { value: 'ACTIVE', label: 'Active' },
                 { value: 'PENDING', label: 'Pending Verification' },
@@ -410,17 +445,106 @@ export const UsersListView: React.FC = () => {
         </Modal>
       )}
 
+      {/* Quick Wallet Credit Modal */}
+      {creditUser && (
+        <Modal
+          isOpen={!!creditUser}
+          onClose={() => setCreditUser(null)}
+          title={`Top-up Wallet Credit (${creditUser.userId || creditUser.code})`}
+          size="md"
+        >
+          <form onSubmit={handleExecuteCredit} className="space-y-4 text-xs pt-2">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="font-semibold text-blue-900">{creditUser.fullName || creditUser.name}</div>
+              <div className="text-[11px] text-blue-700 mt-0.5">
+                Current Available Balance: {formatCurrency(creditUser.availableBalance ?? 0)}
+              </div>
+            </div>
+
+            <Input
+              label="Credit Amount in ₹"
+              type="number"
+              placeholder="e.g. 5000.00"
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+              required
+            />
+
+            <Input
+              label="Reason / Audit Note"
+              placeholder="e.g. Manual Top-up / Administrative Adjustment"
+              value={creditRemarks}
+              onChange={(e) => setCreditRemarks(e.target.value)}
+            />
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5EAF1]">
+              <Button type="button" variant="outline" onClick={() => setCreditUser(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" leftIcon={<PlusCircle className="w-4 h-4" />}>
+                Execute Wallet Credit
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Quick Hold Funds Modal */}
+      {holdUser && (
+        <Modal
+          isOpen={!!holdUser}
+          onClose={() => setHoldUser(null)}
+          title={`Hold Security Funds (${holdUser.userId || holdUser.code})`}
+          size="md"
+        >
+          <form onSubmit={handleExecuteHold} className="space-y-4 text-xs pt-2">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+              <div className="font-semibold text-amber-900">{holdUser.fullName || holdUser.name}</div>
+              <div className="text-[11px] text-amber-700 mt-0.5">
+                Available: {formatCurrency(holdUser.availableBalance ?? 0)} • Active Hold: {formatCurrency(holdUser.holdBalance ?? 0)}
+              </div>
+            </div>
+
+            <Input
+              label="Hold Amount in ₹"
+              type="number"
+              placeholder="e.g. 2000.00"
+              value={holdAmount}
+              onChange={(e) => setHoldAmount(e.target.value)}
+              required
+            />
+
+            <Input
+              label="Reason for Hold"
+              placeholder="e.g. Pending Document Audit / Dispute Investigation"
+              value={holdReason}
+              onChange={(e) => setHoldReason(e.target.value)}
+              required
+            />
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5EAF1]">
+              <Button type="button" variant="outline" onClick={() => setHoldUser(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" leftIcon={<Lock className="w-4 h-4" />}>
+                Apply Security Hold
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
       {/* Swap Role / Parent Modal */}
       {swappingUser && (
         <Modal
           isOpen={isSwapModalOpen}
           onClose={() => setIsSwapModalOpen(false)}
-          title={`Swap User Role / Parent (${swappingUser.userId})`}
+          title={`Swap User Role / Parent (${swappingUser.userId || swappingUser.code})`}
           size="sm"
         >
           <div className="space-y-4 text-xs pt-2">
             <p className="text-[#64748B]">
-              Reassign downline hierarchy mapping for <strong>{swappingUser.fullName}</strong> across Distributor levels.
+              Reassign downline hierarchy mapping for <strong>{swappingUser.fullName || swappingUser.name}</strong> across Distributor levels.
             </p>
 
             <Select

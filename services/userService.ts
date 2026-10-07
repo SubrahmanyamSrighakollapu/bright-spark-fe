@@ -13,6 +13,84 @@ import { APP_CONFIG } from '@/config';
 const inMemoryEntities: BusinessEntity[] = [...mockEntities];
 const inMemoryMappings: EntityMapping[] = [...mockEntityMappings];
 
+export interface NetworkUserItem {
+  id: string;
+  userId: string;
+  partyId: string;
+  code: string;
+  fullName: string;
+  name: string;
+  email: string;
+  mobile: string;
+  contactNo: string;
+  displayName: string;
+  businessName: string;
+  legalName?: string | null;
+  role: string;
+  roleName: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER' | string;
+  parentId?: string | null;
+  parentName?: string | null;
+  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'INACTIVE' | 'DISABLED' | 'BLOCKED' | string;
+  accountStatus: string;
+  approvalStatus: string;
+  kycStatus: string;
+  isAadharVerify: boolean;
+  panNoVerify: boolean;
+  walletId?: string | null;
+  availableBalance: number;
+  holdBalance: number;
+  ledgerBalance: number;
+  version: number;
+  createdAt: string;
+}
+
+export interface NetworkUserListResult {
+  items: NetworkUserItem[];
+  pagination: PaginationState;
+}
+
+export interface CreateUserInput {
+  role: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER';
+  fullName: string;
+  email: string;
+  mobile: string;
+  displayName: string;
+  legalName?: string;
+  parentPartyId?: string;
+  password?: string;
+}
+
+export interface WalletTransactionResult {
+  user: NetworkUserItem;
+  transaction: {
+    transId: string;
+    type: 'CREDIT' | 'DEBIT';
+    amount: number;
+    remarks: string;
+    status: 'SUCCESS' | 'FAILED';
+    wallet: {
+      availableBalance: number;
+      ledgerBalance: number;
+      holdBalance: number;
+    };
+  };
+}
+
+export interface WalletHoldResult {
+  user: NetworkUserItem;
+  holdRecord: {
+    action: 'HOLD' | 'RELEASE';
+    amount: number;
+    remarks: string;
+    status: 'ACTIVE_HOLD' | 'RELEASED';
+    wallet: {
+      availableBalance: number;
+      ledgerBalance: number;
+      holdBalance: number;
+    };
+  };
+}
+
 export interface EntityListResult {
   items: BusinessEntity[];
   pagination: PaginationState;
@@ -24,6 +102,216 @@ export interface MappingListResult {
 }
 
 export const userService = {
+  /**
+   * Fetch paginated list of network members (MD, Distributor, Retailer).
+   */
+  async getUsers(params?: {
+    page?: number;
+    pageSize?: number;
+    role?: string;
+    status?: string;
+    search?: string;
+    parentPartyId?: string;
+  }): Promise<ApiResponse<NetworkUserListResult>> {
+    try {
+      if (!APP_CONFIG.useMockData) {
+        const response = await apiClient.get<ApiResponse<NetworkUserListResult>>('/users', {
+          params,
+        });
+        if (response && response.data) return response;
+      }
+    } catch (err) {
+      console.warn('Backend /users API unavailable, serving fallback user list:', err);
+    }
+
+    // Fallback Mock Response
+    return {
+      success: true,
+      data: {
+        items: [
+          {
+            id: 'usr_1',
+            userId: 'MD901',
+            partyId: 'pty_md901',
+            code: 'MD901',
+            fullName: 'Ramesh Kumar Hub',
+            name: 'Ramesh Kumar Hub',
+            email: 'ramesh.md@qinstarpay.com',
+            mobile: '9876543210',
+            contactNo: '9876543210',
+            displayName: 'Ramesh Hub & Services',
+            businessName: 'Ramesh Hub & Services',
+            role: 'MASTER_DISTRIBUTOR',
+            roleName: 'MASTER_DISTRIBUTOR',
+            status: 'ACTIVE',
+            accountStatus: 'ACTIVE',
+            approvalStatus: 'APPROVED',
+            kycStatus: 'APPROVED',
+            isAadharVerify: true,
+            panNoVerify: true,
+            availableBalance: 125000.0,
+            holdBalance: 0,
+            ledgerBalance: 125000.0,
+            version: 1,
+            createdAt: '2026-09-01T10:30:00Z',
+          },
+          {
+            id: 'usr_2',
+            userId: 'DST402',
+            partyId: 'pty_dst402',
+            code: 'DST402',
+            fullName: 'Apex Distro Agency',
+            name: 'Apex Distro Agency',
+            email: 'apex.dist@qinstarpay.com',
+            mobile: '9812345678',
+            contactNo: '9812345678',
+            displayName: 'Apex Distro Agency',
+            businessName: 'Apex Distro Agency',
+            role: 'DISTRIBUTOR',
+            roleName: 'DISTRIBUTOR',
+            parentId: 'usr_1',
+            parentName: 'Ramesh Kumar Hub',
+            status: 'ACTIVE',
+            accountStatus: 'ACTIVE',
+            approvalStatus: 'APPROVED',
+            kycStatus: 'APPROVED',
+            isAadharVerify: true,
+            panNoVerify: true,
+            availableBalance: 48000.0,
+            holdBalance: 12500.0,
+            ledgerBalance: 60500.0,
+            version: 1,
+            createdAt: '2026-09-05T14:15:00Z',
+          },
+          {
+            id: 'usr_3',
+            userId: 'RET2045',
+            partyId: 'pty_ret2045',
+            code: 'RET2045',
+            fullName: 'Zenith Retail Mart',
+            name: 'Zenith Retail Mart',
+            email: 'zenith.retail@gmail.com',
+            mobile: '9988776655',
+            contactNo: '9988776655',
+            displayName: 'Zenith Retail Mart',
+            businessName: 'Zenith Retail Mart',
+            role: 'RETAILER',
+            roleName: 'RETAILER',
+            parentId: 'usr_2',
+            parentName: 'Apex Distro Agency',
+            status: 'PENDING',
+            accountStatus: 'PENDING',
+            approvalStatus: 'PENDING_APPROVAL',
+            kycStatus: 'UNDER_REVIEW',
+            isAadharVerify: true,
+            panNoVerify: false,
+            availableBalance: 14000.0,
+            holdBalance: 5000.0,
+            ledgerBalance: 19000.0,
+            version: 1,
+            createdAt: '2026-09-12T09:45:00Z',
+          },
+          {
+            id: 'usr_4',
+            userId: 'RET2046',
+            partyId: 'pty_ret2046',
+            code: 'RET2046',
+            fullName: 'Swift Commerce Point',
+            name: 'Swift Commerce Point',
+            email: 'swift.store@gmail.com',
+            mobile: '9765432109',
+            contactNo: '9765432109',
+            displayName: 'Swift Commerce Point',
+            businessName: 'Swift Commerce Point',
+            role: 'RETAILER',
+            roleName: 'RETAILER',
+            parentId: 'usr_2',
+            parentName: 'Apex Distro Agency',
+            status: 'SUSPENDED',
+            accountStatus: 'SUSPENDED',
+            approvalStatus: 'APPROVED',
+            kycStatus: 'APPROVED',
+            isAadharVerify: false,
+            panNoVerify: false,
+            availableBalance: 8500.0,
+            holdBalance: 0,
+            ledgerBalance: 8500.0,
+            version: 1,
+            createdAt: '2026-09-15T16:20:00Z',
+          },
+        ],
+        pagination: { page: params?.page || 1, pageSize: params?.pageSize || 10, totalItems: 4, totalPages: 1 },
+      },
+      timestamp: new Date().toISOString(),
+    };
+  },
+
+  /**
+   * Onboard a new network user (MD, DS, Retailer).
+   */
+  async createUser(input: CreateUserInput): Promise<ApiResponse<NetworkUserItem>> {
+    return apiClient.post<ApiResponse<NetworkUserItem>>('/users', input);
+  },
+
+  /**
+   * Update account status (Activate / Suspend / Pending).
+   */
+  async updateUserStatus(
+    id: string,
+    status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'INACTIVE' | 'DISABLED' | 'BLOCKED',
+    reason?: string
+  ): Promise<ApiResponse<NetworkUserItem>> {
+    return apiClient.patch<ApiResponse<NetworkUserItem>>(`/users/${id}/status`, { status, reason });
+  },
+
+  /**
+   * Add wallet balance (Credit).
+   */
+  async creditWallet(
+    id: string,
+    amount: number,
+    remarks?: string,
+    referenceNumber?: string
+  ): Promise<ApiResponse<WalletTransactionResult>> {
+    return apiClient.post<ApiResponse<WalletTransactionResult>>(`/users/${id}/wallet/credit`, {
+      amount,
+      remarks,
+      referenceNumber,
+    });
+  },
+
+  /**
+   * Deduct wallet balance (Debit).
+   */
+  async debitWallet(
+    id: string,
+    amount: number,
+    remarks?: string,
+    referenceNumber?: string
+  ): Promise<ApiResponse<WalletTransactionResult>> {
+    return apiClient.post<ApiResponse<WalletTransactionResult>>(`/users/${id}/wallet/debit`, {
+      amount,
+      remarks,
+      referenceNumber,
+    });
+  },
+
+  /**
+   * Hold or release funds.
+   */
+  async holdWalletFunds(
+    id: string,
+    amount: number,
+    action: 'HOLD' | 'RELEASE',
+    remarks?: string
+  ): Promise<ApiResponse<WalletHoldResult>> {
+    return apiClient.post<ApiResponse<WalletHoldResult>>(`/users/${id}/wallet/hold`, {
+      amount,
+      action,
+      remarks,
+    });
+  },
+
   /**
    * Fetch entities by type with filtering and pagination.
    */

@@ -1,79 +1,144 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import {
+  employeeService,
+  EmployeeMetaDepartment,
+  EmployeeMetaRole,
+} from '@/services/employeeService';
+import {
   UserCheck,
-  Shield,
-  Briefcase,
-  Calendar,
-  Clock,
   ArrowRight,
   ArrowLeft,
   CheckCircle2,
-  KeyRound,
   Plus,
+  Loader2,
 } from 'lucide-react';
 
 export const CreateEmployeeWizard: React.FC = () => {
-  const { toastSuccess, toastError, toastInfo } = useToast();
+  const router = useRouter();
+  const { toastSuccess, toastError } = useToast();
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [departments, setDepartments] = useState<EmployeeMetaDepartment[]>([
+    { code: 'OPERATIONS', label: 'Operations', description: 'Operations & Technical Support' },
+    { code: 'ACCOUNTS', label: 'Accounts', description: 'Finance & Accounts Management' },
+    { code: 'KYC', label: 'KYC', description: 'Verification & KYC Compliance' },
+    { code: 'SALES', label: 'Sales', description: 'Business Development & Growth' },
+  ]);
+
+  const [roles, setRoles] = useState<EmployeeMetaRole[]>([
+    { id: 5, code: 'OPERATIONS', name: 'Operations', description: null },
+    { id: 6, code: 'ACCOUNTS', name: 'Accounts', description: null },
+    { id: 7, code: 'KYC', name: 'KYC', description: null },
+    { id: 8, code: 'SALES', name: 'Sales', description: null },
+  ]);
 
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    contactNo: '',
-    employeeCode: `EMP-${Math.floor(100 + Math.random() * 900)}`,
-    departmentId: 'KYC_ONBOARDING',
-    roleId: 'KYC_SPECIALIST',
-    statusId: 'ACTIVE',
+    mobile: '',
+    employeeCode: `EMP_${Math.floor(1000 + Math.random() * 9000)}`,
+    departmentCode: 'OPERATIONS',
+    roleId: 5,
+    designation: 'Operations Staff',
     isAutoPassword: true,
-    password: '',
-    isViewOrder: true,
-    isManageInventory: false,
-    isPaymentApproval: false,
-    isViewReports: true,
+    password: 'Demo@1234567',
     joiningDate: new Date().toISOString().split('T')[0],
     shift: 'MORNING',
   });
 
+  useEffect(() => {
+    employeeService.getEmployeeMeta().then((meta) => {
+      if (meta.departments.length > 0) setDepartments(meta.departments);
+      if (meta.roles.length > 0) {
+        setRoles(meta.roles);
+        // Default roleId to first role
+        if (meta.roles[0]) {
+          setFormData((p) => ({ ...p, roleId: meta.roles[0].id, departmentCode: meta.departments[0]?.code || 'OPERATIONS' }));
+        }
+      }
+    }).catch((err) => {
+      console.warn('Failed to load employee meta', err);
+    });
+  }, []);
+
+  // When department changes, update default role and designation matching that department
+  const handleDepartmentChange = (deptCode: string) => {
+    const matchedRole = roles.find((r) => r.code === deptCode) || roles[0];
+    const roleId = matchedRole ? matchedRole.id : 5;
+    const defaultDesignations: Record<string, string> = {
+      OPERATIONS: 'Operations Lead',
+      ACCOUNTS: 'Staff Accountant',
+      KYC: 'KYC Specialist',
+      SALES: 'Sales Lead',
+    };
+    setFormData((p) => ({
+      ...p,
+      departmentCode: deptCode,
+      roleId: roleId,
+      designation: defaultDesignations[deptCode] || 'Staff Member',
+    }));
+  };
+
   const handleNextStep = () => {
-    if (!formData.fullName) {
+    if (!formData.fullName.trim()) {
       toastError('Please enter Full Name before proceeding.');
       return;
     }
-    if (!formData.email) {
-      toastError('Please enter Email ID before proceeding.');
+    if (!formData.email.trim()) {
+      toastError('Please enter Official Email ID before proceeding.');
       return;
     }
     setCurrentStep(2);
   };
 
-  const handleSaveEmployee = (addAnother: boolean = false) => {
-    toastSuccess(`Employee ${formData.employeeCode} ("${formData.fullName}") onboarded successfully!`);
-    if (addAnother) {
-      setFormData({
-        fullName: '',
-        email: '',
-        contactNo: '',
-        employeeCode: `EMP-${Math.floor(100 + Math.random() * 900)}`,
-        departmentId: 'KYC_ONBOARDING',
-        roleId: 'KYC_SPECIALIST',
-        statusId: 'ACTIVE',
-        isAutoPassword: true,
-        password: '',
-        isViewOrder: true,
-        isManageInventory: false,
-        isPaymentApproval: false,
-        isViewReports: true,
-        joiningDate: new Date().toISOString().split('T')[0],
-        shift: 'MORNING',
+  const handleSaveEmployee = async (addAnother: boolean = false) => {
+    try {
+      setIsSubmitting(true);
+      const created = await employeeService.createEmployee({
+        employeeCode: formData.employeeCode,
+        fullName: formData.fullName,
+        email: formData.email,
+        mobile: formData.mobile ? formData.mobile : undefined,
+        password: formData.isAutoPassword ? 'Demo@123456' : formData.password,
+        departmentCode: formData.departmentCode,
+        roleId: Number(formData.roleId),
+        designation: formData.designation,
+        joiningDate: formData.joiningDate,
       });
-      setCurrentStep(1);
+
+      toastSuccess(`Employee ${created.employeeCode} ("${created.fullName}") onboarded successfully!`);
+
+      if (addAnother) {
+        setFormData({
+          fullName: '',
+          email: '',
+          mobile: '',
+          employeeCode: `EMP_${Math.floor(1000 + Math.random() * 9000)}`,
+          departmentCode: 'OPERATIONS',
+          roleId: roles[0]?.id || 5,
+          designation: 'Operations Staff',
+          isAutoPassword: true,
+          password: 'Demo@1234567',
+          joiningDate: new Date().toISOString().split('T')[0],
+          shift: 'MORNING',
+        });
+        setCurrentStep(1);
+      } else {
+        router.push('/admin/employees');
+      }
+    } catch (err: any) {
+      toastError(err.message || 'Failed to onboard employee.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -84,10 +149,10 @@ export const CreateEmployeeWizard: React.FC = () => {
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
             <UserCheck className="w-5 h-5 text-[#155EEF]" />
-            Add Employee (CreateEmployee)
+            Onboard New Employee
           </h1>
           <p className="text-xs text-[#64748B] mt-1 font-medium">
-            Multi-step onboarding wizard for operational staff across KYC, Sales, Accounts, and Support.
+            Multi-step wizard to create staff under role <strong className="text-slate-800">Employee</strong> across the 4 departments: Operations, Accounts, KYC, and Sales.
           </p>
         </div>
 
@@ -101,7 +166,7 @@ export const CreateEmployeeWizard: React.FC = () => {
             }`}
           >
             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">1</span>
-            Basic & Access Details
+            Basic & Department Details
           </div>
 
           <div
@@ -112,92 +177,120 @@ export const CreateEmployeeWizard: React.FC = () => {
             }`}
           >
             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">2</span>
-            Work & Schedule
+            Schedule & Credentials
           </div>
         </div>
       </div>
 
-      {/* STEP 1: Basic & Access Details */}
+      {/* STEP 1: Basic & Department Details */}
       {currentStep === 1 && (
         <div className="space-y-6">
-          <Card title="Category 1: Personal Info & Department Assignment" subtitle="Employee code, official email, and organizational role">
+          <Card title="Category 1: Personal Info & Department Assignment" subtitle="Employee identity, contact, and department assignment">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
               <Input
-                label="Full Name (fullName)"
-                placeholder="Enter full name"
+                label="Full Name"
+                placeholder="e.g. Rajesh Kumar"
                 value={formData.fullName}
                 onChange={(e) => setFormData((p) => ({ ...p, fullName: e.target.value }))}
                 required
               />
 
               <Input
-                label="Official Email ID (email)"
+                label="Official Email ID"
                 type="email"
-                placeholder="employee@qinstarpay.com"
+                placeholder="rajesh.ops@qinstarpay.com"
                 value={formData.email}
                 onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
                 required
               />
 
               <Input
-                label="Mobile Number (contactNo)"
-                placeholder="10-digit mobile number"
+                label="Mobile Number (Optional)"
+                placeholder="9876543210"
                 maxLength={10}
-                value={formData.contactNo}
-                onChange={(e) => setFormData((p) => ({ ...p, contactNo: e.target.value.replace(/\D/g, '') }))}
-                required
+                value={formData.mobile}
+                onChange={(e) => setFormData((p) => ({ ...p, mobile: e.target.value.replace(/\D/g, '') }))}
               />
 
               <Input
-                label="Employee Code (employeeCode)"
+                label="Employee Code"
                 value={formData.employeeCode}
                 onChange={(e) => setFormData((p) => ({ ...p, employeeCode: e.target.value }))}
                 required
               />
 
               <Select
-                label="Department (departmentId)"
-                value={formData.departmentId}
-                onChange={(e) => setFormData((p) => ({ ...p, departmentId: e.target.value }))}
-                options={[
-                  { value: 'KYC_ONBOARDING', label: 'KYC & Onboarding Desk' },
-                  { value: 'SALES', label: 'Sales & Growth' },
-                  { value: 'ACCOUNTS', label: 'Finance & Accounts' },
-                  { value: 'OPERATIONS', label: 'Operations & Support' },
-                ]}
+                label="Department (4 Core Options)"
+                value={formData.departmentCode}
+                onChange={(e) => handleDepartmentChange(e.target.value)}
+                options={departments.map((d) => ({
+                  value: d.code,
+                  label: `${d.label} (${d.code})`,
+                }))}
               />
 
               <Select
-                label="Role Type (roleId)"
-                value={formData.roleId}
-                onChange={(e) => setFormData((p) => ({ ...p, roleId: e.target.value }))}
-                options={[
-                  { value: 'KYC_SPECIALIST', label: 'KYC Approval Specialist' },
-                  { value: 'SALES_LEAD', label: 'Sales Lead' },
-                  { value: 'ACCOUNTANT', label: 'Staff Accountant' },
-                  { value: 'OPERATIONS_LEAD', label: 'Operations Lead' },
-                ]}
+                label="Role Category Role"
+                value={formData.roleId.toString()}
+                onChange={(e) => setFormData((p) => ({ ...p, roleId: Number(e.target.value) }))}
+                options={roles.map((r) => ({
+                  value: r.id.toString(),
+                  label: `${r.name} (Role: Employee)`,
+                }))}
               />
 
-              <Select
-                label="Initial Status (statusId)"
-                value={formData.statusId}
-                onChange={(e) => setFormData((p) => ({ ...p, statusId: e.target.value }))}
-                options={[
-                  { value: 'ACTIVE', label: 'Active' },
-                  { value: 'ON_LEAVE', label: 'On Leave' },
-                  { value: 'SUSPENDED', label: 'Suspended' },
-                ]}
+              <Input
+                label="Designation"
+                placeholder="e.g. Operations Executive"
+                value={formData.designation}
+                onChange={(e) => setFormData((p) => ({ ...p, designation: e.target.value }))}
               />
             </div>
           </Card>
 
-          <Card title="Category 2: System Permissions & Security" subtitle="Configure granular feature switches for staff access">
-            <div className="space-y-4 pt-1">
+          <div className="bg-white rounded-2xl border border-[#E5EAF1] p-4 shadow-xs flex justify-end">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleNextStep}
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+            >
+              Next: Schedule & Credentials
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 2: Schedule & Credentials */}
+      {currentStep === 2 && (
+        <div className="space-y-6">
+          <Card title="Step 2: Work Schedule & Password Security" subtitle="Joining date, assigned shift, and account password">
+            <div className="space-y-5 pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <Input
+                  label="Joining Date"
+                  type="date"
+                  value={formData.joiningDate}
+                  onChange={(e) => setFormData((p) => ({ ...p, joiningDate: e.target.value }))}
+                  required
+                />
+
+                <Select
+                  label="Assigned Shift"
+                  value={formData.shift}
+                  onChange={(e) => setFormData((p) => ({ ...p, shift: e.target.value }))}
+                  options={[
+                    { value: 'MORNING', label: 'Morning Shift (09:00 AM - 06:00 PM)' },
+                    { value: 'EVENING', label: 'Evening Shift (02:00 PM - 11:00 PM)' },
+                    { value: 'NIGHT', label: 'Night Shift (10:00 PM - 07:00 AM)' },
+                  ]}
+                />
+              </div>
+
               <div className="flex items-center justify-between p-4 bg-[#F8FAFC] border border-[#E5EAF1] rounded-xl">
                 <div>
-                  <span className="text-xs font-bold text-[#0F172A] block">Auto-generate Password (isAutoPassword)</span>
-                  <span className="text-[11px] text-[#64748B]">Automatically create secure credentials and send welcome email.</span>
+                  <span className="text-xs font-bold text-[#0F172A] block">Auto-generate Password</span>
+                  <span className="text-[11px] text-[#64748B]">Set default secure password (Demo@123456).</span>
                 </div>
                 <button
                   type="button"
@@ -216,106 +309,13 @@ export const CreateEmployeeWizard: React.FC = () => {
 
               {!formData.isAutoPassword && (
                 <Input
-                  label="Password (password)"
+                  label="Custom Password (min 12 chars)"
                   type="password"
-                  placeholder="Set employee password"
+                  placeholder="Set custom password"
                   value={formData.password}
                   onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
                 />
               )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                <div className="flex items-center justify-between p-3.5 bg-white border border-[#E5EAF1] rounded-xl">
-                  <div>
-                    <span className="text-xs font-bold text-[#0F172A] block">View Orders (isViewOrder)</span>
-                    <span className="text-[11px] text-[#64748B]">Visibility to global order pipeline.</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.isViewOrder}
-                    onChange={(e) => setFormData((p) => ({ ...p, isViewOrder: e.target.checked }))}
-                    className="w-4 h-4 text-[#155EEF] rounded cursor-pointer"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 bg-white border border-[#E5EAF1] rounded-xl">
-                  <div>
-                    <span className="text-xs font-bold text-[#0F172A] block">Manage Inventory (isManageInventory)</span>
-                    <span className="text-[11px] text-[#64748B]">Permissions to add/edit products.</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.isManageInventory}
-                    onChange={(e) => setFormData((p) => ({ ...p, isManageInventory: e.target.checked }))}
-                    className="w-4 h-4 text-[#155EEF] rounded cursor-pointer"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 bg-white border border-[#E5EAF1] rounded-xl">
-                  <div>
-                    <span className="text-xs font-bold text-[#0F172A] block">Approve Payments (isPaymentApproval)</span>
-                    <span className="text-[11px] text-[#64748B]">Grant access to approve payouts.</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.isPaymentApproval}
-                    onChange={(e) => setFormData((p) => ({ ...p, isPaymentApproval: e.target.checked }))}
-                    className="w-4 h-4 text-[#155EEF] rounded cursor-pointer"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 bg-white border border-[#E5EAF1] rounded-xl">
-                  <div>
-                    <span className="text-xs font-bold text-[#0F172A] block">View Reports (isViewReports)</span>
-                    <span className="text-[11px] text-[#64748B]">Access to financial audit reports.</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.isViewReports}
-                    onChange={(e) => setFormData((p) => ({ ...p, isViewReports: e.target.checked }))}
-                    className="w-4 h-4 text-[#155EEF] rounded cursor-pointer"
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <div className="bg-white rounded-2xl border border-[#E5EAF1] p-4 shadow-xs flex justify-end">
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleNextStep}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              Next: Work & Schedule Details
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 2: Work & Schedule Details */}
-      {currentStep === 2 && (
-        <div className="space-y-6">
-          <Card title="Step 2: Work & Schedule Details" subtitle="Joining date and operational shift timing">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
-              <Input
-                label="Joining Date (joiningDate)"
-                type="date"
-                value={formData.joiningDate}
-                onChange={(e) => setFormData((p) => ({ ...p, joiningDate: e.target.value }))}
-                required
-              />
-
-              <Select
-                label="Assigned Shift (shift)"
-                value={formData.shift}
-                onChange={(e) => setFormData((p) => ({ ...p, shift: e.target.value }))}
-                options={[
-                  { value: 'MORNING', label: 'Morning Shift (09:00 AM - 06:00 PM)' },
-                  { value: 'EVENING', label: 'Evening Shift (02:00 PM - 11:00 PM)' },
-                  { value: 'NIGHT', label: 'Night Shift (10:00 PM - 07:00 AM)' },
-                ]}
-              />
             </div>
           </Card>
 
@@ -333,8 +333,9 @@ export const CreateEmployeeWizard: React.FC = () => {
               <Button
                 type="button"
                 variant="secondary"
+                disabled={isSubmitting}
                 onClick={() => handleSaveEmployee(true)}
-                leftIcon={<Plus className="w-4 h-4" />}
+                leftIcon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               >
                 Save & Add Another
               </Button>
@@ -342,10 +343,11 @@ export const CreateEmployeeWizard: React.FC = () => {
               <Button
                 type="button"
                 variant="primary"
+                disabled={isSubmitting}
                 onClick={() => handleSaveEmployee(false)}
-                leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                leftIcon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               >
-                Save Employee
+                {isSubmitting ? 'Onboarding...' : 'Save Employee'}
               </Button>
             </div>
           </div>

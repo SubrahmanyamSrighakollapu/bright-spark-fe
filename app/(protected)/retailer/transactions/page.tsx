@@ -14,6 +14,7 @@ import { TransactionDetailsDrawer } from '@/components/features/transactions/Tra
 import { PayInReceipt } from '@/components/features/retailer/PayInReceipt';
 import { PayOutReceipt } from '@/components/features/retailer/PayOutReceipt';
 import { Pagination } from '@/components/ui/Pagination';
+import { Modal } from '@/components/ui/Modal';
 
 // Financial Foundation Components
 import { FinancialPageHeader } from '@/components/features/financial/FinancialPageHeader';

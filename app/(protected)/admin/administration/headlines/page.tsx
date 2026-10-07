@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useToast } from '@/components/ui/Toast';
+import { Modal } from '@/components/ui/Modal';
 import {
   headlineAlertService,
   HeadlineAlertItem,
@@ -401,120 +402,114 @@ export default function AdminHeadlinesPage() {
         )}
 
         {/* CREATE / EDIT HEADLINE MODAL */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-            <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-slate-200 space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Megaphone className="w-5 h-5 text-[#0F4C81]" />
-                  {editingItem ? 'Edit Headline Alert' : 'Add New Headline Alert'}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 text-lg font-bold"
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={
+            <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
+              <Megaphone className="w-5 h-5 text-[#0F4C81]" />
+              <span>{editingItem ? 'Edit Headline Alert' : 'Add New Headline Alert'}</span>
+            </div>
+          }
+          size="lg"
+          footer={
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="headline-form"
+                variant="primary"
+                size="sm"
+                className="bg-[#0F4C81] text-white font-bold"
+              >
+                {editingItem ? 'Save Headline Changes' : 'Publish Headline Alert'}
+              </Button>
+            </>
+          }
+        >
+          <form id="headline-form" onSubmit={handleSaveHeadline} className="space-y-4 text-xs">
+            <div className="space-y-1">
+              <label className="font-semibold text-slate-700 block">
+                Headline Title <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Special Pay-In Festival Offer"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-semibold text-slate-700 block">
+                Full Headline Announcement Text <span className="text-rose-500">*</span>
+              </label>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Enter the full marquee text message displayed on Retailer dashboards..."
+                rows={3}
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="font-semibold text-slate-700 block">
+                  Category / Type
+                </label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
                 >
-                  ×
-                </button>
+                  <option value="PROMOTION">PROMOTION (Offers & Margins)</option>
+                  <option value="INFO">INFO (System Updates)</option>
+                  <option value="WARNING">WARNING (Banking Notices)</option>
+                  <option value="CRITICAL">CRITICAL (Security Alerts)</option>
+                </select>
               </div>
 
-              <form onSubmit={handleSaveHeadline} className="space-y-4 text-xs">
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 block">
-                    Headline Title <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Special Pay-In Festival Offer"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 block">
-                    Full Headline Announcement Text <span className="text-rose-500">*</span>
-                  </label>
-                  <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Enter the full marquee text message displayed on Retailer dashboards..."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="font-semibold text-slate-700 block">
-                      Category / Type
-                    </label>
-                    <select
-                      value={type}
-                      onChange={(e) => setType(e.target.value as any)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                    >
-                      <option value="PROMOTION">PROMOTION (Offers & Margins)</option>
-                      <option value="INFO">INFO (System Updates)</option>
-                      <option value="WARNING">WARNING (Banking Notices)</option>
-                      <option value="CRITICAL">CRITICAL (Security Alerts)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-semibold text-slate-700 block">
-                      Priority Level
-                    </label>
-                    <select
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value as any)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                    >
-                      <option value="HIGH">HIGH Priority</option>
-                      <option value="MEDIUM">MEDIUM Priority</option>
-                      <option value="LOW">LOW Priority</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 block">
-                    Badge Tag Text <span className="text-slate-400">(Optional e.g. FESTIVAL OFFER)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={badgeText}
-                    onChange={(e) => setBadgeText(e.target.value)}
-                    placeholder="e.g. FESTIVAL OFFER, SECURITY ALERT"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                  />
-                </div>
-
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="sm"
-                    className="bg-[#0F4C81] text-white font-bold"
-                  >
-                    {editingItem ? 'Save Headline Changes' : 'Publish Headline Alert'}
-                  </Button>
-                </div>
-              </form>
+              <div className="space-y-1">
+                <label className="font-semibold text-slate-700 block">
+                  Priority Level
+                </label>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                >
+                  <option value="HIGH">HIGH Priority</option>
+                  <option value="MEDIUM">MEDIUM Priority</option>
+                  <option value="LOW">LOW Priority</option>
+                </select>
+              </div>
             </div>
-          </div>
-        )}
+
+            <div className="space-y-1">
+              <label className="font-semibold text-slate-700 block">
+                Badge Tag Text <span className="text-slate-400">(Optional e.g. FESTIVAL OFFER)</span>
+              </label>
+              <input
+                type="text"
+                value={badgeText}
+                onChange={(e) => setBadgeText(e.target.value)}
+                placeholder="e.g. FESTIVAL OFFER, SECURITY ALERT"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+              />
+            </div>
+          </form>
+        </Modal>
       </div>
     </PageContainer>
   );

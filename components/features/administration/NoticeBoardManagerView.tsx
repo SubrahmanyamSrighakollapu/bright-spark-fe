@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -9,72 +9,47 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { ColumnDefinition } from '@/types/common';
 import { formatDateTime } from '@/utils/formatters';
-import { Bell, Plus, Edit, Trash2, Calendar, AlertTriangle, Info, AlertCircle } from 'lucide-react';
-
-export interface NoticeItem {
-  id: string;
-  noticeTitle: string;
-  noticeContent: string;
-  noticeType: 'Information' | 'Important' | 'Urgent Alert';
-  publishDate: string;
-  expiryDate: string;
-  createdAt: string;
-}
-
-const INITIAL_NOTICES: NoticeItem[] = [
-  {
-    id: 'notice_1',
-    noticeTitle: 'New Banking Beneficiary Addition Guideline Update',
-    noticeContent: 'All Master Distributors & Retailers must verify Aadhaar OTP before binding new beneficiary bank accounts for instant payout operations.',
-    noticeType: 'Important',
-    publishDate: '2026-09-20T00:00:00Z',
-    expiryDate: '2026-10-31T23:59:59Z',
-    createdAt: '2026-09-19T11:00:00Z',
-  },
-  {
-    id: 'notice_2',
-    noticeTitle: 'GST Tax Clearance Statement Submission Deadline',
-    noticeContent: 'Quarterly GST reconciliation statements are due by 5th October 2026 for all Super Distributor accounts.',
-    noticeType: 'Urgent Alert',
-    publishDate: '2026-09-22T00:00:00Z',
-    expiryDate: '2026-10-05T23:59:59Z',
-    createdAt: '2026-09-21T16:00:00Z',
-  },
-  {
-    id: 'notice_3',
-    noticeTitle: 'Platform Upgrade v3.4 Deployment Briefing',
-    noticeContent: 'Enhanced UI components and real-time wallet settlement features are now live across all portal sections.',
-    noticeType: 'Information',
-    publishDate: '2026-09-25T00:00:00Z',
-    expiryDate: '2026-12-31T23:59:59Z',
-    createdAt: '2026-09-24T09:30:00Z',
-  },
-];
+import { headlineAlertService, NoticeBoardItem } from '@/services/headlineAlertService';
+import { Bell, Plus, Edit, Trash2, AlertTriangle, Info, AlertCircle, RefreshCw } from 'lucide-react';
 
 export const NoticeBoardManagerView: React.FC = () => {
-  const { toastSuccess, toastInfo } = useToast();
-  const [notices, setNotices] = useState<NoticeItem[]>(INITIAL_NOTICES);
+  const { toastSuccess, toastInfo, toastError } = useToast();
+  const [notices, setNotices] = useState<NoticeBoardItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingNotice, setEditingNotice] = useState<NoticeItem | null>(null);
+  const [editingNotice, setEditingNotice] = useState<NoticeBoardItem | null>(null);
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeContent, setNoticeContent] = useState('');
   const [noticeType, setNoticeType] = useState<'Information' | 'Important' | 'Urgent Alert'>('Information');
-  const [publishDate, setPublishDate] = useState('2026-09-26');
-  const [expiryDate, setExpiryDate] = useState('2026-10-26');
+  const [publishDate, setPublishDate] = useState(new Date().toISOString().split('T')[0]);
+  const [expiryDate, setExpiryDate] = useState('2026-10-31');
+
+  const fetchNotices = async () => {
+    setIsLoading(true);
+    const res = await headlineAlertService.getNotices();
+    if (res.success && res.data) {
+      setNotices(res.data);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchNotices();
+  }, []);
 
   const handleOpenAdd = () => {
     setEditingNotice(null);
     setNoticeTitle('');
     setNoticeContent('');
     setNoticeType('Information');
-    setPublishDate('2026-09-26');
-    setExpiryDate('2026-10-26');
+    setPublishDate(new Date().toISOString().split('T')[0]);
+    setExpiryDate('2026-10-31');
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (notice: NoticeItem) => {
+  const handleOpenEdit = (notice: NoticeBoardItem) => {
     setEditingNotice(notice);
     setNoticeTitle(notice.noticeTitle);
     setNoticeContent(notice.noticeContent);
@@ -84,49 +59,58 @@ export const NoticeBoardManagerView: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!noticeTitle.trim() || !noticeContent.trim()) return;
+    if (!noticeTitle.trim() || !noticeContent.trim()) {
+      toastError('Please fill in notice title and content.');
+      return;
+    }
 
     if (editingNotice) {
-      setNotices((prev) =>
-        prev.map((n) =>
-          n.id === editingNotice.id
-            ? {
-                ...n,
-                noticeTitle,
-                noticeContent,
-                noticeType,
-                publishDate: `${publishDate}T00:00:00Z`,
-                expiryDate: `${expiryDate}T23:59:59Z`,
-              }
-            : n
-        )
-      );
-      toastSuccess(`Notice "${noticeTitle}" updated!`);
-    } else {
-      const newNotice: NoticeItem = {
-        id: `notice_${Date.now()}`,
-        noticeTitle,
-        noticeContent,
+      const res = await headlineAlertService.updateNotice(editingNotice.id, {
+        noticeTitle: noticeTitle.trim(),
+        noticeContent: noticeContent.trim(),
         noticeType,
         publishDate: `${publishDate}T00:00:00Z`,
         expiryDate: `${expiryDate}T23:59:59Z`,
-        createdAt: new Date().toISOString(),
-      };
-      setNotices([newNotice, ...notices]);
-      toastSuccess('Platform notice created & scheduled!');
+      });
+      if (res.success) {
+        toastSuccess(`Notice "${noticeTitle}" updated!`);
+        fetchNotices();
+        setIsModalOpen(false);
+      } else {
+        toastError('Failed to update notice.');
+      }
+    } else {
+      const res = await headlineAlertService.createNotice({
+        noticeTitle: noticeTitle.trim(),
+        noticeContent: noticeContent.trim(),
+        noticeType,
+        publishDate: `${publishDate}T00:00:00Z`,
+        expiryDate: `${expiryDate}T23:59:59Z`,
+      });
+      if (res.success) {
+        toastSuccess('Platform notice created & scheduled!');
+        fetchNotices();
+        setIsModalOpen(false);
+      } else {
+        toastError('Failed to create notice.');
+      }
     }
-
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string, title: string) => {
-    setNotices((prev) => prev.filter((n) => n.id !== id));
-    toastInfo(`Notice "${title}" deleted.`);
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete notice "${title}"?`)) return;
+    const res = await headlineAlertService.deleteNotice(id);
+    if (res.success) {
+      toastInfo(`Notice "${title}" deleted.`);
+      fetchNotices();
+    } else {
+      toastError('Failed to delete notice.');
+    }
   };
 
-  const getTypeBadge = (type: NoticeItem['noticeType']) => {
+  const getTypeBadge = (type: NoticeBoardItem['noticeType']) => {
     switch (type) {
       case 'Information':
         return (
@@ -149,14 +133,14 @@ export const NoticeBoardManagerView: React.FC = () => {
     }
   };
 
-  const columns: ColumnDefinition<NoticeItem>[] = [
+  const columns: ColumnDefinition<NoticeBoardItem>[] = [
     {
       key: 'noticeTitle',
       header: 'Headline & Content',
       render: (row) => (
         <div className="max-w-md">
-          <div className="font-bold text-[#0F172A] text-sm mb-0.5">{row.noticeTitle}</div>
-          <div className="text-xs text-[#64748B] line-clamp-2">{row.noticeContent}</div>
+          <div className="font-bold text-slate-900 text-sm mb-0.5">{row.noticeTitle}</div>
+          <div className="text-xs text-slate-500 line-clamp-2">{row.noticeContent}</div>
         </div>
       ),
     },
@@ -169,12 +153,12 @@ export const NoticeBoardManagerView: React.FC = () => {
       key: 'publishDate',
       header: 'Schedule Controls',
       render: (row) => (
-        <div className="text-xs space-y-0.5 text-[#334155]">
+        <div className="text-xs space-y-0.5 text-slate-700 font-mono">
           <div>
-            <span className="text-[#64748B]">Pub:</span> {row.publishDate.split('T')[0]}
+            <span className="text-slate-400">Pub:</span> {row.publishDate.split('T')[0]}
           </div>
           <div>
-            <span className="text-[#64748B]">Exp:</span> {row.expiryDate.split('T')[0]}
+            <span className="text-slate-400">Exp:</span> {row.expiryDate.split('T')[0]}
           </div>
         </div>
       ),
@@ -188,7 +172,7 @@ export const NoticeBoardManagerView: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => handleOpenEdit(row)}
-            className="h-8 px-2 text-[#155EEF] hover:bg-[#F1F5F9]"
+            className="h-8 px-2 text-[#0F4C81] hover:bg-indigo-50"
           >
             <Edit className="w-3.5 h-3.5 mr-1" />
             Edit
@@ -209,106 +193,108 @@ export const NoticeBoardManagerView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs">
         <div>
-          <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <Bell className="w-6 h-6 text-[#155EEF]" />
+          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <Bell className="w-6 h-6 text-[#0F4C81]" />
             Notice Board & Bulletin Manager
           </h1>
-          <p className="text-sm text-[#64748B] mt-0.5">
+          <p className="text-sm text-slate-500 mt-0.5">
             Create modal bulletin announcements and platform notice banners for user downlines.
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenAdd}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Notice
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={fetchNotices} leftIcon={<RefreshCw className="w-3.5 h-3.5" />}>
+            Refresh
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleOpenAdd} className="bg-[#0F4C81] text-white font-bold">
+            <Plus className="w-4 h-4 mr-1.5" />
+            Create Notice
+          </Button>
+        </div>
       </div>
 
-      <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-4">
-        <Table columns={columns} data={notices} keyExtractor={(n) => n.id} />
+      <Card className="p-6 bg-white border border-slate-200/90 shadow-xs rounded-2xl space-y-4">
+        {isLoading ? (
+          <div className="py-12 text-center text-xs text-slate-400">Loading Notice Board items...</div>
+        ) : (
+          <Table columns={columns} data={notices} keyExtractor={(n) => n.id} />
+        )}
       </Card>
 
-      {isModalOpen && (
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={editingNotice ? 'Edit Platform Notice' : 'Publish Platform Notice'}
-        >
-          <form onSubmit={handleSave} className="space-y-4">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={
+          <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
+            <Bell className="w-5 h-5 text-[#0F4C81]" />
+            <span>{editingNotice ? 'Edit Platform Notice' : 'Publish Platform Notice'}</span>
+          </div>
+        }
+        size="lg"
+        footer={
+          <>
+            <Button type="button" variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" form="notice-form" variant="primary" size="sm" className="bg-[#0F4C81] text-white font-bold">
+              {editingNotice ? 'Save Notice' : 'Publish Notice'}
+            </Button>
+          </>
+        }
+      >
+        <form id="notice-form" onSubmit={handleSave} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Notice Title (noticeTitle) <span className="text-rose-500">*</span>
+            </label>
+            <Input
+              placeholder="e.g. Banking Beneficiary Verification Notice"
+              value={noticeTitle}
+              onChange={(e) => setNoticeTitle(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Notice Type</label>
+            <select
+              value={noticeType}
+              onChange={(e) => setNoticeType(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0F4C81]"
+            >
+              <option value="Information">Information (Blue)</option>
+              <option value="Important">Important (Yellow)</option>
+              <option value="Urgent Alert">Urgent Alert (Red)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Notice Content (noticeContent) <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              rows={4}
+              placeholder="Detailed announcement text..."
+              value={noticeContent}
+              onChange={(e) => setNoticeContent(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0F4C81]"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Notice Title (noticeTitle) <span className="text-rose-500">*</span>
-              </label>
-              <Input
-                placeholder="e.g. Banking Beneficiary Verification Notice"
-                value={noticeTitle}
-                onChange={(e) => setNoticeTitle(e.target.value)}
-                required
-              />
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Publish Date</label>
+              <Input type="date" value={publishDate} onChange={(e) => setPublishDate(e.target.value)} required />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Notice Type
-              </label>
-              <select
-                value={noticeType}
-                onChange={(e) => setNoticeType(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A]"
-              >
-                <option value="Information">Information (Blue)</option>
-                <option value="Important">Important (Yellow)</option>
-                <option value="Urgent Alert">Urgent Alert (Red)</option>
-              </select>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Expiry Date</label>
+              <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} required />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Notice Content (noticeContent) <span className="text-rose-500">*</span>
-              </label>
-              <textarea
-                rows={4}
-                placeholder="Detailed announcement text..."
-                value={noticeContent}
-                onChange={(e) => setNoticeContent(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#334155] mb-1">Publish Date</label>
-                <Input
-                  type="date"
-                  value={publishDate}
-                  onChange={(e) => setPublishDate(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#334155] mb-1">Expiry Date</label>
-                <Input
-                  type="date"
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary">
-                Publish Notice
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

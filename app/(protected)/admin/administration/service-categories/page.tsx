@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useToast } from '@/components/ui/Toast';
+import { Modal } from '@/components/ui/Modal';
 import {
   serviceCategoryService,
   ServiceCategoryItem,
@@ -628,285 +629,265 @@ export default function ServiceCategoriesAdminPage() {
         )}
 
         {/* CREATE / EDIT CATEGORY MODAL */}
-        {isCategoryModalOpen && (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150">
-            <div
-              className="fixed inset-0"
-              onClick={() => setIsCategoryModalOpen(false)}
-              aria-hidden="true"
-            />
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 flex flex-col max-h-[85vh] overflow-hidden my-auto z-10 animate-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-[#0F4C81]" />
-                  {editingCategory ? 'Edit Service Category' : 'Add New Service Category'}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 text-lg font-bold"
-                >
-                  ×
-                </button>
+        <Modal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setIsCategoryModalOpen(false)}
+          title={
+            <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
+              <Layers className="w-5 h-5 text-[#0F4C81]" />
+              <span>{editingCategory ? 'Edit Service Category' : 'Add New Service Category'}</span>
+            </div>
+          }
+          size="lg"
+          footer={
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCategoryModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="category-form"
+                variant="primary"
+                size="sm"
+                className="bg-[#0F4C81] text-white font-bold"
+              >
+                {editingCategory ? 'Save Category Changes' : 'Create Category'}
+              </Button>
+            </>
+          }
+        >
+          <form id="category-form" onSubmit={handleSaveCategory} className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="font-semibold text-slate-700 block">
+                  Category Code <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={catCode}
+                  onChange={(e) => setCatCode(e.target.value)}
+                  placeholder="e.g. GROCERY, TOURISM"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono focus:outline-hidden focus:border-[#0F4C81]"
+                  required
+                />
               </div>
 
-              <form onSubmit={handleSaveCategory} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1 min-h-0 pt-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="font-semibold text-slate-700 block">
-                      Category Code <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={catCode}
-                      onChange={(e) => setCatCode(e.target.value)}
-                      placeholder="e.g. GROCERY, TOURISM"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono focus:outline-hidden focus:border-[#0F4C81]"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-semibold text-slate-700 block">
-                      Category Icon
-                    </label>
-                    <select
-                      value={catIcon}
-                      onChange={(e) => setCatIcon(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                    >
-                      <option value="ShoppingBag">Shopping Bag (Grocery)</option>
-                      <option value="Plane">Plane (Tourism)</option>
-                      <option value="Shirt">Shirt (Fashion)</option>
-                      <option value="QrCode">QR Code (UPI)</option>
-                      <option value="Receipt">Receipt (Bill Payment)</option>
-                      <option value="Zap">Zap (Utilities)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 block">
-                    Category Display Name <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={catName}
-                    onChange={(e) => setCatName(e.target.value)}
-                    placeholder="e.g. Grocery Application, Tourism & Travel"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 block">
-                    Retailer Price Entry Mode <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setCatPricingMode('BOTH')}
-                      className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 ${
-                        catPricingMode === 'BOTH'
-                          ? 'border-[#0F4C81] bg-indigo-50/70 ring-2 ring-indigo-100 font-bold text-[#0F4C81]'
-                          : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
-                      }`}
-                    >
-                      <div className="text-xs font-bold flex items-center gap-1">
-                        <span>Both Allowed</span>
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-normal leading-tight">
-                        Presets & manual custom amount
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setCatPricingMode('PRESET_ONLY')}
-                      className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 ${
-                        catPricingMode === 'PRESET_ONLY'
-                          ? 'border-amber-600 bg-amber-50/70 ring-2 ring-amber-100 font-bold text-amber-900'
-                          : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
-                      }`}
-                    >
-                      <div className="text-xs font-bold flex items-center gap-1">
-                        <span>Preset Prices Only</span>
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-normal leading-tight">
-                        Must pick configured product
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setCatPricingMode('MANUAL_ONLY')}
-                      className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 ${
-                        catPricingMode === 'MANUAL_ONLY'
-                          ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-100 font-bold text-blue-900'
-                          : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
-                      }`}
-                    >
-                      <div className="text-xs font-bold flex items-center gap-1">
-                        <span>Manual Input Only</span>
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-normal leading-tight">
-                        Type custom amount only
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 block">Description</label>
-                  <textarea
-                    value={catDesc}
-                    onChange={(e) => setCatDesc(e.target.value)}
-                    placeholder="Describe the application services and product categories..."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                  />
-                </div>
-
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsCategoryModalOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="sm"
-                    className="bg-[#0F4C81] text-white font-bold"
-                  >
-                    {editingCategory ? 'Save Category Changes' : 'Create Category'}
-                  </Button>
-                </div>
-              </form>
+              <div className="space-y-1">
+                <label className="font-semibold text-slate-700 block">
+                  Category Icon
+                </label>
+                <select
+                  value={catIcon}
+                  onChange={(e) => setCatIcon(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                >
+                  <option value="ShoppingBag">Shopping Bag (Grocery)</option>
+                  <option value="Plane">Plane (Tourism)</option>
+                  <option value="Shirt">Shirt (Fashion)</option>
+                  <option value="QrCode">QR Code (UPI)</option>
+                  <option value="Receipt">Receipt (Bill Payment)</option>
+                  <option value="Zap">Zap (Utilities)</option>
+                </select>
+              </div>
             </div>
-          </div>
-        )}
+
+            <div className="space-y-1">
+              <label className="font-semibold text-slate-700 block">
+                Category Display Name <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={catName}
+                onChange={(e) => setCatName(e.target.value)}
+                placeholder="e.g. Grocery Application, Tourism & Travel"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="font-semibold text-slate-700 block">
+                Retailer Price Entry Mode <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCatPricingMode('BOTH')}
+                  className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 cursor-pointer ${
+                    catPricingMode === 'BOTH'
+                      ? 'border-[#0F4C81] bg-indigo-50/70 ring-2 ring-indigo-100 font-bold text-[#0F4C81]'
+                      : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center gap-1">
+                    <span>Both Allowed</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-normal leading-tight">
+                    Presets & manual custom amount
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCatPricingMode('PRESET_ONLY')}
+                  className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 cursor-pointer ${
+                    catPricingMode === 'PRESET_ONLY'
+                      ? 'border-amber-600 bg-amber-50/70 ring-2 ring-amber-100 font-bold text-amber-900'
+                      : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center gap-1">
+                    <span>Preset Prices Only</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-normal leading-tight">
+                    Must pick configured product
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCatPricingMode('MANUAL_ONLY')}
+                  className={`p-2.5 rounded-xl border text-left transition-all space-y-0.5 cursor-pointer ${
+                    catPricingMode === 'MANUAL_ONLY'
+                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-100 font-bold text-blue-900'
+                      : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center gap-1">
+                    <span>Manual Input Only</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-normal leading-tight">
+                    Type custom amount only
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-semibold text-slate-700 block">Description</label>
+              <textarea
+                value={catDesc}
+                onChange={(e) => setCatDesc(e.target.value)}
+                placeholder="Describe the application services and product categories..."
+                rows={2}
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+              />
+            </div>
+          </form>
+        </Modal>
 
         {/* CREATE / EDIT PRODUCT MODAL */}
-        {isProductModalOpen && targetCategoryForProduct && (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150">
-            <div
-              className="fixed inset-0"
-              onClick={() => setIsProductModalOpen(false)}
-              aria-hidden="true"
-            />
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 flex flex-col max-h-[85vh] overflow-hidden my-auto z-10 animate-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Package className="w-5 h-5 text-[#0F4C81]" />
-                  {editingProduct ? 'Edit Product Details' : `Add Product under ${targetCategoryForProduct.name}`}
-                </h3>
-                <button
+        {targetCategoryForProduct && (
+          <Modal
+            isOpen={isProductModalOpen}
+            onClose={() => setIsProductModalOpen(false)}
+            title={
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
+                <Package className="w-5 h-5 text-[#0F4C81]" />
+                <span>{editingProduct ? 'Edit Product Details' : `Add Product under ${targetCategoryForProduct.name}`}</span>
+              </div>
+            }
+            size="lg"
+            footer={
+              <>
+                <Button
                   type="button"
                   onClick={() => setIsProductModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 text-lg font-bold"
+                  variant="outline"
+                  size="sm"
                 >
-                  ×
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveProduct} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1 min-h-0 pt-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="font-semibold text-slate-700 block">
-                      Product Code <span className="text-slate-400">(Optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={prodCode}
-                      onChange={(e) => setProdCode(e.target.value)}
-                      placeholder="e.g. GROC_500"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono focus:outline-hidden focus:border-[#0F4C81]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="font-semibold text-slate-700 block">
-                      Configured Price (₹) <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={prodPrice}
-                      onChange={(e) => setProdPrice(e.target.value)}
-                      placeholder="e.g. 500"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono font-bold focus:outline-hidden focus:border-[#0F4C81]"
-                      required
-                    />
-                  </div>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  form="product-form"
+                  variant="primary"
+                  size="sm"
+                  className="bg-[#0F4C81] text-white font-bold"
+                >
+                  {editingProduct ? 'Save Product Details' : 'Add Product'}
+                </Button>
+              </>
+            }
+          >
+            <form id="product-form" onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-semibold text-slate-700 block">
+                    Product Code <span className="text-slate-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={prodCode}
+                    onChange={(e) => setProdCode(e.target.value)}
+                    placeholder="e.g. GROC_500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono focus:outline-hidden focus:border-[#0F4C81]"
+                  />
                 </div>
 
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700 block">
-                    Product Title / Name <span className="text-rose-500">*</span>
+                    Configured Price (₹) <span className="text-rose-500">*</span>
                   </label>
                   <input
-                    type="text"
-                    value={prodName}
-                    onChange={(e) => setProdName(e.target.value)}
-                    placeholder="e.g. Provisions Basket Pack, Domestic Flight Voucher"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={prodPrice}
+                    onChange={(e) => setProdPrice(e.target.value)}
+                    placeholder="e.g. 500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono font-bold focus:outline-hidden focus:border-[#0F4C81]"
                     required
                   />
                 </div>
+              </div>
 
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 block">
-                    Product Details & Description
-                  </label>
-                  <textarea
-                    value={prodDesc}
-                    onChange={(e) => setProdDesc(e.target.value)}
-                    placeholder="Provide details about what this product voucher includes..."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                  />
-                </div>
+              <div className="space-y-1">
+                <label className="font-semibold text-slate-700 block">
+                  Product Title / Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={prodName}
+                  onChange={(e) => setProdName(e.target.value)}
+                  placeholder="e.g. Provisions Basket Pack, Domestic Flight Voucher"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                  required
+                />
+              </div>
 
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 block">
-                    Badge Tag <span className="text-slate-400">(Optional e.g. Popular, Best Value)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={prodBadge}
-                    onChange={(e) => setProdBadge(e.target.value)}
-                    placeholder="e.g. Popular, Essential, Best Value"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
-                  />
-                </div>
+              <div className="space-y-1">
+                <label className="font-semibold text-slate-700 block">
+                  Product Details & Description
+                </label>
+                <textarea
+                  value={prodDesc}
+                  onChange={(e) => setProdDesc(e.target.value)}
+                  placeholder="Provide details about what this product voucher includes..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                />
+              </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsProductModalOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="sm"
-                    className="bg-[#0F4C81] text-white font-bold"
-                  >
-                    {editingProduct ? 'Save Product Details' : 'Add Product'}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
+              <div className="space-y-1">
+                <label className="font-semibold text-slate-700 block">
+                  Badge Tag <span className="text-slate-400">(Optional e.g. Popular, Best Value)</span>
+                </label>
+                <input
+                  type="text"
+                  value={prodBadge}
+                  onChange={(e) => setProdBadge(e.target.value)}
+                  placeholder="e.g. Popular, Essential, Best Value"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                />
+              </div>
+            </form>
+          </Modal>
         )}
       </div>
     </PageContainer>
