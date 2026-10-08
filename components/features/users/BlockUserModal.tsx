@@ -30,7 +30,7 @@ export const BlockUserModal: React.FC<BlockUserModalProps> = ({
 
   if (!entity) return null;
 
-  const isBlocked = entity.status === 'BLOCKED' || entity.status === 'SUSPENDED';
+  const isBlocked = entity.status === 'BLOCKED';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -2,6 +2,9 @@ import { Retailer, AccountStatus, KYCStatus, ApiResponse, ApprovalStatus } from 
 import { hierarchyService } from '@/services/hierarchyService';
 import { retailerPlanService } from '@/services/retailerPlanService';
 import { approvalService } from '@/services/approvalService';
+import { APP_CONFIG } from '@/config';
+import { userService } from './userService';
+import { networkUserToDistributor, networkUserToRetailer } from './networkUserMapper';
 
 export interface CreateRetailerInput {
   distributorId: string;
@@ -39,10 +42,23 @@ export interface ScopedRetailerSummary {
   inactiveRetailers: number;
 }
 
+function summarizeRetailers(retailers: Retailer[]): ScopedRetailerSummary {
+  return {
+    totalRetailers: retailers.length,
+    activeRetailers: retailers.filter((item) => item.approvalStatus === 'APPROVED' && item.accountStatus === 'ACTIVE').length,
+    pendingApprovalRetailers: retailers.filter((item) => item.approvalStatus === 'PENDING_APPROVAL').length,
+    inactiveRetailers: retailers.filter((item) => item.accountStatus !== 'ACTIVE' && item.approvalStatus !== 'PENDING_APPROVAL').length,
+  };
+}
+
 class RetailerService {
   async getRetailersForMasterDistributor(
     masterDistributorId: string
   ): Promise<ApiResponse<Retailer[]>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.getUsers({ role: 'RETAILER', pageSize: 100 });
+      return { ...response, data: response.data?.items.map(networkUserToRetailer) || [] };
+    }
     const retailers = hierarchyService.getMasterDistributorRetailers(masterDistributorId);
     return {
       success: true,
@@ -55,6 +71,10 @@ class RetailerService {
     masterDistributorId: string,
     retailerId: string
   ): Promise<ApiResponse<Retailer | null>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.getUser(retailerId);
+      return { ...response, data: response.data ? networkUserToRetailer(response.data) : null };
+    }
     const retailer = hierarchyService.getRetailerById(retailerId);
 
     // Security Scoping: Guarantee retailer belongs to the authenticated Master Distributor
@@ -77,6 +97,11 @@ class RetailerService {
   }
 
   async getEligibleDistributorsForRetailerCreation(masterDistributorId: string) {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.getUsers({ role: 'DISTRIBUTOR', pageSize: 100 });
+      return (response.data?.items || []).map(networkUserToDistributor)
+        .filter((item) => item.status === 'ACTIVE' && item.approvalStatus === 'APPROVED');
+    }
     const networkDistributors = hierarchyService.getMasterDistributorDistributors(masterDistributorId);
     // Operationally eligible: APPROVED & ACTIVE
     return networkDistributors.filter(
@@ -89,6 +114,12 @@ class RetailerService {
     input: CreateRetailerInput,
     createdByUserId: string = 'usr_md_01'
   ): Promise<ApiResponse<Retailer>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.createUser({ role: 'RETAILER', fullName: input.name,
+        displayName: input.businessName, email: input.email, mobile: input.mobile, parentPartyId: input.distributorId });
+      if (response.data) await userService.assignUserPlan(response.data.id, input.planId);
+      return { ...response, data: response.data ? networkUserToRetailer(response.data) : undefined };
+    }
     // 1. Validate Parent Distributor ownership & operational status
     const parentDst = hierarchyService.getDistributorById(input.distributorId);
     if (
@@ -181,6 +212,12 @@ class RetailerService {
     retailerId: string,
     updates: UpdateRetailerInput
   ): Promise<ApiResponse<Retailer>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.updateUser(retailerId, { fullName: updates.name,
+        displayName: updates.businessName, email: updates.email, mobile: updates.mobile, status: updates.accountStatus });
+      if (updates.planId) await userService.assignUserPlan(retailerId, updates.planId);
+      return { ...response, data: response.data ? networkUserToRetailer(response.data) : undefined };
+    }
     const check = await this.getRetailerByIdForMasterDistributor(masterDistributorId, retailerId);
     if (!check.success || !check.data) {
       return {
@@ -220,6 +257,13 @@ class RetailerService {
     masterDistributorId: string,
     retailerId: string
   ): Promise<ApiResponse<Retailer>> {
+    if (!APP_CONFIG.useMockData) {
+      const current = await this.getRetailerByIdForMasterDistributor(masterDistributorId, retailerId);
+      if (!current.success || !current.data) return current as ApiResponse<Retailer>;
+      const next = current.data.accountStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      const response = await userService.updateUserStatus(retailerId, next, 'Master Distributor retailer status change');
+      return { ...response, data: response.data ? networkUserToRetailer(response.data) : undefined };
+    }
     const check = await this.getRetailerByIdForMasterDistributor(masterDistributorId, retailerId);
     if (!check.success || !check.data) {
       return {
@@ -263,6 +307,10 @@ class RetailerService {
   async getRetailerSummaryForMasterDistributor(
     masterDistributorId: string
   ): Promise<ScopedRetailerSummary> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await this.getRetailersForMasterDistributor(masterDistributorId);
+      return summarizeRetailers(response.data || []);
+    }
     const retailers = hierarchyService.getMasterDistributorRetailers(masterDistributorId);
 
     const totalRetailers = retailers.length;
@@ -287,6 +335,10 @@ class RetailerService {
   async getRetailersForDistributor(
     distributorId: string
   ): Promise<ApiResponse<Retailer[]>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.getUsers({ role: 'RETAILER', pageSize: 100 });
+      return { ...response, data: response.data?.items.map(networkUserToRetailer) || [] };
+    }
     const retailers = hierarchyService.getDistributorRetailers(distributorId);
     return {
       success: true,
@@ -299,6 +351,10 @@ class RetailerService {
     distributorId: string,
     retailerId: string
   ): Promise<ApiResponse<Retailer | null>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.getUser(retailerId);
+      return { ...response, data: response.data ? networkUserToRetailer(response.data) : null };
+    }
     const retailer = hierarchyService.getRetailerById(retailerId);
 
     // Security Scoping: Guarantee retailer belongs to the authenticated Distributor
@@ -325,6 +381,12 @@ class RetailerService {
     input: CreateRetailerInput,
     createdByUserId: string = 'usr_dst_01'
   ): Promise<ApiResponse<Retailer>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.createUser({ role: 'RETAILER', fullName: input.name,
+        displayName: input.businessName, email: input.email, mobile: input.mobile, parentPartyId: distributorId });
+      if (response.data) await userService.assignUserPlan(response.data.id, input.planId);
+      return { ...response, data: response.data ? networkUserToRetailer(response.data) : undefined };
+    }
     // 1. Resolve parent Distributor & Master Distributor from hierarchy
     const parentDst = hierarchyService.getDistributorById(distributorId);
     if (!parentDst || parentDst.status !== 'ACTIVE' || (parentDst.approvalStatus || 'APPROVED') !== 'APPROVED') {
@@ -413,6 +475,12 @@ class RetailerService {
     retailerId: string,
     updates: UpdateRetailerInput
   ): Promise<ApiResponse<Retailer>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.updateUser(retailerId, { fullName: updates.name,
+        displayName: updates.businessName, email: updates.email, mobile: updates.mobile, status: updates.accountStatus });
+      if (updates.planId) await userService.assignUserPlan(retailerId, updates.planId);
+      return { ...response, data: response.data ? networkUserToRetailer(response.data) : undefined };
+    }
     const check = await this.getRetailerByIdForDistributor(distributorId, retailerId);
     if (!check.success || !check.data) {
       return {
@@ -452,6 +520,13 @@ class RetailerService {
     distributorId: string,
     retailerId: string
   ): Promise<ApiResponse<Retailer>> {
+    if (!APP_CONFIG.useMockData) {
+      const current = await this.getRetailerByIdForDistributor(distributorId, retailerId);
+      if (!current.success || !current.data) return current as ApiResponse<Retailer>;
+      const next = current.data.accountStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      const response = await userService.updateUserStatus(retailerId, next, 'Distributor retailer status change');
+      return { ...response, data: response.data ? networkUserToRetailer(response.data) : undefined };
+    }
     const check = await this.getRetailerByIdForDistributor(distributorId, retailerId);
     if (!check.success || !check.data) {
       return {
@@ -494,6 +569,10 @@ class RetailerService {
   async getRetailerSummaryForDistributor(
     distributorId: string
   ): Promise<ScopedRetailerSummary> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await this.getRetailersForDistributor(distributorId);
+      return summarizeRetailers(response.data || []);
+    }
     const retailers = hierarchyService.getDistributorRetailers(distributorId);
 
     const totalRetailers = retailers.length;

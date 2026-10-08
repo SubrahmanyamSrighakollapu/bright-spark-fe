@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout';
 import { useAuth } from '@/context/AuthContext';
 import { AccessDeniedView } from '@/components/features/auth/AccessDeniedView';
 import { isRouteAuthorizedForRole } from '@/config/roles';
+import { ForcePasswordChangeModal } from '@/components/features/auth/ForcePasswordChangeModal';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { session, isAuthenticated, isLoading } = useAuth();
@@ -41,6 +42,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   return (
     <AppShell>
       {isAuthorized ? children : <AccessDeniedView />}
+      <ForcePasswordChangeModal />
     </AppShell>
   );
 }

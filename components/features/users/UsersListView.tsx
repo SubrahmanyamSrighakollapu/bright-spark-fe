@@ -227,6 +227,18 @@ export const UsersListView: React.FC = () => {
       },
     },
     {
+      key: 'createdBy',
+      header: 'Created By',
+      render: (row) => (
+        <div className="text-xs">
+          <div className="font-semibold text-[#0F172A]">{row.createdBy || 'Admin'}</div>
+          {row.createdByRole && row.createdByRole !== 'ADMIN' && row.createdByRole !== 'SUPER_ADMIN' && (
+            <div className="text-[10px] text-[#64748B]">{row.createdByRole.replaceAll('_', ' ')}</div>
+          )}
+        </div>
+      ),
+    },
+    {
       key: 'walletBalance',
       header: 'Available Balance',
       align: 'right',

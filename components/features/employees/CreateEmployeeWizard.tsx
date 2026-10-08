@@ -45,12 +45,10 @@ export const CreateEmployeeWizard: React.FC = () => {
     fullName: '',
     email: '',
     mobile: '',
-    employeeCode: `EMP_${Math.floor(1000 + Math.random() * 9000)}`,
+    employeeCode: '',
     departmentCode: 'OPERATIONS',
     roleId: 5,
     designation: 'Operations Staff',
-    isAutoPassword: true,
-    password: 'Demo@1234567',
     joiningDate: new Date().toISOString().split('T')[0],
     shift: 'MORNING',
   });
@@ -97,26 +95,26 @@ export const CreateEmployeeWizard: React.FC = () => {
       toastError('Please enter Official Email ID before proceeding.');
       return;
     }
+    if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+      toastError('Please enter a valid 10-digit mobile number. It is required for the initial password.');
+      return;
+    }
     setCurrentStep(2);
   };
 
   const handleSaveEmployee = async (addAnother: boolean = false) => {
     try {
       setIsSubmitting(true);
-      const last4 = formData.mobile ? formData.mobile.trim().slice(-4) : '1234';
-      const autoPassword = `QinStarEmp@${last4}`;
-      const empPassword = formData.isAutoPassword ? autoPassword : (formData.password || autoPassword);
-
       const created = await employeeService.createEmployee({
         employeeCode: formData.employeeCode,
         fullName: formData.fullName,
         email: formData.email,
-        mobile: formData.mobile ? formData.mobile : undefined,
-        password: empPassword,
+        mobile: formData.mobile,
         departmentCode: formData.departmentCode,
         roleId: Number(formData.roleId),
         designation: formData.designation,
         joiningDate: formData.joiningDate,
+        shiftCode: formData.shift as 'MORNING' | 'EVENING' | 'NIGHT',
       });
 
       toastSuccess(`Employee ${created.employeeCode} ("${created.fullName}") onboarded successfully!`);
@@ -126,12 +124,10 @@ export const CreateEmployeeWizard: React.FC = () => {
           fullName: '',
           email: '',
           mobile: '',
-          employeeCode: `EMP_${Math.floor(1000 + Math.random() * 9000)}`,
+          employeeCode: '',
           departmentCode: 'OPERATIONS',
           roleId: roles[0]?.id || 5,
           designation: 'Operations Staff',
-          isAutoPassword: true,
-          password: 'Demo@1234567',
           joiningDate: new Date().toISOString().split('T')[0],
           shift: 'MORNING',
         });
@@ -139,8 +135,8 @@ export const CreateEmployeeWizard: React.FC = () => {
       } else {
         router.push('/admin/employees');
       }
-    } catch (err: any) {
-      toastError(err.message || 'Failed to onboard employee.');
+    } catch (err: unknown) {
+      toastError((err as Error).message || 'Failed to onboard employee.');
     } finally {
       setIsSubmitting(false);
     }
@@ -209,11 +205,12 @@ export const CreateEmployeeWizard: React.FC = () => {
               />
 
               <Input
-                label="Mobile Number (Optional)"
+                label="Mobile Number"
                 placeholder="9876543210"
                 maxLength={10}
                 value={formData.mobile}
                 onChange={(e) => setFormData((p) => ({ ...p, mobile: e.target.value.replace(/\D/g, '') }))}
+                required
               />
 
               <Input
@@ -291,35 +288,12 @@ export const CreateEmployeeWizard: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-[#F8FAFC] border border-[#E5EAF1] rounded-xl">
+              <div className="p-4 bg-[#F8FAFC] border border-[#E5EAF1] rounded-xl">
                 <div>
-                  <span className="text-xs font-bold text-[#0F172A] block">Auto-generate Password</span>
-                  <span className="text-[11px] text-[#64748B]">Set default secure password (Demo@123456).</span>
+                  <span className="text-xs font-bold text-[#0F172A] block">Temporary Password</span>
+                  <span className="text-[11px] text-[#64748B]">The initial password is the last 4 digits of the employee mobile number. The employee must create a new secure password immediately after first login.</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setFormData((p) => ({ ...p, isAutoPassword: !p.isAutoPassword }))}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                    formData.isAutoPassword ? 'bg-[#155EEF]' : 'bg-slate-200'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      formData.isAutoPassword ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
               </div>
-
-              {!formData.isAutoPassword && (
-                <Input
-                  label="Custom Password (min 12 chars)"
-                  type="password"
-                  placeholder="Set custom password"
-                  value={formData.password}
-                  onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
-                />
-              )}
             </div>
           </Card>
 

@@ -17,6 +17,7 @@ export interface AuthSession {
   permissions: string[];
   accessToken?: string;
   refreshToken?: string;
+  mustChangePassword?: boolean;
   loggedInAt: string;
 }
 

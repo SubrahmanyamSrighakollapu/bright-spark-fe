@@ -8,9 +8,11 @@ import { Select } from '@/components/ui/Select';
 import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { Pagination } from '@/components/ui/Pagination';
 import { useToast } from '@/components/ui/Toast';
 import { ActionKebabMenu, ActionMenuItem } from '@/components/ui/ActionKebabMenu';
 import { ColumnDefinition } from '@/types/common';
+import { PaginationState } from '@/types/domain';
 import {
   employeeService,
   BackendEmployeeItem,
@@ -55,6 +57,9 @@ export const EmployeesListView: React.FC = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<BackendEmployeeItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editReason, setEditReason] = useState('Employee profile updated by administrator');
+  const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 20, totalItems: 0, totalPages: 1 });
   const [authError, setAuthError] = useState<string | null>(null);
 
   const fetchMetaAndEmployees = useCallback(async () => {
@@ -69,8 +74,11 @@ export const EmployeesListView: React.FC = () => {
         search: searchTerm,
         departmentCode: departmentFilter !== 'ALL' ? departmentFilter : undefined,
         status: statusFilter !== 'ALL' ? statusFilter : undefined,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
       });
       setEmployees(res.items);
+      setPagination(res.pagination);
     } catch (error: any) {
       console.error('Error fetching employees:', error);
       const msg = error.message || 'Failed to load employee list from server';
@@ -82,7 +90,7 @@ export const EmployeesListView: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, departmentFilter, statusFilter, toastError]);
+  }, [searchTerm, departmentFilter, statusFilter, pagination.page, pagination.pageSize, toastError]);
 
   useEffect(() => {
     fetchMetaAndEmployees();
@@ -102,8 +110,39 @@ export const EmployeesListView: React.FC = () => {
     }
   };
 
-  const handleResetPassword = (emp: BackendEmployeeItem) => {
-    toastInfo(`Password reset instructions sent to ${emp.fullName} (${emp.email}).`);
+  const handleResetPassword = async (emp: BackendEmployeeItem) => {
+    try {
+      const temporaryPassword = await employeeService.resetEmployeePassword(emp.id, 'Administrator initiated password reset');
+      toastInfo(`Temporary password for ${emp.fullName}: ${temporaryPassword}`);
+    } catch (error: unknown) {
+      toastError(error instanceof Error ? error.message : 'Failed to reset employee password');
+    }
+  };
+
+  const handleSaveEmployee = async () => {
+    if (!selectedEmployee) return;
+    try {
+      setIsSaving(true);
+      const updated = await employeeService.updateEmployee(selectedEmployee.id, {
+        fullName: selectedEmployee.fullName,
+        email: selectedEmployee.email,
+        mobile: selectedEmployee.mobile,
+        departmentCode: selectedEmployee.departmentCode,
+        roleId: selectedEmployee.role.id,
+        designation: selectedEmployee.designation,
+        joiningDate: selectedEmployee.joiningDate,
+        shiftCode: selectedEmployee.shiftCode,
+        reason: editReason,
+      });
+      setEmployees((current) => current.map((employee) => employee.id === updated.id ? updated : employee));
+      setSelectedEmployee(updated);
+      setIsEditModalOpen(false);
+      toastSuccess(`Employee ${updated.employeeCode} updated successfully.`);
+    } catch (error: unknown) {
+      toastError(error instanceof Error ? error.message : 'Failed to update employee');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Department count calculations
@@ -386,6 +425,11 @@ export const EmployeesListView: React.FC = () => {
             />
           )}
         </div>
+        {pagination.totalPages > 1 && (
+          <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+            onPageChange={(page) => setPagination((current) => ({ ...current, page }))}
+            onPageSizeChange={(pageSize) => setPagination((current) => ({ ...current, page: 1, pageSize }))} />
+        )}
       </Card>
 
       {/* View / Edit Employee Modal */}
@@ -397,19 +441,20 @@ export const EmployeesListView: React.FC = () => {
           size="md"
         >
           <div className="space-y-4 text-xs pt-2">
-            <div className="p-4 bg-[#F8FAFC] border border-[#E5EAF1] rounded-xl space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Full Name:</span>
-                <span className="font-bold text-[#0F172A] text-sm">{selectedEmployee.fullName}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Email:</span>
-                <span className="font-semibold text-slate-800">{selectedEmployee.email}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Mobile:</span>
-                <span className="font-semibold text-slate-800">{selectedEmployee.mobile || 'N/A'}</span>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input label="Full Name" value={selectedEmployee.fullName} onChange={(event) => setSelectedEmployee({ ...selectedEmployee, fullName: event.target.value })} />
+              <Input label="Email" type="email" value={selectedEmployee.email} onChange={(event) => setSelectedEmployee({ ...selectedEmployee, email: event.target.value })} />
+              <Input label="Mobile" value={selectedEmployee.mobile || ''} onChange={(event) => setSelectedEmployee({ ...selectedEmployee, mobile: event.target.value || null })} />
+              <Input label="Designation" value={selectedEmployee.designation || ''} onChange={(event) => setSelectedEmployee({ ...selectedEmployee, designation: event.target.value || null })} />
+              <Select label="Department" value={selectedEmployee.departmentCode} onChange={(event) => setSelectedEmployee({ ...selectedEmployee, departmentCode: event.target.value })}
+                options={departments.map((department) => ({ value: department.code, label: department.label }))} />
+              <Select label="Employee Role" value={String(selectedEmployee.role.id)} onChange={(event) => {
+                const role = roles.find((item) => item.id === Number(event.target.value));
+                if (role) setSelectedEmployee({ ...selectedEmployee, role: { id: role.id, code: role.code, name: role.name } });
+              }} options={roles.map((role) => ({ value: String(role.id), label: role.name }))} />
+              <Input label="Joining Date" type="date" value={selectedEmployee.joiningDate || ''} onChange={(event) => setSelectedEmployee({ ...selectedEmployee, joiningDate: event.target.value || null })} />
+              <Select label="Shift" value={selectedEmployee.shiftCode} onChange={(event) => setSelectedEmployee({ ...selectedEmployee, shiftCode: event.target.value as BackendEmployeeItem['shiftCode'] })}
+                options={[{ value: 'MORNING', label: 'Morning' }, { value: 'EVENING', label: 'Evening' }, { value: 'NIGHT', label: 'Night' }]} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -435,6 +480,7 @@ export const EmployeesListView: React.FC = () => {
                 </span>
               </div>
             </div>
+            <Input label="Reason for change" value={editReason} onChange={(event) => setEditReason(event.target.value)} />
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5EAF1]">
               <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
@@ -450,6 +496,9 @@ export const EmployeesListView: React.FC = () => {
                 }}
               >
                 {selectedEmployee.employmentStatus === 'ACTIVE' ? 'Suspend Employee' : 'Activate Employee'}
+              </Button>
+              <Button type="button" variant="primary" disabled={isSaving || editReason.trim().length < 3} onClick={handleSaveEmployee}>
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           </div>

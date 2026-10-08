@@ -1,7 +1,6 @@
 import { apiClient } from './apiClient';
 import { UserRole } from '@/config/roles';
 import { AuthSession, getDefaultRouteForRole } from './mockAuthService';
-import { APP_CONFIG } from '@/config';
 
 export interface LoginApiResponse {
   success: boolean;
@@ -17,6 +16,7 @@ export interface LoginApiResponse {
       name: string;
       roles: string[];
       permissions: string[];
+      mustChangePassword: boolean;
     };
   };
 }
@@ -39,6 +39,7 @@ export interface MeApiResponse {
     email: string;
     roles: string[];
     permissions: string[];
+    mustChangePassword: boolean;
   };
 }
 
@@ -72,6 +73,7 @@ export class AuthService {
           permissions: user.permissions || [],
           accessToken,
           refreshToken,
+          mustChangePassword: user.mustChangePassword,
           loggedInAt: new Date().toISOString(),
         };
 
@@ -140,6 +142,12 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ accessToken: string; refreshToken: string }> {
+    const response = await apiClient.post<RefreshApiResponse>('/auth/change-password', { currentPassword, newPassword });
+    if (!response.success || !response.data) throw new Error('Unable to change password');
+    return { accessToken: response.data.accessToken, refreshToken: response.data.refreshToken };
   }
 }
 

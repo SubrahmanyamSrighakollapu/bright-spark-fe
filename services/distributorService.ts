@@ -1,5 +1,8 @@
 import { Distributor, AccountStatus, KYCStatus, ApiResponse, ApprovalStatus, UserRole } from '@/types/domain';
 import { hierarchyService } from '@/services/hierarchyService';
+import { APP_CONFIG } from '@/config';
+import { userService } from './userService';
+import { networkUserToDistributor } from './networkUserMapper';
 
 export interface CreateDistributorInput {
   name: string;
@@ -48,6 +51,10 @@ class DistributorService {
   async getDistributorsForMasterDistributor(
     masterDistributorId: string
   ): Promise<ApiResponse<Distributor[]>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.getUsers({ role: 'DISTRIBUTOR', pageSize: 100 });
+      return { ...response, data: response.data?.items.map(networkUserToDistributor) || [] };
+    }
     const distributors = hierarchyService.getMasterDistributorDistributors(masterDistributorId);
     return {
       success: true,
@@ -60,6 +67,10 @@ class DistributorService {
     masterDistributorId: string,
     distributorId: string
   ): Promise<ApiResponse<Distributor | null>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.getUser(distributorId);
+      return { ...response, data: response.data ? networkUserToDistributor(response.data) : null };
+    }
     const distributor = hierarchyService.getDistributorById(distributorId);
 
     // Security check: Ensure distributor belongs to the authenticated Master Distributor
@@ -87,6 +98,11 @@ class DistributorService {
     createdByUserId: string = 'usr_md_01',
     createdByRole: UserRole = 'MASTER_DISTRIBUTOR'
   ): Promise<ApiResponse<Distributor>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.createUser({ role: 'DISTRIBUTOR', fullName: input.name,
+        displayName: input.businessName, email: input.email, mobile: input.mobile, parentPartyId: masterDistributorId });
+      return { ...response, data: response.data ? networkUserToDistributor(response.data) : undefined };
+    }
     // 1. Code Uniqueness Validation
     const cleanCode = input.code.trim().toUpperCase();
     const existing = hierarchyService
@@ -156,6 +172,11 @@ class DistributorService {
     distributorId: string,
     updates: UpdateDistributorInput
   ): Promise<ApiResponse<Distributor>> {
+    if (!APP_CONFIG.useMockData) {
+      const response = await userService.updateUser(distributorId, { fullName: updates.name,
+        displayName: updates.businessName, email: updates.email, mobile: updates.mobile, status: updates.status });
+      return { ...response, data: response.data ? networkUserToDistributor(response.data) : undefined };
+    }
     const check = await this.getDistributorById(masterDistributorId, distributorId);
     if (!check.success || !check.data) {
       return {
@@ -189,6 +210,13 @@ class DistributorService {
     masterDistributorId: string,
     distributorId: string
   ): Promise<ApiResponse<Distributor>> {
+    if (!APP_CONFIG.useMockData) {
+      const current = await this.getDistributorById(masterDistributorId, distributorId);
+      if (!current.success || !current.data) return current as ApiResponse<Distributor>;
+      const next = current.data.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      const response = await userService.updateUserStatus(distributorId, next, 'Master Distributor status change');
+      return { ...response, data: response.data ? networkUserToDistributor(response.data) : undefined };
+    }
     const check = await this.getDistributorById(masterDistributorId, distributorId);
     if (!check.success || !check.data) {
       return {
@@ -228,6 +256,17 @@ class DistributorService {
   }
 
   async getDistributorSummary(masterDistributorId: string): Promise<ScopedDistributorSummary> {
+    if (!APP_CONFIG.useMockData) {
+      const [distributorResponse, retailerResponse] = await Promise.all([
+        this.getDistributorsForMasterDistributor(masterDistributorId), userService.getUsers({ role: 'RETAILER', pageSize: 100 }),
+      ]);
+      const distributors = distributorResponse.data || [];
+      return { totalDistributors: distributors.length,
+        activeDistributors: distributors.filter((item) => item.status === 'ACTIVE' && item.approvalStatus === 'APPROVED').length,
+        pendingApprovalDistributors: distributors.filter((item) => item.approvalStatus === 'PENDING_APPROVAL').length,
+        inactiveDistributors: distributors.filter((item) => item.status !== 'ACTIVE' && item.approvalStatus !== 'PENDING_APPROVAL').length,
+        totalRetailers: retailerResponse.data?.items.length || 0 };
+    }
     const distributors = hierarchyService.getMasterDistributorDistributors(masterDistributorId);
     const retailers = hierarchyService.getMasterDistributorRetailers(masterDistributorId);
 

@@ -30,6 +30,7 @@ export interface NetworkUserItem {
   roleName: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER' | string;
   parentId?: string | null;
   parentName?: string | null;
+  masterDistributorId?: string | null;
   status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'INACTIVE' | 'DISABLED' | 'BLOCKED' | string;
   accountStatus: string;
   approvalStatus: string;
@@ -42,6 +43,10 @@ export interface NetworkUserItem {
   ledgerBalance: number;
   version: number;
   createdAt: string;
+  createdByUserId?: string | null;
+  createdByRole?: string | null;
+  createdBy?: string;
+  planId?: string | null;
 }
 
 export interface NetworkUserListResult {
@@ -121,6 +126,7 @@ export const userService = {
         if (response && response.data) return response;
       }
     } catch (err) {
+      if (!APP_CONFIG.useMockData) throw err;
       console.warn('Backend /users API unavailable, serving fallback user list:', err);
     }
 
@@ -279,6 +285,15 @@ export const userService = {
       return { success: true, data: newUser, timestamp: new Date().toISOString() };
     }
     return apiClient.post<ApiResponse<NetworkUserItem>>('/users', input);
+  },
+
+  async getUser(id: string): Promise<ApiResponse<NetworkUserItem>> {
+    return apiClient.get<ApiResponse<NetworkUserItem>>(`/users/${id}`);
+  },
+
+  async assignUserPlan(userId: string, planId: string): Promise<void> {
+    if (APP_CONFIG.useMockData || !planId) return;
+    await apiClient.post('/plans/user-plan-mapping', { userId, planId });
   },
 
   /**

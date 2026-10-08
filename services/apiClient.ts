@@ -38,7 +38,7 @@ class ApiClient {
     return url.toString();
   }
 
-  private getStoredSession(): { isLocal: boolean; session: any } | null {
+  private getStoredSession(): { isLocal: boolean; session: Record<string, unknown> } | null {
     if (typeof window === 'undefined') return null;
     try {
       const sessionRaw = sessionStorage.getItem('qin-star-pay-auth-session-session');
@@ -54,7 +54,7 @@ class ApiClient {
 
   private getStoredToken(): string | null {
     const data = this.getStoredSession();
-    return data?.session?.accessToken || null;
+    return typeof data?.session?.accessToken === 'string' ? data.session.accessToken : null;
   }
 
   private updateStoredTokens(accessToken: string, refreshToken?: string) {
@@ -71,6 +71,7 @@ class ApiClient {
     const key = stored.isLocal ? 'qin-star-pay-auth-session-local' : 'qin-star-pay-auth-session-session';
     const storage = stored.isLocal ? localStorage : sessionStorage;
     storage.setItem(key, JSON.stringify(updatedSession));
+    window.dispatchEvent(new CustomEvent('qsp:tokens-refreshed', { detail: { accessToken, refreshToken } }));
   }
 
   private clearSessionAndRedirect() {
@@ -91,7 +92,7 @@ class ApiClient {
     this.refreshPromise = (async () => {
       try {
         const stored = this.getStoredSession();
-        const refreshToken = stored?.session?.refreshToken;
+        const refreshToken = typeof stored?.session?.refreshToken === 'string' ? stored.session.refreshToken : undefined;
         if (!refreshToken) {
           return null;
         }

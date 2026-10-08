@@ -33,6 +33,7 @@ export interface BackendEmployeeItem {
   designation: string | null;
   managerUserId: string | null;
   joiningDate: string | null;
+  shiftCode: 'MORNING' | 'EVENING' | 'NIGHT';
   employmentStatus: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'TERMINATED';
   role: {
     id: number;
@@ -61,12 +62,24 @@ export interface CreateEmployeeInput {
   employeeCode: string;
   fullName: string;
   email: string;
-  mobile?: string;
-  password?: string;
+  mobile: string;
   departmentCode: string;
   roleId: number;
   designation?: string;
   joiningDate?: string;
+  shiftCode?: 'MORNING' | 'EVENING' | 'NIGHT';
+}
+
+export interface UpdateEmployeeInput {
+  fullName: string;
+  email: string;
+  mobile?: string | null;
+  departmentCode: string;
+  roleId: number;
+  designation?: string | null;
+  joiningDate?: string | null;
+  shiftCode: 'MORNING' | 'EVENING' | 'NIGHT';
+  reason: string;
 }
 
 // Default departments list fallback in case backend meta is offline
@@ -91,24 +104,9 @@ export const employeeService = {
       };
     }
 
-    try {
-      const response = await apiClient.get<ApiResponse<EmployeeMetaResponse>>('/employees/meta');
-      if (response && response.success && response.data) {
-        return response.data;
-      }
-    } catch (err) {
-      console.warn('Failed to fetch employee meta, using defaults', err);
-    }
-
-    return {
-      departments: DEFAULT_DEPARTMENTS,
-      roles: [
-        { id: 5, code: 'OPERATIONS', name: 'Operations', description: null },
-        { id: 6, code: 'ACCOUNTS', name: 'Accounts', description: null },
-        { id: 7, code: 'KYC', name: 'KYC', description: null },
-        { id: 8, code: 'SALES', name: 'Sales', description: null },
-      ],
-    };
+    const response = await apiClient.get<ApiResponse<EmployeeMetaResponse>>('/employees/meta');
+    if (!response?.success || !response.data) throw new Error(response?.message || 'Failed to load employee configuration');
+    return response.data;
   },
 
   async getEmployees(filters: EmployeeListFilters = {}): Promise<EmployeeListResult> {
@@ -119,7 +117,7 @@ export const employeeService = {
       };
     }
 
-    const params: Record<string, any> = {};
+    const params: Record<string, string | number | boolean | undefined> = {};
     if (filters.search) params.search = filters.search;
     if (filters.departmentCode && filters.departmentCode !== 'ALL') params.departmentCode = filters.departmentCode;
     if (filters.roleId) params.roleId = filters.roleId;
@@ -152,7 +150,9 @@ export const employeeService = {
         accountStatus: 'ACTIVE',
         departmentCode: input.departmentCode,
         designation: input.designation || 'Staff',
+        managerUserId: null,
         joiningDate: input.joiningDate || new Date().toISOString().split('T')[0],
+        shiftCode: input.shiftCode || 'MORNING',
         employmentStatus: 'ACTIVE',
         role: { id: input.roleId, code: 'EMPLOYEE', name: 'Employee' },
         createdAt: new Date().toISOString(),
@@ -160,13 +160,7 @@ export const employeeService = {
       };
     }
 
-    const defaultPassword = input.password || 'Demo@1234567';
-    const payload = {
-      ...input,
-      password: defaultPassword,
-    };
-
-    const response = await apiClient.post<ApiResponse<BackendEmployeeItem>>('/employees', payload);
+    const response = await apiClient.post<ApiResponse<BackendEmployeeItem>>('/employees', input);
     if (!response || !response.success || !response.data) {
       throw new Error(response?.message || 'Failed to create employee');
     }
@@ -175,10 +169,28 @@ export const employeeService = {
   },
 
   async updateEmployeeStatus(id: string, status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'TERMINATED'): Promise<BackendEmployeeItem> {
-    const response = await apiClient.patch<ApiResponse<BackendEmployeeItem>>(`/employees/${id}/status`, { status });
+    const response = await apiClient.patch<ApiResponse<BackendEmployeeItem>>(`/employees/${id}/status`, { status, reason: `Status changed to ${status} from employee management` });
     if (!response || !response.success || !response.data) {
       throw new Error(response?.message || 'Failed to update employee status');
     }
     return response.data;
+  },
+
+  async getEmployee(id: string): Promise<BackendEmployeeItem> {
+    const response = await apiClient.get<ApiResponse<BackendEmployeeItem>>(`/employees/${id}`);
+    if (!response.success || !response.data) throw new Error(response.message || 'Failed to fetch employee');
+    return response.data;
+  },
+
+  async updateEmployee(id: string, input: UpdateEmployeeInput): Promise<BackendEmployeeItem> {
+    const response = await apiClient.put<ApiResponse<BackendEmployeeItem>>(`/employees/${id}`, input);
+    if (!response.success || !response.data) throw new Error(response.message || 'Failed to update employee');
+    return response.data;
+  },
+
+  async resetEmployeePassword(id: string, reason: string): Promise<string> {
+    const response = await apiClient.post<ApiResponse<{ temporaryPassword: string }>>(`/employees/${id}/reset-password`, { reason });
+    if (!response.success || !response.data) throw new Error(response.message || 'Failed to reset password');
+    return response.data.temporaryPassword;
   },
 };
