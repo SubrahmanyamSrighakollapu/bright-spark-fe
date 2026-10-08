@@ -52,7 +52,6 @@ export const DistributorTopRetailers: React.FC<DistributorTopRetailersProps> = (
         <EmptyState
           title="No Retailers Registered"
           description="Your direct retailer network has no active retailers."
-          icon={<Store className="w-8 h-8 text-slate-400" />}
         />
       ) : (
         <div className="overflow-x-auto">

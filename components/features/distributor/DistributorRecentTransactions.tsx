@@ -51,7 +51,6 @@ export const DistributorRecentTransactions: React.FC<DistributorRecentTransactio
           <EmptyState
             title="No Recent Transactions"
             description="No transaction activity recorded for your retailer network yet."
-            icon={<ArrowLeftRight className="w-8 h-8 text-slate-400" />}
           />
         ) : (
           <div className="overflow-x-auto">

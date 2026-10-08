@@ -9,6 +9,8 @@ import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
 import Link from 'next/link';
 import { TransactionDetailsDrawer } from '@/components/features/transactions/TransactionDetailsDrawer';
 
+import { EmptyState } from '@/components/ui/EmptyState';
+
 export interface MasterDistributorRecentTransactionsProps {
   transactions: Transaction[];
   isLoading?: boolean;
@@ -32,7 +34,13 @@ export const MasterDistributorRecentTransactions: React.FC<MasterDistributorRece
           </Link>
         }
       >
-        <div className="overflow-x-auto">
+        {transactions.length === 0 ? (
+          <EmptyState
+            title="No Recent Network Transactions"
+            description="No transaction activity recorded across your distributor and retailer network yet."
+          />
+        ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-[10px] font-bold uppercase text-[var(--text-muted)] bg-slate-50">
@@ -105,6 +113,7 @@ export const MasterDistributorRecentTransactions: React.FC<MasterDistributorRece
             </tbody>
           </table>
         </div>
+        )}
       </Card>
 
       {/* Transaction Details Drawer */}

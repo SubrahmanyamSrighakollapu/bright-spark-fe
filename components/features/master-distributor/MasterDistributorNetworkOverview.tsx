@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 import { Users, Store, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export interface TopDistributorItem {
   id: string;
@@ -100,36 +101,43 @@ export const MasterDistributorNetworkOverview: React.FC<MasterDistributorNetwork
             </Link>
           }
         >
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 text-[10px] font-bold uppercase text-[var(--text-muted)] bg-slate-50">
-                  <th className="py-2.5 px-3">Distributor Name</th>
-                  <th className="py-2.5 px-3">Code</th>
-                  <th className="py-2.5 px-3 text-center">Retailers</th>
-                  <th className="py-2.5 px-3 text-right">Today's Txns</th>
-                  <th className="py-2.5 px-3 text-right">Today's Volume</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
-                {topDistributors.map((dist) => (
-                  <tr key={dist.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-3 font-sans font-semibold text-slate-900">{dist.name}</td>
-                    <td className="py-3 px-3 text-[#0F4C81] font-bold">{dist.code}</td>
-                    <td className="py-3 px-3 text-center">{dist.retailersCount}</td>
-                    <td className="py-3 px-3 text-right">{formatNumber(dist.todayTransactions)}</td>
-                    <td className="py-3 px-3 text-right font-bold text-slate-900">
-                      {formatCurrency(dist.todayVolume)}
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <StatusBadge status="ACTIVE" label={dist.status} size="sm" />
-                    </td>
+          {topDistributors.length === 0 ? (
+            <EmptyState
+              title="No Direct Distributors"
+              description="There are no active distributor partners in your network."
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-[10px] font-bold uppercase text-[var(--text-muted)] bg-slate-50">
+                    <th className="py-2.5 px-3">Distributor Name</th>
+                    <th className="py-2.5 px-3">Code</th>
+                    <th className="py-2.5 px-3 text-center">Retailers</th>
+                    <th className="py-2.5 px-3 text-right">Today's Txns</th>
+                    <th className="py-2.5 px-3 text-right">Today's Volume</th>
+                    <th className="py-2.5 px-3 text-center">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-mono">
+                  {topDistributors.map((dist) => (
+                    <tr key={dist.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3 px-3 font-sans font-semibold text-slate-900">{dist.name}</td>
+                      <td className="py-3 px-3 text-[#0F4C81] font-bold">{dist.code}</td>
+                      <td className="py-3 px-3 text-center">{dist.retailersCount}</td>
+                      <td className="py-3 px-3 text-right">{formatNumber(dist.todayTransactions)}</td>
+                      <td className="py-3 px-3 text-right font-bold text-slate-900">
+                        {formatCurrency(dist.todayVolume)}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <StatusBadge status="ACTIVE" label={dist.status} size="sm" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
       </div>
     </div>

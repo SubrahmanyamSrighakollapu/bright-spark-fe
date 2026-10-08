@@ -52,7 +52,6 @@ export const RetailerRecentTransactions: React.FC<RetailerRecentTransactionsProp
           <EmptyState
             title="No Recent Transactions"
             description="No transaction activity recorded for your retailer account yet."
-            icon={<ArrowLeftRight className="w-8 h-8 text-slate-400" />}
           />
         ) : (
           <div className="overflow-x-auto -mx-5 -mb-5">

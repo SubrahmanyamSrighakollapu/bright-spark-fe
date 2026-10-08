@@ -1,36 +1,57 @@
+'use client';
+
 import React from 'react';
-import { Inbox } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 export interface EmptyStateProps {
   title?: string;
   description?: string;
+  imageSrc?: string;
   icon?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
+  imageClassName?: string;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
   title = 'No Data Found',
-  description = 'There are no records available at the moment.',
+  description = 'There are no records available at the moment matching your criteria.',
+  imageSrc = '/no-data-found.png',
   icon,
   action,
   className,
+  imageClassName,
 }) => {
   return (
     <div
       className={cn(
-        'w-full py-12 px-6 flex flex-col items-center justify-center text-center bg-white border border-[var(--border)] rounded-[var(--radius-lg)] shadow-xs',
+        'w-full py-10 px-6 flex flex-col items-center justify-center text-center bg-white border border-[#E5EAF1] rounded-2xl shadow-xs transition-all duration-300 animate-fadeIn',
         className
       )}
     >
-      <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] flex items-center justify-center mb-3">
-        {icon || <Inbox className="w-6 h-6 stroke-[1.5]" />}
+      <div className="relative mb-3 flex items-center justify-center">
+        {icon ? (
+          <div className="w-16 h-16 rounded-2xl bg-blue-50/80 border border-blue-100 text-[#155EEF] flex items-center justify-center shadow-xs">
+            {icon}
+          </div>
+        ) : (
+          <div className="relative w-48 h-36 sm:w-56 sm:h-40 flex items-center justify-center">
+            {/* Standard Global Empty State Illustration */}
+            <img
+              src={imageSrc}
+              alt={title}
+              className={cn(
+                'max-w-full max-h-full object-contain filter drop-shadow-sm transition-transform duration-300 hover:scale-105',
+                imageClassName
+              )}
+            />
+          </div>
+        )}
       </div>
 
-      <h4 className="text-base font-semibold text-[var(--text-primary)] mb-1">{title}</h4>
+      <h4 className="text-base font-extrabold text-[#0F172A] tracking-tight mb-1">{title}</h4>
       {description && (
-        <p className="text-xs text-[var(--text-muted)] max-w-md leading-relaxed mb-4">
+        <p className="text-xs text-[#64748B] max-w-md font-medium leading-relaxed mb-4">
           {description}
         </p>
       )}
@@ -39,3 +60,4 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     </div>
   );
 };
+
