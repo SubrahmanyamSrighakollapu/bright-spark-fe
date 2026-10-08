@@ -9,6 +9,8 @@ import { BusinessEntity } from '@/types/domain';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
 import { userService } from '@/services/userService';
 
+import { useToast } from '@/components/ui/Toast';
+
 export interface BlockUserModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,27 +24,32 @@ export const BlockUserModal: React.FC<BlockUserModalProps> = ({
   entity,
   onSuccess,
 }) => {
+  const { toastSuccess, toastError } = useToast();
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!entity) return null;
 
-  const isBlocked = entity.status === 'BLOCKED';
+  const isBlocked = entity.status === 'BLOCKED' || entity.status === 'SUSPENDED';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      if (isBlocked) {
-        await userService.unblockUser(entity.id);
+      const res = isBlocked
+        ? await userService.unblockUser(entity.id)
+        : await userService.blockUser(entity.id, reason);
+
+      if (res && res.success) {
+        toastSuccess(`Account ${entity.code || entity.name} ${isBlocked ? 'unblocked' : 'blocked'} successfully.`);
+        setReason('');
+        if (onSuccess) onSuccess();
+        onClose();
       } else {
-        await userService.blockUser(entity.id, reason);
+        toastError(res?.message || 'Failed to change user block status.');
       }
-      setReason('');
-      if (onSuccess) onSuccess();
-      onClose();
-    } catch {
-      // Fallback
+    } catch (err: any) {
+      toastError(err?.message || 'Failed to change user block status.');
     } finally {
       setIsSubmitting(false);
     }

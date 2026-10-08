@@ -140,6 +140,26 @@ export const employeeService = {
   },
 
   async createEmployee(input: CreateEmployeeInput): Promise<BackendEmployeeItem> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 300));
+      return {
+        id: `emp_${Date.now()}`,
+        userId: `usr_emp_${Date.now()}`,
+        employeeCode: input.employeeCode || `EMP_${Math.floor(1000 + Math.random() * 9000)}`,
+        fullName: input.fullName,
+        email: input.email,
+        mobile: input.mobile || null,
+        accountStatus: 'ACTIVE',
+        departmentCode: input.departmentCode,
+        designation: input.designation || 'Staff',
+        joiningDate: input.joiningDate || new Date().toISOString().split('T')[0],
+        employmentStatus: 'ACTIVE',
+        role: { id: input.roleId, code: 'EMPLOYEE', name: 'Employee' },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
     const defaultPassword = input.password || 'Demo@1234567';
     const payload = {
       ...input,

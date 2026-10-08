@@ -246,11 +246,69 @@ export const userService = {
     };
   },
 
-  /**
-   * Onboard a new network user (MD, DS, Retailer).
-   */
   async createUser(input: CreateUserInput): Promise<ApiResponse<NetworkUserItem>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 300));
+      const newId = `usr_${Date.now()}`;
+      const newUser: NetworkUserItem = {
+        id: newId,
+        userId: `${input.role.substring(0, 3)}${Math.floor(1000 + Math.random() * 9000)}`,
+        partyId: `pty_${newId}`,
+        code: `${input.role.substring(0, 3)}${Math.floor(1000 + Math.random() * 9000)}`,
+        fullName: input.fullName,
+        name: input.fullName,
+        email: input.email,
+        mobile: input.mobile,
+        contactNo: input.mobile,
+        displayName: input.displayName || input.fullName,
+        businessName: input.displayName || input.fullName,
+        role: input.role,
+        roleName: input.role,
+        status: 'ACTIVE',
+        accountStatus: 'ACTIVE',
+        approvalStatus: 'APPROVED',
+        kycStatus: 'APPROVED',
+        isAadharVerify: true,
+        panNoVerify: true,
+        availableBalance: 0,
+        holdBalance: 0,
+        ledgerBalance: 0,
+        version: 1,
+        createdAt: new Date().toISOString(),
+      };
+      return { success: true, data: newUser, timestamp: new Date().toISOString() };
+    }
     return apiClient.post<ApiResponse<NetworkUserItem>>('/users', input);
+  },
+
+  /**
+   * Edit user details (Full Name, Email, Mobile, Display Name).
+   */
+  async updateUser(
+    id: string,
+    data: { fullName?: string; email?: string; mobile?: string; displayName?: string; legalName?: string; status?: string }
+  ): Promise<ApiResponse<NetworkUserItem>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 200));
+      return { success: true, timestamp: new Date().toISOString() };
+    }
+    return apiClient.put<ApiResponse<NetworkUserItem>>(`/users/${id}`, data);
+  },
+
+  /**
+   * Swap user network role (Master Distributor, Distributor, Retailer).
+   */
+  async swapUserRole(
+    id: string,
+    role: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER',
+    parentPartyId?: string,
+    reason?: string
+  ): Promise<ApiResponse<NetworkUserItem>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 200));
+      return { success: true, timestamp: new Date().toISOString() };
+    }
+    return apiClient.patch<ApiResponse<NetworkUserItem>>(`/users/${id}/role`, { role, parentPartyId, reason });
   },
 
   /**

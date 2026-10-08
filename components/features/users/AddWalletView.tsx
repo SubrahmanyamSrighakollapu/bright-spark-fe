@@ -142,39 +142,43 @@ export const AddWalletView: React.FC = () => {
     );
 
     try {
-      if (actionModalType === 'CREDIT') {
-        await userService.creditWallet(targetUserId, numAmount, noteInput);
+      const res =
+        actionModalType === 'CREDIT'
+          ? await userService.creditWallet(targetUserId, numAmount, noteInput)
+          : await userService.debitWallet(targetUserId, numAmount, noteInput);
+
+      if (res && res.success) {
+        const txnData = res.data?.transaction;
+        const newLog: WalletTransactionItem = {
+          srNo: logs.length + 1,
+          transDate: new Date().toISOString(),
+          transId: txnData?.transId || `WLT${Date.now().toString().slice(-8)}`,
+          userName: selectedUser?.fullName || selectedUser?.displayName || targetUserId,
+          mobile: selectedUser?.mobile || selectedUser?.contactNo || '',
+          userId: selectedUser?.userId || selectedUser?.code || targetUserId,
+          role: selectedUser?.role || 'RETAILER',
+          businessName: selectedUser?.displayName || selectedUser?.businessName || 'Network Partner',
+          walletFrom: actionModalType === 'CREDIT' ? 'SYSTEM_MAIN' : `${selectedUser?.code || targetUserId}_WALLET`,
+          walletTo: actionModalType === 'CREDIT' ? `${selectedUser?.code || targetUserId}_WALLET` : 'SYSTEM_MAIN',
+          type: actionModalType === 'CREDIT' ? 'CREDIT' : 'DEBIT',
+          amount: numAmount,
+          status: 'SUCCESS',
+        };
+
+        setLogs([newLog, ...logs]);
+        toastSuccess(
+          `Wallet ${actionModalType === 'CREDIT' ? 'Credit' : 'Debit'} of ${formatCurrency(numAmount)} executed successfully!`
+        );
+
+        setActionModalType(null);
+        setAmountInput('');
+        setNoteInput('');
       } else {
-        await userService.debitWallet(targetUserId, numAmount, noteInput);
+        toastError(res?.message || `Wallet ${actionModalType === 'CREDIT' ? 'Credit' : 'Debit'} failed.`);
       }
-    } catch (err) {
-      console.warn('Backend wallet endpoint error, recording transaction locally:', err);
+    } catch (err: any) {
+      toastError(err?.message || `Wallet ${actionModalType === 'CREDIT' ? 'Credit' : 'Debit'} failed.`);
     }
-
-    const newLog: WalletTransactionItem = {
-      srNo: logs.length + 1,
-      transDate: new Date().toISOString(),
-      transId: `WLT${Date.now().toString().slice(-8)}`,
-      userName: selectedUser?.fullName || selectedUser?.displayName || targetUserId,
-      mobile: selectedUser?.mobile || '9876543210',
-      userId: selectedUser?.userId || selectedUser?.code || targetUserId,
-      role: selectedUser?.role || 'RETAILER',
-      businessName: selectedUser?.displayName || selectedUser?.businessName || 'Network Partner',
-      walletFrom: actionModalType === 'CREDIT' ? 'SYSTEM_MAIN' : `${targetUserId}_WALLET`,
-      walletTo: actionModalType === 'CREDIT' ? `${targetUserId}_WALLET` : 'SYSTEM_MAIN',
-      type: actionModalType === 'CREDIT' ? 'CREDIT' : 'DEBIT',
-      amount: numAmount,
-      status: 'SUCCESS',
-    };
-
-    setLogs([newLog, ...logs]);
-    toastSuccess(
-      `Wallet ${actionModalType === 'CREDIT' ? 'Credit' : 'Debit'} of ${formatCurrency(numAmount)} executed successfully!`
-    );
-
-    setActionModalType(null);
-    setAmountInput('');
-    setNoteInput('');
   };
 
   const userOptions =

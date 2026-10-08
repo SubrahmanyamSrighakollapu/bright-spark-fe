@@ -82,33 +82,57 @@ export const UsersListView: React.FC = () => {
     try {
       const res = await userService.updateUserStatus(user.id, nextStatus, 'Admin status toggle');
       if (res && res.success) {
-        toastSuccess(`User ${user.userId || user.code} status changed to ${nextStatus}.`);
+        toastSuccess(`User ${user.userId || user.code || user.fullName} status changed to ${nextStatus}.`);
         fetchUsers();
       } else {
-        toastError('Failed to update user status.');
+        toastError(res?.message || 'Failed to update user status.');
       }
-    } catch (err) {
-      toastError('Failed to update user status.');
+    } catch (err: any) {
+      toastError(err?.message || 'Failed to update user status. Please check your session/login.');
     }
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
 
-    setUsers((prev) => prev.map((u) => (u.id === editingUser.id ? editingUser : u)));
-    setIsEditModalOpen(false);
-    toastSuccess(`User ${editingUser.userId || editingUser.code} updated successfully.`);
+    try {
+      const res = await userService.updateUser(editingUser.id, {
+        fullName: editingUser.fullName,
+        email: editingUser.email,
+        mobile: editingUser.mobile || editingUser.contactNo,
+        displayName: editingUser.displayName || editingUser.fullName,
+        status: editingUser.status,
+      });
+
+      if (res && res.success) {
+        toastSuccess(`User ${editingUser.userId || editingUser.code || editingUser.fullName} updated successfully.`);
+        setIsEditModalOpen(false);
+        fetchUsers();
+      } else {
+        toastError(res?.message || 'Failed to update user profile.');
+      }
+    } catch (err: any) {
+      toastError(err?.message || 'Failed to update user profile.');
+    }
   };
 
-  const handleConfirmSwap = () => {
+  const handleConfirmSwap = async () => {
     if (!swappingUser) return;
 
-    setUsers((prev) =>
-      prev.map((u) => (u.id === swappingUser.id ? { ...u, role: newRole, roleName: newRole } : u))
-    );
-    setIsSwapModalOpen(false);
-    toastSuccess(`Role for ${swappingUser.userId || swappingUser.code} swapped to ${newRole.replace('_', ' ')}.`);
+    try {
+      const res = await userService.swapUserRole(swappingUser.id, newRole as any);
+
+      if (res && res.success) {
+        toastSuccess(`Role for ${swappingUser.userId || swappingUser.code || swappingUser.fullName} swapped to ${newRole.replace('_', ' ')}.`);
+        setIsSwapModalOpen(false);
+        fetchUsers();
+      } else {
+        toastError(res?.message || 'Failed to swap user role.');
+      }
+    } catch (err: any) {
+      toastError(err?.message || 'Failed to swap user role.');
+    }
   };
 
   const handleExecuteCredit = async (e: React.FormEvent) => {
@@ -129,10 +153,10 @@ export const UsersListView: React.FC = () => {
         setCreditRemarks('');
         fetchUsers();
       } else {
-        toastError('Wallet credit failed.');
+        toastError(res?.message || 'Wallet credit failed.');
       }
-    } catch (err) {
-      toastError('Wallet credit failed.');
+    } catch (err: any) {
+      toastError(err?.message || 'Wallet credit failed.');
     }
   };
 
@@ -154,10 +178,10 @@ export const UsersListView: React.FC = () => {
         setHoldReason('');
         fetchUsers();
       } else {
-        toastError('Hold funds action failed.');
+        toastError(res?.message || 'Hold funds action failed.');
       }
-    } catch (err) {
-      toastError('Hold funds action failed.');
+    } catch (err: any) {
+      toastError(err?.message || 'Hold funds action failed.');
     }
   };
 

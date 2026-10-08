@@ -117,49 +117,60 @@ export const HoldFundsView: React.FC = () => {
       return;
     }
 
-    if (selectedUserId) {
-      try {
-        await userService.holdWalletFunds(selectedUserId, amountNum, 'HOLD', reasonInput);
-      } catch (err) {
-        console.warn('Backend hold funds error, recording locally:', err);
-      }
+    if (!selectedUserId) {
+      toastError('Please select a user to apply hold.');
+      return;
     }
 
-    const newHold: HoldFundRecord = {
-      id: `hld_${Date.now().toString().slice(-6)}`,
-      userId: activeUser?.userId || activeUser?.code || selectedUserId || 'USER',
-      userName: activeUser?.fullName || activeUser?.displayName || 'Network Partner',
-      role: activeUser?.role || 'Retailer',
-      amountFrozen: amountNum,
-      availableBalance: activeAvailableBalance,
-      reason: reasonInput,
-      durationMode: durationToggle,
-      specificDate: durationToggle === 'SPECIFIC_DATE' ? specificDateInput : undefined,
-      status: 'ACTIVE_HOLD',
-      dateApplied: new Date().toISOString(),
-    };
+    try {
+      const res = await userService.holdWalletFunds(selectedUserId, amountNum, 'HOLD', reasonInput);
+      if (res && res.success) {
+        const newHold: HoldFundRecord = {
+          id: `hld_${Date.now().toString().slice(-6)}`,
+          userId: activeUser?.userId || activeUser?.code || selectedUserId || 'USER',
+          userName: activeUser?.fullName || activeUser?.displayName || 'Network Partner',
+          role: activeUser?.role || 'Retailer',
+          amountFrozen: amountNum,
+          availableBalance: activeAvailableBalance,
+          reason: reasonInput,
+          durationMode: durationToggle,
+          specificDate: durationToggle === 'SPECIFIC_DATE' ? specificDateInput : undefined,
+          status: 'ACTIVE_HOLD',
+          dateApplied: new Date().toISOString(),
+        };
 
-    setHolds([newHold, ...holds]);
-    toastSuccess(`Security hold of ${formatCurrency(amountNum)} placed successfully.`);
+        setHolds([newHold, ...holds]);
+        toastSuccess(`Security hold of ${formatCurrency(amountNum)} placed successfully.`);
 
-    setHoldAmountInput('');
-    setReasonInput('');
+        setHoldAmountInput('');
+        setReasonInput('');
+      } else {
+        toastError(res?.message || 'Hold funds action failed.');
+      }
+    } catch (err: any) {
+      toastError(err?.message || 'Hold funds action failed.');
+    }
   };
 
   const handleReleaseHold = async (id: string, userId: string, amount: number) => {
-    const holdItem = holds.find((h) => h.id === id);
-    if (holdItem && selectedUserId) {
-      try {
-        await userService.holdWalletFunds(selectedUserId, amount, 'RELEASE', 'Manual release from admin UI');
-      } catch (err) {
-        console.warn('Backend release hold error, releasing locally:', err);
-      }
+    if (!selectedUserId) {
+      toastError('Please select a user to release hold.');
+      return;
     }
 
-    setHolds((prev) =>
-      prev.map((h) => (h.id === id ? { ...h, status: 'RELEASED' } : h))
-    );
-    toastInfo(`Security hold of ${formatCurrency(amount)} for user ${userId} has been released.`);
+    try {
+      const res = await userService.holdWalletFunds(selectedUserId, amount, 'RELEASE', 'Manual release from admin UI');
+      if (res && res.success) {
+        setHolds((prev) =>
+          prev.map((h) => (h.id === id ? { ...h, status: 'RELEASED' } : h))
+        );
+        toastInfo(`Security hold of ${formatCurrency(amount)} for user ${userId} has been released.`);
+      } else {
+        toastError(res?.message || 'Failed to release security hold.');
+      }
+    } catch (err: any) {
+      toastError(err?.message || 'Failed to release security hold.');
+    }
   };
 
   const userOptions =

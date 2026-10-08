@@ -1,7 +1,6 @@
 "use client";
 
 import React, { ButtonHTMLAttributes, forwardRef } from 'react';
-import { Button as PrimeButton } from 'primereact/button';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -54,11 +53,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     return (
-      <PrimeButton
-        pt={{ root: { ref } }}
+      <button
+        ref={ref}
         type={type}
         disabled={disabled || isLoading}
-        unstyled
         className={cn(
           'inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer',
           variantStyles[variant],
@@ -79,7 +77,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {!isLoading && rightIcon ? (
           <span className="shrink-0 inline-flex items-center">{rightIcon}</span>
         ) : null}
-      </PrimeButton>
+      </button>
     );
   }
 );

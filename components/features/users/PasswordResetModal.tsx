@@ -7,6 +7,8 @@ import { BusinessEntity } from '@/types/domain';
 import { userService } from '@/services/userService';
 import { Key, Mail, Copy, Check, CheckCircle2 } from 'lucide-react';
 
+import { useToast } from '@/components/ui/Toast';
+
 export interface PasswordResetModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,6 +20,7 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
   onClose,
   entity,
 }) => {
+  const { toastError } = useToast();
   const [resetMode, setResetMode] = useState<'LINK' | 'TEMP_PASSWORD'>('LINK');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{ message: string; tempPassword?: string } | null>(null);
@@ -31,9 +34,11 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
       const res = await userService.requestPasswordReset(entity.id, resetMode);
       if (res.success && res.data) {
         setResult(res.data);
+      } else {
+        toastError(res?.message || 'Password reset request failed.');
       }
-    } catch {
-      // Fallback
+    } catch (err: any) {
+      toastError(err?.message || 'Password reset request failed.');
     } finally {
       setIsSubmitting(false);
     }

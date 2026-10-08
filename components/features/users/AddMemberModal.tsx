@@ -45,132 +45,42 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !mobile) return;
+    if (!name || !mobile) {
+      toastError('Full Name and Mobile number are required.');
+      return;
+    }
 
     const requiredDocuments = ['AADHAAR', 'PAN', 'CANCELLED_CHEQUE'];
-    if (memberType !== 'BACKOFFICE' && requiredDocuments.some((type) => !kycFiles[type])) return;
+    if (memberType !== 'BACKOFFICE' && requiredDocuments.some((type) => !kycFiles[type])) {
+      toastError('Please upload all required KYC documents (Aadhaar, PAN, Cancelled Cheque).');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      if (memberType !== 'BACKOFFICE') {
-        try {
-          const apiRes = await userService.createUser({
-            role: memberType,
-            fullName: name,
-            displayName: businessName || name,
-            email: email || `${mobile}@qinstarpay.com`,
-            mobile,
-          });
+      const apiRes = await userService.createUser({
+        role: (memberType === 'BACKOFFICE' ? 'RETAILER' : memberType) as any,
+        fullName: name.trim(),
+        displayName: businessName.trim() || name.trim(),
+        email: email.trim() || `${mobile.trim()}@qinstarpay.com`,
+        mobile: mobile.trim(),
+      });
 
-          if (apiRes && apiRes.success) {
-            toastSuccess(`New ${memberType.replace('_', ' ')} "${name}" onboarded successfully!`);
-            if (onSuccess) onSuccess();
-            onClose();
-            setName('');
-            setBusinessName('');
-            setMobile('');
-            setEmail('');
-            return;
-          }
-        } catch (apiErr) {
-          console.warn('Real API create user failed, falling back to hierarchy local record:', apiErr);
-        }
+      if (apiRes && apiRes.success) {
+        toastSuccess(`New ${memberType.replace('_', ' ')} "${name}" onboarded successfully!`);
+        if (onSuccess) onSuccess();
+        onClose();
+        setName('');
+        setBusinessName('');
+        setMobile('');
+        setEmail('');
+        setKycFiles({ AADHAAR: null, PAN: null, GST_CERTIFICATE: null, CANCELLED_CHEQUE: null });
+      } else {
+        toastError(apiRes?.message || 'Failed to onboard user.');
       }
-
-      // Local fallback for state/demo
-      const code =
-        memberType === 'MASTER_DISTRIBUTOR'
-          ? `MD_${Math.floor(100 + Math.random() * 900)}`
-          : memberType === 'DISTRIBUTOR'
-          ? `DST_${Math.floor(100 + Math.random() * 900)}`
-          : memberType === 'RETAILER'
-          ? `RET_${Math.floor(100 + Math.random() * 900)}`
-          : `EMP_${Math.floor(100 + Math.random() * 900)}`;
-
-      const documents: KYCDocument[] = Object.entries(kycFiles)
-        .filter((entry): entry is [string, File] => Boolean(entry[1]))
-        .map(([type, file]) => ({
-          id: `doc_${type.toLowerCase()}_${Date.now()}`,
-          type: type as KYCDocument['type'],
-          title: file.name,
-          documentNumberMasked: 'Submitted for verification',
-          fileUrl: URL.createObjectURL(file),
-          uploadedAt: new Date().toISOString(),
-          status: 'PENDING',
-        }));
-
-      if (memberType === 'DISTRIBUTOR') {
-        hierarchyService.addDistributorRecord({
-          id: `dst_${Date.now()}`,
-          code,
-          userId: `usr_${Date.now()}`,
-          name,
-          businessName: businessName || name,
-          email: email || `${code.toLowerCase()}@qinstar.in`,
-          mobile,
-          status: 'ACTIVE',
-          kycStatus: 'APPROVED',
-          approvalStatus: 'APPROVED',
-          masterDistributorId: 'md_01',
-          walletId: `wlt_dst_${Date.now()}`,
-          createdByUserId: 'usr_admin_01',
-          createdByRole: 'ADMIN',
-          createdByEntityId: 'ent_admin',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          documents,
-        });
-      } else if (memberType === 'RETAILER') {
-        hierarchyService.addRetailerRecord({
-          id: `ret_${Date.now()}`,
-          code,
-          userId: `usr_${Date.now()}`,
-          name,
-          businessName: businessName || name,
-          email: email || `${code.toLowerCase()}@qinstar.in`,
-          mobile,
-          accountStatus: 'ACTIVE',
-          kycStatus: 'APPROVED',
-          approvalStatus: 'APPROVED',
-          masterDistributorId: 'md_01',
-          distributorId: 'dst_01',
-          planId: 'PLAN_STANDARD',
-          walletId: `wlt_ret_${Date.now()}`,
-          createdByUserId: 'usr_admin_01',
-          createdByRole: 'ADMIN',
-          createdByEntityId: 'ent_admin',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          documents,
-        });
-      } else if (memberType === 'MASTER_DISTRIBUTOR') {
-        hierarchyService.addMasterDistributorRecord({
-          id: `md_${Date.now()}`,
-          code,
-          userId: `usr_${Date.now()}`,
-          name,
-          businessName: businessName || name,
-          email: email || `${code.toLowerCase()}@qinstar.in`,
-          mobile,
-          status: 'ACTIVE',
-          walletId: `wlt_md_${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          documents,
-        });
-      }
-
-      toastSuccess(`New ${memberType.replace('_', ' ')} "${name}" (${code}) onboarded successfully!`);
-      if (onSuccess) onSuccess();
-      onClose();
-      setName('');
-      setBusinessName('');
-      setMobile('');
-      setEmail('');
-      setKycFiles({ AADHAAR: null, PAN: null, GST_CERTIFICATE: null, CANCELLED_CHEQUE: null });
-    } catch (err) {
-      console.error(err);
-      toastError('Failed to onboard user');
+    } catch (err: any) {
+      console.error('Failed to create user:', err);
+      toastError(err?.message || 'Failed to onboard user. Please check backend logs.');
     } finally {
       setIsSubmitting(false);
     }

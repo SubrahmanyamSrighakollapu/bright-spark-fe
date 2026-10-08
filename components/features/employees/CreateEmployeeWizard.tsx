@@ -103,12 +103,16 @@ export const CreateEmployeeWizard: React.FC = () => {
   const handleSaveEmployee = async (addAnother: boolean = false) => {
     try {
       setIsSubmitting(true);
+      const last4 = formData.mobile ? formData.mobile.trim().slice(-4) : '1234';
+      const autoPassword = `QinStarEmp@${last4}`;
+      const empPassword = formData.isAutoPassword ? autoPassword : (formData.password || autoPassword);
+
       const created = await employeeService.createEmployee({
         employeeCode: formData.employeeCode,
         fullName: formData.fullName,
         email: formData.email,
         mobile: formData.mobile ? formData.mobile : undefined,
-        password: formData.isAutoPassword ? 'Demo@123456' : formData.password,
+        password: empPassword,
         departmentCode: formData.departmentCode,
         roleId: Number(formData.roleId),
         designation: formData.designation,

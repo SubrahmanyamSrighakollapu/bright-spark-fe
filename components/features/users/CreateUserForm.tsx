@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
+import { userService } from '@/services/userService';
 import {
   UserPlus,
   ShieldCheck,
@@ -40,6 +41,41 @@ export const CreateUserForm: React.FC = () => {
 
   const [verifyingAadhaar, setVerifyingAadhaar] = useState(false);
   const [verifyingPan, setVerifyingPan] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [parentOptions, setParentOptions] = useState<{ value: string; label: string }[]>([
+    { value: '', label: 'Default (Direct Under Admin Platform)' },
+  ]);
+  const [parentPartyId, setParentPartyId] = useState('');
+
+  React.useEffect(() => {
+    const targetRole =
+      formData.roleName === 'RETAILER'
+        ? 'DISTRIBUTOR'
+        : formData.roleName === 'DISTRIBUTOR'
+        ? 'MASTER_DISTRIBUTOR'
+        : undefined;
+
+    if (targetRole) {
+      userService
+        .getUsers({ role: targetRole })
+        .then((res) => {
+          if (res && res.success && res.data && res.data.items) {
+            const opts = res.data.items.map((u) => ({
+              value: u.partyId || u.id,
+              label: `${u.fullName} (${u.code || u.userId || u.partyId})`,
+            }));
+            setParentOptions([{ value: '', label: 'Default (Direct Under Admin Platform)' }, ...opts]);
+          }
+        })
+        .catch(() => {
+          setParentOptions([{ value: '', label: 'Default (Direct Under Admin Platform)' }]);
+        });
+    } else {
+      setParentOptions([{ value: '', label: 'Default (Direct Under Admin Platform)' }]);
+      setParentPartyId('');
+    }
+  }, [formData.roleName]);
 
   const handleVerifyAadhaar = () => {
     if (!formData.aadharNo || formData.aadharNo.length < 12) {
@@ -67,9 +103,9 @@ export const CreateUserForm: React.FC = () => {
     }, 600);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName) {
+    if (!formData.fullName.trim()) {
       toastError('Full Name is required.');
       return;
     }
@@ -77,7 +113,34 @@ export const CreateUserForm: React.FC = () => {
       toastError('Valid 10-digit Mobile Number is required.');
       return;
     }
-    toastSuccess(`New ${formData.roleName.replace('_', ' ')} user "${formData.fullName}" created successfully!`);
+
+    try {
+      setIsSubmitting(true);
+      const last4 = formData.contactNo.trim().slice(-4) || '1234';
+      const autoPassword = `QinStar@${last4}`;
+      const userPassword = !formData.isAutoPassword && formData.password ? formData.password : autoPassword;
+
+      const res = await userService.createUser({
+        role: formData.roleName as 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER',
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim() || `${formData.contactNo}@qinstarpay.com`,
+        mobile: formData.contactNo.trim(),
+        displayName: formData.fullName.trim(),
+        parentPartyId: parentPartyId || undefined,
+        password: userPassword,
+      });
+
+      if (res && res.success) {
+        toastSuccess(`New ${formData.roleName.replace('_', ' ')} user "${formData.fullName}" created successfully!`);
+        handleCancel();
+      } else {
+        toastError(res?.message || 'Failed to create user account.');
+      }
+    } catch (err: any) {
+      toastError(err.message || 'Failed to create user account. Please check server logs.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSendCredentials = () => {
@@ -256,6 +319,15 @@ export const CreateUserForm: React.FC = () => {
             ]}
           />
 
+          {formData.roleName !== 'MASTER_DISTRIBUTOR' && (
+            <Select
+              label={`Assign Specific Parent ${formData.roleName === 'RETAILER' ? 'Distributor' : 'Master Distributor'} (Optional - Defaults to Logged-in Creator)`}
+              value={parentPartyId}
+              onChange={(e) => setParentPartyId(e.target.value)}
+              options={parentOptions}
+            />
+          )}
+
           <Select
             label="Initial Account Status (statusValue)"
             value={formData.statusValue}
@@ -349,6 +421,8 @@ export const CreateUserForm: React.FC = () => {
           <Button
             type="submit"
             variant="primary"
+            isLoading={isSubmitting}
+            onClick={(e) => handleSubmit(e)}
             leftIcon={<UserPlus className="w-4 h-4" />}
           >
             Create User Account
