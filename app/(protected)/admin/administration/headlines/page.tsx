@@ -28,9 +28,11 @@ import {
   Sparkles,
   Eye,
 } from 'lucide-react';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 export default function AdminHeadlinesPage() {
   const { toastSuccess, toastError } = useToast();
+  const confirmAction = useConfirmation();
   const [headlines, setHeadlines] = useState<HeadlineAlertItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -154,7 +156,7 @@ export default function AdminHeadlinesPage() {
   };
 
   const handleDeleteHeadline = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+    if (!(await confirmAction({ title: 'Delete headline?', message: `Delete “${title}”? This cannot be undone.`, confirmText: 'Yes, delete headline', variant: 'danger' }))) return;
     const res = await headlineAlertService.deleteHeadline(id);
     if (res.success) {
       toastSuccess('Headline alert deleted');
@@ -165,7 +167,7 @@ export default function AdminHeadlinesPage() {
   };
 
   const handleResetDefaults = async () => {
-    if (confirm('Reset headlines to default system alerts?')) {
+    if (await confirmAction({ title: 'Reset all headlines?', message: 'Replace the current headlines with the default system alerts? Existing changes will be lost.', confirmText: 'Yes, reset defaults', variant: 'danger' })) {
       await headlineAlertService.resetToDefaults();
       toastSuccess('Headlines reset to factory defaults.');
       fetchHeadlines();

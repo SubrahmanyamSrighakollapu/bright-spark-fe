@@ -36,6 +36,7 @@ import {
   Tag,
   DollarSign,
 } from 'lucide-react';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 const ICON_MAP: Record<string, any> = {
   ShoppingBag,
@@ -48,6 +49,7 @@ const ICON_MAP: Record<string, any> = {
 
 export default function ServiceCategoriesAdminPage() {
   const { toastSuccess, toastError } = useToast();
+  const confirmAction = useConfirmation();
   const [categories, setCategories] = useState<ServiceCategoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -186,7 +188,7 @@ export default function ServiceCategoriesAdminPage() {
   };
 
   const handleDeleteCategory = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete category "${name}" and all its configured products?`)) return;
+    if (!(await confirmAction({ title: 'Delete service category?', message: `Delete “${name}” and every configured product inside it? This cannot be undone.`, confirmText: 'Yes, delete category', variant: 'danger' }))) return;
     const res = await serviceCategoryService.deleteCategory(id);
     if (res.success) {
       toastSuccess(`Category "${name}" removed`);
@@ -282,7 +284,7 @@ export default function ServiceCategoriesAdminPage() {
   };
 
   const handleDeleteProduct = async (catId: string, prodId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!(await confirmAction({ title: 'Delete product?', message: 'Delete this configured product? This cannot be undone.', confirmText: 'Yes, delete product', variant: 'danger' }))) return;
     const res = await serviceCategoryService.deleteProduct(catId, prodId);
     if (res.success) {
       toastSuccess('Product removed');
@@ -293,7 +295,7 @@ export default function ServiceCategoriesAdminPage() {
   };
 
   const handleResetDefaults = async () => {
-    if (confirm('Reset all categories and products to factory default settings?')) {
+    if (await confirmAction({ title: 'Reset service catalogue?', message: 'Replace all categories and products with factory defaults? Existing configuration will be lost.', confirmText: 'Yes, reset catalogue', variant: 'danger' })) {
       await serviceCategoryService.resetToDefaults();
       toastSuccess('Service master catalog reset to default seed data.');
       fetchCategories();

@@ -49,7 +49,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get('/wallet/balance');
+    return apiClient.get('/wallet/balance', { cache: 'no-store' });
   },
 
   /**
@@ -141,7 +141,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/master-distributor/${masterDistributorId}/wallet`);
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${masterDistributorId}`, { cache: 'no-store' });
   },
 
   async getDistributorWallet(distributorId: string): Promise<ApiResponse<WalletAccount>> {
@@ -173,7 +173,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/distributor/${distributorId}/wallet`);
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${distributorId}`, { cache: 'no-store' });
   },
 
   async getRetailerWallet(retailerId: string): Promise<ApiResponse<WalletAccount>> {
@@ -204,7 +204,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/retailer/${retailerId}/wallet`);
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${retailerId}`, { cache: 'no-store' });
   },
 
   async getWalletByEntityId(entityId: string): Promise<ApiResponse<WalletAccount | null>> {
@@ -218,7 +218,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${entityId}`);
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${entityId}`, { cache: 'no-store' });
   },
 
   async getWalletById(walletId: string): Promise<ApiResponse<WalletAccount | null>> {

@@ -19,7 +19,9 @@ export function networkUserToDistributor(user: NetworkUserItem): Distributor {
 export function networkUserToRetailer(user: NetworkUserItem): Retailer {
   return {
     id: user.id, userId: user.id, code: user.code,
-    masterDistributorId: user.masterDistributorId || '', distributorId: user.parentId || '', planId: user.planId || '',
+    masterDistributorId: user.masterDistributorId || '', distributorId: user.parentId || '',
+    distributorName: user.parentName || undefined, distributorCode: user.parentCode || undefined,
+    parentAuthorityType: user.parentType || undefined, planId: user.planId || '',
     name: user.fullName, businessName: user.displayName, email: user.email, mobile: user.mobile,
     kycStatus: user.kycStatus as KYCStatus, approvalStatus: user.approvalStatus as ApprovalStatus,
     accountStatus: accountStatus(user.accountStatus), walletId: user.walletId || '',

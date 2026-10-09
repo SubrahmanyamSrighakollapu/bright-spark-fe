@@ -30,6 +30,8 @@ export interface NetworkUserItem {
   roleName: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER' | string;
   parentId?: string | null;
   parentName?: string | null;
+  parentCode?: string | null;
+  parentType?: string | null;
   masterDistributorId?: string | null;
   status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'INACTIVE' | 'DISABLED' | 'BLOCKED' | string;
   accountStatus: string;
@@ -52,6 +54,25 @@ export interface NetworkUserItem {
 export interface NetworkUserListResult {
   items: NetworkUserItem[];
   pagination: PaginationState;
+}
+
+export type AuthorityType = 'PLATFORM' | 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR';
+
+export interface EligibleAuthorityItem {
+  partyId: string;
+  authorityType: AuthorityType;
+  code: string;
+  name: string;
+  email?: string | null;
+  mobile?: string | null;
+  parentPartyId?: string | null;
+  isCurrent: boolean;
+}
+
+export interface EligibleAuthoritiesResult {
+  user: { id: string; partyId: string; role: string; parentId?: string | null; name: string };
+  allowedAuthorityTypes: AuthorityType[];
+  items: EligibleAuthorityItem[];
 }
 
 export interface CreateUserInput {
@@ -310,20 +331,22 @@ export const userService = {
     return apiClient.put<ApiResponse<NetworkUserItem>>(`/users/${id}`, data);
   },
 
-  /**
-   * Swap user network role (Master Distributor, Distributor, Retailer).
-   */
-  async swapUserRole(
+  async getEligibleAuthorities(
     id: string,
-    role: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER',
-    parentPartyId?: string,
-    reason?: string
+    authorityType?: AuthorityType,
+    search?: string,
+  ): Promise<ApiResponse<EligibleAuthoritiesResult>> {
+    return apiClient.get<ApiResponse<EligibleAuthoritiesResult>>(`/users/${id}/eligible-authorities`, {
+      params: { authorityType, search }, cache: 'no-store',
+    });
+  },
+
+  async transferUserAuthority(
+    id: string,
+    targetParentPartyId: string,
+    reason: string,
   ): Promise<ApiResponse<NetworkUserItem>> {
-    if (APP_CONFIG.useMockData) {
-      await new Promise((res) => setTimeout(res, 200));
-      return { success: true, timestamp: new Date().toISOString() };
-    }
-    return apiClient.patch<ApiResponse<NetworkUserItem>>(`/users/${id}/role`, { role, parentPartyId, reason });
+    return apiClient.patch<ApiResponse<NetworkUserItem>>(`/users/${id}/authority`, { targetParentPartyId, reason });
   },
 
   /**

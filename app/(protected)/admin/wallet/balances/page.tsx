@@ -13,8 +13,10 @@ import { WalletTable } from '@/components/features/wallet/WalletTable';
 import { WalletDetailsDrawer } from '@/components/features/wallet/WalletDetailsDrawer';
 import { CreditDebitFormModal } from '@/components/features/wallet/CreditDebitFormModal';
 import { Layers, Download } from 'lucide-react';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 export default function AvailableBalancesPage() {
+  const confirm = useConfirmation();
   const [activeTab, setActiveTab] = useState<'MASTER' | 'DISTRIBUTOR' | 'RETAILER'>('MASTER');
   const [data, setData] = useState<WalletListResult | null>(null);
   const [filters, setFilters] = useState<WalletFilters>({ entityType: 'MASTER' });
@@ -72,6 +74,13 @@ export default function AvailableBalancesPage() {
   };
 
   const handleToggleFreeze = async (w: WalletAccount) => {
+    const willFreeze = w.status !== 'FROZEN';
+    if (!(await confirm({
+      title: `${willFreeze ? 'Freeze' : 'Unfreeze'} wallet?`,
+      message: `${willFreeze ? 'Freeze' : 'Unfreeze'} the wallet for ${w.entityName} (${w.entityCode})? ${willFreeze ? 'Transactions will be blocked immediately.' : 'Wallet transactions will be enabled again.'}`,
+      confirmText: `Yes, ${willFreeze ? 'freeze' : 'unfreeze'}`,
+      variant: willFreeze ? 'danger' : 'warning',
+    }))) return;
     if (w.status === 'FROZEN') {
       await walletService.unfreezeWallet(w.walletId);
     } else {

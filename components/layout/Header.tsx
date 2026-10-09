@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const pathname = usePathname();
   const { session } = useAuth();
-  const [balance, setBalance] = useState<number | null>(9953681.66);
+  const [balance, setBalance] = useState<number | null>(null);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
 
   const breadcrumbs = getBreadcrumbsForPath(pathname || '/dashboard');
@@ -64,6 +64,12 @@ export const Header: React.FC<HeaderProps> = ({
 
   useEffect(() => {
     loadBalance();
+  }, [session]);
+
+  useEffect(() => {
+    const refreshOnFocus = () => void loadBalance();
+    window.addEventListener('focus', refreshOnFocus);
+    return () => window.removeEventListener('focus', refreshOnFocus);
   }, [session]);
 
   const handleRefreshBalance = async () => {

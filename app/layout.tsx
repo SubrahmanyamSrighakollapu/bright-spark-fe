@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/context/AuthContext";
 import { QinStarPrimeReactProvider } from "@/components/providers/PrimeReactProvider";
+import { ConfirmationProvider } from "@/context/ConfirmationContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col">
         <QinStarPrimeReactProvider>
           <ToastProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <ConfirmationProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </ConfirmationProvider>
           </ToastProvider>
         </QinStarPrimeReactProvider>
       </body>

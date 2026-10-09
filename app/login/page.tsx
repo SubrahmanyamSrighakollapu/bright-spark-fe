@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, ArrowRight, BadgeIndianRupee, Building2, CheckCircle2, ChevronDown, ChevronUp, Eye, EyeOff, Landmark, Lock, Mail, ShieldCheck, Sparkles } from 'lucide-react';
+import { AlertCircle, ArrowRight, BadgeIndianRupee, Building2, CheckCircle2, ChevronDown, ChevronUp, Landmark, Lock, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getDefaultRouteForRole } from '@/services/mockAuthService';
 import { DEV_FEATURES } from '@/config/devFeatures';
@@ -31,7 +31,6 @@ export default function LoginPage() {
   const { session, isAuthenticated, isLoading, login } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -97,7 +96,7 @@ export default function LoginPage() {
             {errorMessage && <div className="mt-6 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-medium leading-5 text-rose-800"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{errorMessage}</div>}
             <form onSubmit={submit} className="mt-7 space-y-4">
               <FormField label="Username, email or mobile" required error={fieldErrors.identifier}><Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="Enter your registered identity" className="h-11" leftIcon={<Mail className="h-4 w-4" />} autoComplete="username" /></FormField>
-              <FormField label="Password" required error={fieldErrors.password}><div className="relative"><Lock className="pointer-events-none absolute left-3 top-3.5 z-10 h-4 w-4 text-slate-400" /><PasswordInput masked={!showPassword} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" className="h-11 pl-9 pr-11" autoComplete="current-password" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-2 top-1.5 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div></FormField>
+              <FormField label="Password" required error={fieldErrors.password}><PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" className="h-11" leftIcon={<Lock className="h-4 w-4" />} autoComplete="current-password" /></FormField>
               <div className="flex items-center justify-between"><Checkbox checked={rememberMe} onChange={setRememberMe} label={<span className="text-xs font-medium">Remember me</span>} /><button type="button" onClick={() => setForgotOpen(true)} className="cursor-pointer text-xs font-bold text-[#0F4C81] hover:underline">Forgot password?</button></div>
               <Button type="submit" size="lg" fullWidth isLoading={isSubmitting} rightIcon={<ArrowRight className="h-4 w-4" />}>Sign in securely</Button>
             </form>

@@ -63,15 +63,18 @@ export const RetailerTable: React.FC<RetailerTableProps> = ({
     },
     {
       key: 'distributor',
-      header: 'Parent Distributor',
+      header: 'Assigned Authority',
       render: (row) => {
-        const dst = hierarchyService.getDistributorById(row.distributorId);
+        const mockDistributor = hierarchyService.getDistributorById(row.distributorId);
+        const isDirect = row.parentAuthorityType === 'MASTER_DISTRIBUTOR' || row.parentAuthorityType === 'PLATFORM';
+        const authorityName = row.distributorName || mockDistributor?.name;
+        const authorityCode = row.distributorCode || mockDistributor?.code;
         return (
           <div className="flex items-center gap-1.5 text-xs">
             <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <div>
-              <p className="font-semibold text-slate-800">{dst?.name || 'Unknown Distributor'}</p>
-              <p className="text-[11px] text-slate-500 font-mono">{dst?.code || row.distributorId}</p>
+              <p className="font-semibold text-slate-800">{authorityName || (isDirect ? 'Direct assignment' : 'Distributor not assigned')}</p>
+              <p className="text-[11px] text-slate-500">{isDirect ? 'Direct under network authority' : authorityCode || 'No distributor mapping'}</p>
             </div>
           </div>
         );

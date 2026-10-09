@@ -10,7 +10,7 @@ import { PayoutRequestInput, Transaction } from '@/types/domain';
 import { formatCurrency } from '@/utils/formatters';
 
 export const CreatePayoutForm: React.FC = () => {
-  const [availableBalance, setAvailableBalance] = useState<number>(9953681.66);
+  const [availableBalance, setAvailableBalance] = useState<number>(0);
   const [formData, setFormData] = useState<PayoutRequestInput>({
     merchantId: 'Apex Pay Solutions',
     beneficiaryName: '',

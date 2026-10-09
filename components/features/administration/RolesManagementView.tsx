@@ -11,9 +11,11 @@ import { useToast } from '@/components/ui/Toast';
 import { ColumnDefinition } from '@/types/common';
 import { Shield, Plus, Edit, Lock, CheckCircle2, XCircle, Trash2, RefreshCw } from 'lucide-react';
 import { roleService, BackendRole, BackendPermission } from '@/services/roleService';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 export const RolesManagementView: React.FC = () => {
   const { toastSuccess, toastError, toastInfo } = useToast();
+  const confirmAction = useConfirmation();
   const [roles, setRoles] = useState<BackendRole[]>([]);
   const [permissionsCatalog, setPermissionsCatalog] = useState<BackendPermission[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -78,8 +80,9 @@ export const RolesManagementView: React.FC = () => {
   };
 
   const handleToggleStatus = async (role: BackendRole) => {
+    const newStatus = !role.isActive;
+    if (!(await confirmAction({ title: `${newStatus ? 'Activate' : 'Deactivate'} role?`, message: `${newStatus ? 'Activate' : 'Deactivate'} “${role.name}”? This changes access for users assigned to this role.`, confirmText: `Yes, ${newStatus ? 'activate' : 'deactivate'}`, variant: newStatus ? 'warning' : 'danger' }))) return;
     try {
-      const newStatus = !role.isActive;
       const res = await roleService.updateRole(role.id, { isActive: newStatus });
       if (res.success) {
         toastSuccess(`Role "${role.name}" ${newStatus ? 'activated' : 'inactivated'} successfully.`);
@@ -93,7 +96,7 @@ export const RolesManagementView: React.FC = () => {
   };
 
   const handleDeleteRole = async (role: BackendRole) => {
-    if (!confirm(`Are you sure you want to delete role "${role.name}"?`)) return;
+    if (!(await confirmAction({ title: 'Delete role?', message: `Permanently delete “${role.name}”? This cannot be undone.`, confirmText: 'Yes, delete role', variant: 'danger' }))) return;
     try {
       const res = await roleService.deleteRole(role.id);
       if (res.success) {

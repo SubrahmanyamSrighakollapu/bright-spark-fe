@@ -11,7 +11,7 @@ export interface ModalProps { isOpen: boolean; onClose: () => void; title?: Reac
 
 const sizeClasses: Record<ModalSize, string> = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-2xl' };
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, children, footer, size = 'md', closeOnOverlayClick = true, className }) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, children, footer, size = 'md', className }) => {
   const header = title || description ? (
     <div className="flex w-full items-start justify-between gap-4">
       <div className="min-w-0">
@@ -27,7 +27,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, descriptio
       visible={isOpen}
       onHide={onClose}
       modal
-      dismissableMask={closeOnOverlayClick}
+      dismissableMask={false}
       closeOnEscape
       blockScroll
       appendTo={typeof document !== 'undefined' ? document.body : undefined}

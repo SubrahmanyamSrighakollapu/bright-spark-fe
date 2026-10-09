@@ -33,7 +33,7 @@ export const RetailerWalletHero: React.FC<RetailerWalletHeroProps> = ({
     );
   }
 
-  const availableBalance = wallet?.availableBalance ?? 45350;
+  const availableBalance = wallet?.availableBalance ?? 0;
   const holdBalance = wallet?.holdBalance ?? 1000;
   const ledgerBalance = wallet?.ledgerBalance ?? (availableBalance + holdBalance);
 

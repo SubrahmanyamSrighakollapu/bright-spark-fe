@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { StatusBadge } from '@/components/ui';
@@ -18,6 +18,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { formatCurrency, formatDateTime } from '@/utils/formatters';
+import { walletService } from '@/services/walletService';
 
 export default function DistributorProfilePage() {
   const { session } = useAuth();
@@ -27,6 +28,14 @@ export default function DistributorProfilePage() {
   const businessName = 'North Zone Distribution Enterprises';
   const parentMdName = 'Apex National Network';
   const parentMdCode = 'MD001';
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    if (!session?.entityId) return;
+    walletService.getDistributorWallet(session.entityId).then((response) => {
+      if (response.success && response.data) setWalletBalance(response.data.availableBalance);
+    }).catch(() => setWalletBalance(0));
+  }, [session?.entityId]);
 
   return (
     <PageContainer
@@ -163,7 +172,7 @@ export default function DistributorProfilePage() {
             </div>
             <div className="flex justify-between py-1 border-b border-slate-50">
               <span className="text-slate-500">Operating Wallet Balance:</span>
-              <span className="font-mono font-bold text-emerald-600">₹85,200.00</span>
+              <span className="font-mono font-bold text-emerald-600">{formatCurrency(walletBalance)}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-50">
               <span className="text-slate-500">Hold / Lien Reserve:</span>

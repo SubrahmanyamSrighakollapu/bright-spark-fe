@@ -13,6 +13,8 @@ import { ActionKebabMenu, ActionMenuItem } from '@/components/ui/ActionKebabMenu
 import { ColumnDefinition } from '@/types/common';
 import { userService, NetworkUserItem } from '@/services/userService';
 import { formatCurrency } from '@/utils/formatters';
+import { useConfirmation } from '@/context/ConfirmationContext';
+import { UserAuthorityTransferDrawer } from './UserAuthorityTransferDrawer';
 import {
   Users,
   Search,
@@ -28,6 +30,7 @@ import {
 
 export const UsersListView: React.FC = () => {
   const { toastSuccess, toastError } = useToast();
+  const confirm = useConfirmation();
 
   const [users, setUsers] = useState<NetworkUserItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,10 +42,9 @@ export const UsersListView: React.FC = () => {
   const [editingUser, setEditingUser] = useState<NetworkUserItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Swap Role / Parent Modal State
+  // Admin-only network authority transfer drawer
   const [swappingUser, setSwappingUser] = useState<NetworkUserItem | null>(null);
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
-  const [newRole, setNewRole] = useState<'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER'>('DISTRIBUTOR');
 
   // Quick Wallet Credit Modal State
   const [creditUser, setCreditUser] = useState<NetworkUserItem | null>(null);
@@ -79,6 +81,12 @@ export const UsersListView: React.FC = () => {
 
   const handleToggleStatus = async (user: NetworkUserItem) => {
     const nextStatus = user.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    if (!(await confirm({
+      title: `${nextStatus === 'SUSPENDED' ? 'Suspend' : 'Activate'} user?`,
+      message: `Are you sure you want to change ${user.fullName || user.userId} to ${nextStatus}? This affects account access immediately.`,
+      confirmText: `Yes, ${nextStatus === 'SUSPENDED' ? 'suspend' : 'activate'}`,
+      variant: nextStatus === 'SUSPENDED' ? 'danger' : 'warning',
+    }))) return;
     try {
       const res = await userService.updateUserStatus(user.id, nextStatus, 'Admin status toggle');
       if (res && res.success) {
@@ -117,24 +125,6 @@ export const UsersListView: React.FC = () => {
     }
   };
 
-  const handleConfirmSwap = async () => {
-    if (!swappingUser) return;
-
-    try {
-      const res = await userService.swapUserRole(swappingUser.id, newRole as any);
-
-      if (res && res.success) {
-        toastSuccess(`Role for ${swappingUser.userId || swappingUser.code || swappingUser.fullName} swapped to ${newRole.replace('_', ' ')}.`);
-        setIsSwapModalOpen(false);
-        fetchUsers();
-      } else {
-        toastError(res?.message || 'Failed to swap user role.');
-      }
-    } catch (err: any) {
-      toastError(err?.message || 'Failed to swap user role.');
-    }
-  };
-
   const handleExecuteCredit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!creditUser) return;
@@ -143,6 +133,7 @@ export const UsersListView: React.FC = () => {
       toastError('Please enter a valid credit amount.');
       return;
     }
+    if (!(await confirm({ title: 'Confirm wallet credit', message: `Credit ${formatCurrency(amount)} to ${creditUser.fullName || creditUser.userId}? This creates a financial ledger adjustment.`, confirmText: 'Yes, credit wallet', variant: 'warning' }))) return;
 
     try {
       const res = await userService.creditWallet(creditUser.id, amount, creditRemarks);
@@ -168,6 +159,7 @@ export const UsersListView: React.FC = () => {
       toastError('Please enter a valid hold amount.');
       return;
     }
+    if (!(await confirm({ title: 'Confirm funds hold', message: `Place a hold of ${formatCurrency(amount)} on ${holdUser.fullName || holdUser.userId}? The amount will become unavailable to the user.`, confirmText: 'Yes, hold funds', variant: 'danger' }))) return;
 
     try {
       const res = await userService.holdWalletFunds(holdUser.id, amount, 'HOLD', holdReason);
@@ -411,12 +403,11 @@ export const UsersListView: React.FC = () => {
                 },
                 {
                   key: 'swapRole',
-                  label: 'Swap Role / Parent',
+                  label: 'Move User Authority',
                   icon: <ArrowUpDown className="w-4 h-4 text-purple-600" />,
                   divider: true,
                   onClick: () => {
                     setSwappingUser(row);
-                    setNewRole((row.role as any) || 'DISTRIBUTOR');
                     setIsSwapModalOpen(true);
                   },
                 },
@@ -570,41 +561,12 @@ export const UsersListView: React.FC = () => {
         </Modal>
       )}
 
-      {/* Swap Role / Parent Modal */}
-      {swappingUser && (
-        <Modal
-          isOpen={isSwapModalOpen}
-          onClose={() => setIsSwapModalOpen(false)}
-          title={`Swap User Role / Parent (${swappingUser.userId || swappingUser.code})`}
-          size="sm"
-        >
-          <div className="space-y-4 text-xs pt-2">
-            <p className="text-[#64748B]">
-              Reassign downline hierarchy mapping for <strong>{swappingUser.fullName || swappingUser.name}</strong> across Distributor levels.
-            </p>
-
-            <Select
-              label="Target Role Tier"
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value as any)}
-              options={[
-                { value: 'MASTER_DISTRIBUTOR', label: 'Master Distributor (MD)' },
-                { value: 'DISTRIBUTOR', label: 'Distributor (DS)' },
-                { value: 'RETAILER', label: 'Retailer' },
-              ]}
-            />
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5EAF1]">
-              <Button type="button" variant="outline" onClick={() => setIsSwapModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="button" variant="primary" onClick={handleConfirmSwap}>
-                Confirm Role Swap
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <UserAuthorityTransferDrawer
+        isOpen={isSwapModalOpen}
+        user={swappingUser}
+        onClose={() => { setIsSwapModalOpen(false); setSwappingUser(null); }}
+        onSuccess={fetchUsers}
+      />
     </div>
   );
 };

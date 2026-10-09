@@ -11,9 +11,11 @@ import { ColumnDefinition } from '@/types/common';
 import { formatDateTime } from '@/utils/formatters';
 import { headlineAlertService, NoticeBoardItem } from '@/services/headlineAlertService';
 import { Bell, Plus, Edit, Trash2, AlertTriangle, Info, AlertCircle, RefreshCw } from 'lucide-react';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 export const NoticeBoardManagerView: React.FC = () => {
   const { toastSuccess, toastInfo, toastError } = useToast();
+  const confirmAction = useConfirmation();
   const [notices, setNotices] = useState<NoticeBoardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -100,7 +102,7 @@ export const NoticeBoardManagerView: React.FC = () => {
   };
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete notice "${title}"?`)) return;
+    if (!(await confirmAction({ title: 'Delete notice?', message: `Delete “${title}” from the notice board? This cannot be undone.`, confirmText: 'Yes, delete notice', variant: 'danger' }))) return;
     const res = await headlineAlertService.deleteNotice(id);
     if (res.success) {
       toastInfo(`Notice "${title}" deleted.`);

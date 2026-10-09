@@ -1695,6 +1695,9 @@ export interface Retailer {
   code: string;
   masterDistributorId: string;
   distributorId: string;
+  distributorName?: string;
+  distributorCode?: string;
+  parentAuthorityType?: string;
   userId: string;
   planId: string;
   name: string;

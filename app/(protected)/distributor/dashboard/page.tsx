@@ -15,6 +15,7 @@ import { DistributorNetworkOverview } from '@/components/features/distributor/Di
 import { DistributorTopRetailers } from '@/components/features/distributor/DistributorTopRetailers';
 import { DistributorRecentTransactions } from '@/components/features/distributor/DistributorRecentTransactions';
 import { DistributorAttentionCard } from '@/components/features/distributor/DistributorAttentionCard';
+import { walletService } from '@/services/walletService';
 
 export default function DistributorDashboardPage() {
   const { session } = useAuth();
@@ -32,7 +33,8 @@ export default function DistributorDashboardPage() {
     try {
       const res = await distributorDashboardService.getDashboardSummary(distributorId);
       if (res.success && res.data) {
-        setSummary(res.data);
+        const walletRes = await walletService.getDistributorWallet(distributorId);
+        setSummary({ ...res.data, walletBalance: walletRes.data?.availableBalance ?? 0 });
       } else {
         setError(res.error?.message || 'Failed to load distributor dashboard metrics.');
       }

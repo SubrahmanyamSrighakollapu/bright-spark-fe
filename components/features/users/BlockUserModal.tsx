@@ -10,6 +10,7 @@ import { ShieldAlert, ShieldCheck } from 'lucide-react';
 import { userService } from '@/services/userService';
 
 import { useToast } from '@/components/ui/Toast';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 export interface BlockUserModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const BlockUserModal: React.FC<BlockUserModalProps> = ({
   onSuccess,
 }) => {
   const { toastSuccess, toastError } = useToast();
+  const confirm = useConfirmation();
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,6 +36,7 @@ export const BlockUserModal: React.FC<BlockUserModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!(await confirm({ title: `${isBlocked ? 'Unblock' : 'Block'} user account?`, message: `${isBlocked ? 'Restore access for' : 'Immediately revoke access from'} ${entity.name} (${entity.code})?`, confirmText: `Yes, ${isBlocked ? 'unblock' : 'block'} user`, variant: isBlocked ? 'warning' : 'danger' }))) return;
     setIsSubmitting(true);
     try {
       const res = isBlocked

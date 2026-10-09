@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
 import { FinancialPageHeader } from '@/components/features/financial/FinancialPageHeader';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/utils/formatters';
+import { walletService } from '@/services/walletService';
 import {
   Building2,
   Users,
@@ -26,6 +27,14 @@ export default function MasterDistributorProfilePage() {
   const mdCode = session?.entityId || 'MD001';
   const mdName = session?.name || 'Apex National Network';
   const mdEmail = session?.email || 'admin@apexnetwork.com';
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    if (!session?.entityId) return;
+    walletService.getMasterDistributorWallet(session.entityId).then((response) => {
+      if (response.success && response.data) setWalletBalance(response.data.availableBalance);
+    }).catch(() => setWalletBalance(0));
+  }, [session?.entityId]);
 
   return (
     <PageContainer>
@@ -137,7 +146,7 @@ export default function MasterDistributorProfilePage() {
               </span>
               <span className="font-mono text-xs font-bold text-emerald-700">ACTIVE</span>
             </div>
-            <p className="text-2xl font-extrabold text-[#0F4C81] font-mono">{formatCurrency(45350)}</p>
+            <p className="text-2xl font-extrabold text-[#0F4C81] font-mono">{formatCurrency(walletBalance)}</p>
             <p className="text-[11px] text-slate-500">Spendable MD wallet balance</p>
           </div>
         </div>

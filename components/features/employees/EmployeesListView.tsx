@@ -35,9 +35,11 @@ import {
   RefreshCw,
   Loader2,
 } from 'lucide-react';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 export const EmployeesListView: React.FC = () => {
   const { toastSuccess, toastError, toastInfo } = useToast();
+  const confirm = useConfirmation();
 
   const [employees, setEmployees] = useState<BackendEmployeeItem[]>([]);
   const [departments, setDepartments] = useState<EmployeeMetaDepartment[]>([
@@ -98,6 +100,7 @@ export const EmployeesListView: React.FC = () => {
 
   const handleToggleStatus = async (emp: BackendEmployeeItem) => {
     const nextStatus = emp.employmentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    if (!(await confirm({ title: `${nextStatus === 'SUSPENDED' ? 'Suspend' : 'Activate'} employee?`, message: `Are you sure you want to set ${emp.fullName} to ${nextStatus}? This affects login access immediately.`, confirmText: `Yes, ${nextStatus === 'SUSPENDED' ? 'suspend' : 'activate'}`, variant: nextStatus === 'SUSPENDED' ? 'danger' : 'warning' }))) return;
     try {
       setIsUpdatingStatus(true);
       const updated = await employeeService.updateEmployeeStatus(emp.id, nextStatus);
@@ -111,6 +114,7 @@ export const EmployeesListView: React.FC = () => {
   };
 
   const handleResetPassword = async (emp: BackendEmployeeItem) => {
+    if (!(await confirm({ title: 'Reset employee password?', message: `Reset the password for ${emp.fullName}? Their current password will stop working and a new temporary password will be generated.`, confirmText: 'Yes, reset password', variant: 'danger' }))) return;
     try {
       const temporaryPassword = await employeeService.resetEmployeePassword(emp.id, 'Administrator initiated password reset');
       toastInfo(`Temporary password for ${emp.fullName}: ${temporaryPassword}`);

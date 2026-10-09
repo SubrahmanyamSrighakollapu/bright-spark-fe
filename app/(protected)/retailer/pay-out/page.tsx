@@ -13,6 +13,7 @@ import { PAY_OUT_SERVICES, PAY_OUT_PAYMENT_MODES } from '@/constants/serviceMast
 import { PayOutReceipt } from '@/components/features/retailer/PayOutReceipt';
 import { formatCurrency } from '@/utils/formatters';
 import { normalizeEntityId } from '@/utils/identity';
+import { walletService } from '@/services/walletService';
 
 // Shared Transaction Components
 import { TransactionHeader } from '@/components/features/transactions/TransactionHeader';
@@ -60,6 +61,13 @@ export default function RetailerPayOutPage() {
 
   // Step State
   const [step, setStep] = useState<PayOutStep>(1);
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    walletService.getRetailerWallet(retailerId).then((response) => {
+      if (response.success && response.data) setWalletBalance(response.data.availableBalance);
+    }).catch(() => setWalletBalance(0));
+  }, [retailerId]);
 
   // Form State
   const [beneficiaryName, setBeneficiaryName] = useState('');
@@ -336,7 +344,7 @@ export default function RetailerPayOutPage() {
           title="Retailer Pay-Out"
           subtitle="Send funds securely to a beneficiary"
           retailerId={retailerId}
-          walletBalance={preview?.availableBalance || 45350}
+          walletBalance={preview?.availableBalance ?? walletBalance}
           assignedPlan={preview?.planName || 'Standard Retailer Plan'}
         />
 

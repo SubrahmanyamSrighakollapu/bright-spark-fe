@@ -19,6 +19,7 @@ import {
 import { PayInReceipt } from '@/components/features/retailer/PayInReceipt';
 import { formatAmountInWords, formatCurrency } from '@/utils/formatters';
 import { normalizeEntityId } from '@/utils/identity';
+import { walletService } from '@/services/walletService';
 
 // Shared Transaction Components
 import { TransactionHeader } from '@/components/features/transactions/TransactionHeader';
@@ -67,6 +68,13 @@ export default function RetailerPayInPage() {
 
   // Step State
   const [step, setStep] = useState<PayInStep>(1);
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    walletService.getRetailerWallet(retailerId).then((response) => {
+      if (response.success && response.data) setWalletBalance(response.data.availableBalance);
+    }).catch(() => setWalletBalance(0));
+  }, [retailerId]);
 
   // Dynamic Service Master State
   const [categories, setCategories] = useState<ServiceCategoryItem[]>([]);
@@ -334,7 +342,7 @@ export default function RetailerPayInPage() {
           title="Retailer Pay-In"
           subtitle="Collect customer payments securely across application categories"
           retailerId={retailerId}
-          walletBalance={45350}
+          walletBalance={walletBalance}
           assignedPlan={preview?.planName || 'Standard Retailer Plan'}
         />
 

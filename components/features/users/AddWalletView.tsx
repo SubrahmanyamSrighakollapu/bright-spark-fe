@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/Toast';
 import { ColumnDefinition } from '@/types/common';
 import { formatCurrency, formatDateTime } from '@/utils/formatters';
 import { userService, NetworkUserItem } from '@/services/userService';
+import { useConfirmation } from '@/context/ConfirmationContext';
 import {
   Wallet,
   PlusCircle,
@@ -85,6 +86,7 @@ const MOCK_WALLET_LOGS: WalletTransactionItem[] = [
 
 export const AddWalletView: React.FC = () => {
   const { toastSuccess, toastError } = useToast();
+  const confirm = useConfirmation();
 
   const [logs, setLogs] = useState<WalletTransactionItem[]>(MOCK_WALLET_LOGS);
   const [networkUsers, setNetworkUsers] = useState<NetworkUserItem[]>([]);
@@ -140,6 +142,13 @@ export const AddWalletView: React.FC = () => {
     const selectedUser = networkUsers.find(
       (u) => u.id === targetUserId || u.userId === targetUserId || u.code === targetUserId
     );
+    const operation = actionModalType === 'CREDIT' ? 'credit' : 'debit';
+    if (!(await confirm({
+      title: `Confirm wallet ${operation}`,
+      message: `${operation === 'credit' ? 'Credit' : 'Debit'} ${formatCurrency(numAmount)} ${operation === 'credit' ? 'to' : 'from'} ${selectedUser?.fullName || selectedUser?.userId || 'the selected user'}? This financial adjustment will be recorded.`,
+      confirmText: `Yes, ${operation} wallet`,
+      variant: operation === 'debit' ? 'danger' : 'warning',
+    }))) return;
 
     try {
       const res =

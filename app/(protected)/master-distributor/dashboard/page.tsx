@@ -16,6 +16,7 @@ import { MasterDistributorRecentTransactions } from '@/components/features/maste
 import { MasterDistributorAttentionCard } from '@/components/features/master-distributor/MasterDistributorAttentionCard';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import { walletService } from '@/services/walletService';
 
 export default function MasterDistributorDashboardPage() {
   const { session } = useAuth();
@@ -31,7 +32,8 @@ export default function MasterDistributorDashboardPage() {
     try {
       const res = await masterDistributorService.getDashboardSummary(targetMdId);
       if (res.success && res.data) {
-        setSummary(res.data);
+        const walletRes = await walletService.getMasterDistributorWallet(targetMdId);
+        setSummary({ ...res.data, walletBalance: walletRes.data?.availableBalance ?? 0 });
         setError(null);
       } else {
         setError(res.message || 'Failed to load Master Distributor dashboard metrics.');

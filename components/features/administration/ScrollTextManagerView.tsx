@@ -11,9 +11,11 @@ import { ColumnDefinition } from '@/types/common';
 import { formatDateTime } from '@/utils/formatters';
 import { headlineAlertService, ScrollTickerItem } from '@/services/headlineAlertService';
 import { Radio, Plus, Edit, Trash2, Power, Eye, Users, Sparkles, RefreshCw } from 'lucide-react';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 export const ScrollTextManagerView: React.FC = () => {
   const { toastSuccess, toastInfo, toastError } = useToast();
+  const confirmAction = useConfirmation();
   const [tickers, setTickers] = useState<ScrollTickerItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -105,7 +107,7 @@ export const ScrollTextManagerView: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this ticker?')) return;
+    if (!(await confirmAction({ title: 'Delete ticker?', message: 'Delete this ticker from all user dashboards? This cannot be undone.', confirmText: 'Yes, delete ticker', variant: 'danger' }))) return;
     const res = await headlineAlertService.deleteTicker(id);
     if (res.success) {
       toastInfo('Ticker deleted.');

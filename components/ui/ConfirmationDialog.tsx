@@ -46,7 +46,6 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       isOpen={isOpen}
       onClose={onCancel}
       size="sm"
-      closeOnOverlayClick={!isLoading}
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onCancel} disabled={isLoading}>

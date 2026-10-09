@@ -117,7 +117,7 @@ export default function MasterDistributorWalletPage() {
             <div>
               <span className="text-xs text-slate-500 font-medium">Available Balance</span>
               <div className="text-4xl md:text-5xl font-extrabold font-mono text-[#0F4C81] tracking-tight">
-                {formatCurrency(wallet?.availableBalance || 245800.0)}
+                {formatCurrency(wallet?.availableBalance ?? 0)}
               </div>
             </div>
             <p className="text-xs text-slate-500 font-medium">
@@ -140,7 +140,7 @@ export default function MasterDistributorWalletPage() {
               <span className="text-slate-500 font-semibold">Available Balance</span>
               <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Spendable</span>
             </div>
-            <p className="text-xl font-bold font-mono text-[#0F4C81]">{formatCurrency(wallet?.availableBalance || 245800.0)}</p>
+            <p className="text-xl font-bold font-mono text-[#0F4C81]">{formatCurrency(wallet?.availableBalance ?? 0)}</p>
             <p className="text-[10px] text-slate-400">Ready for network distribution</p>
           </div>
 

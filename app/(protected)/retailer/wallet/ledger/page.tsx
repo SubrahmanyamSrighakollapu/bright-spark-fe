@@ -40,7 +40,7 @@ export default function RetailerLedgerPage() {
 
   // State
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
-  const [availableBalance, setAvailableBalance] = useState(45350);
+  const [availableBalance, setAvailableBalance] = useState(0);
   const [holdBalance, setHoldBalance] = useState(1000);
   const [ledgerBalance, setLedgerBalance] = useState(46350);
   const [loading, setLoading] = useState(true);

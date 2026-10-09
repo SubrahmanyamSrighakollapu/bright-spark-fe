@@ -30,7 +30,7 @@ export const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, descript
       onHide={onClose}
       position={position}
       modal
-      dismissable
+      dismissable={false}
       closeOnEscape
       blockScroll
       appendTo={typeof document !== 'undefined' ? document.body : undefined}
