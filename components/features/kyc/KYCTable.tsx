@@ -29,18 +29,15 @@ export const KYCTable: React.FC<KYCTableProps> = ({
 }) => {
   const columns: ColumnDefinition<KYCApplication>[] = [
     {
-      key: 'id',
-      header: 'App ID & Code',
+      key: 'entityCode',
+      header: 'User Code',
       render: (row) => (
-        <div>
-          <span className="font-mono font-bold text-[var(--primary)] text-xs block">{row.id}</span>
-          <span className="font-mono text-[10px] text-slate-400 block">{row.entityId || 'ENT-001'}</span>
-        </div>
+        <span className="font-mono text-xs font-bold text-[var(--primary)]">{row.entityCode || '—'}</span>
       ),
     },
     {
       key: 'entityName',
-      header: 'Entity / Business',
+      header: 'User / Business',
       render: (row) => (
         <div>
           <div className="font-semibold text-xs text-[var(--text-primary)]">{row.entityName}</div>
@@ -50,38 +47,12 @@ export const KYCTable: React.FC<KYCTableProps> = ({
     },
     {
       key: 'entityType',
-      header: 'Entity Type',
+      header: 'Role',
       align: 'center',
       render: (row) => (
         <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-200">
-          {row.entityType}
+          {row.entityType.replaceAll('_', ' ')}
         </span>
-      ),
-    },
-    {
-      key: 'parentNetwork',
-      header: 'Parent Network',
-      render: (row) => (
-        <span className="text-xs text-slate-700 font-medium">
-          {String((row as unknown as Record<string, unknown>).parentName || (row.entityType === 'RETAILER' ? 'North Hub Dist' : 'Direct Network'))}
-        </span>
-      ),
-    },
-    {
-      key: 'panNumberMasked',
-      header: 'Masked Identifiers',
-      render: (row) => (
-        <div className="font-mono text-xs text-slate-800 space-y-0.5">
-          <div>PAN: {row.panNumberMasked}</div>
-          {row.gstNumber && <div className="text-[10px] text-slate-400">GST: {row.gstNumber}</div>}
-        </div>
-      ),
-    },
-    {
-      key: 'assignedTo',
-      header: 'Assigned Officer',
-      render: (row) => (
-        <span className="text-xs text-slate-700 font-medium">{row.assignedTo || 'Unassigned'}</span>
       ),
     },
     {

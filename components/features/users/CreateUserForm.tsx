@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { userService } from '@/services/userService';
+import { kycService, type KYCDocumentRequirement } from '@/services/kycService';
 import {
   UserPlus,
   ShieldCheck,
@@ -18,10 +19,23 @@ import {
   Send,
   RotateCcw,
   KeyRound,
-  Check,
+  FileCheck2,
+  IdCard,
+  MapPin,
+  Landmark,
+  Camera,
+  UploadCloud,
 } from 'lucide-react';
 
-export const CreateUserForm: React.FC = () => {
+interface CreateUserFormProps {
+  fixedRole?: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER';
+  parentPartyId?: string;
+  embedded?: boolean;
+  onCompleted?: () => void;
+  onCancel?: () => void;
+}
+
+export const CreateUserForm: React.FC<CreateUserFormProps> = ({ fixedRole, parentPartyId, embedded = false, onCompleted, onCancel }) => {
   const { toastSuccess, toastError, toastInfo } = useToast();
 
   const [formData, setFormData] = useState({
@@ -32,50 +46,27 @@ export const CreateUserForm: React.FC = () => {
     fullName: '',
     email: '',
     contactNo: '',
-    roleName: 'RETAILER',
-    statusValue: 'ACTIVE',
+    roleName: fixedRole || 'RETAILER',
     isAutoPassword: true,
     password: '',
-    isActive: true,
   });
 
   const [verifyingAadhaar, setVerifyingAadhaar] = useState(false);
   const [verifyingPan, setVerifyingPan] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdPartyId, setCreatedPartyId] = useState<string | null>(null);
 
-  const [parentOptions, setParentOptions] = useState<{ value: string; label: string }[]>([
-    { value: '', label: 'Default (Direct Under Admin Platform)' },
-  ]);
-  const [parentPartyId, setParentPartyId] = useState('');
+  const [documentTypes, setDocumentTypes] = useState<KYCDocumentRequirement[]>([]);
+  const [documents, setDocuments] = useState<Record<string, File>>({});
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
 
-  React.useEffect(() => {
-    const targetRole =
-      formData.roleName === 'RETAILER'
-        ? 'DISTRIBUTOR'
-        : formData.roleName === 'DISTRIBUTOR'
-        ? 'MASTER_DISTRIBUTOR'
-        : undefined;
-
-    if (targetRole) {
-      userService
-        .getUsers({ role: targetRole })
-        .then((res) => {
-          if (res && res.success && res.data && res.data.items) {
-            const opts = res.data.items.map((u) => ({
-              value: u.partyId || u.id,
-              label: `${u.fullName} (${u.code || u.userId || u.partyId})`,
-            }));
-            setParentOptions([{ value: '', label: 'Default (Direct Under Admin Platform)' }, ...opts]);
-          }
-        })
-        .catch(() => {
-          setParentOptions([{ value: '', label: 'Default (Direct Under Admin Platform)' }]);
-        });
-    } else {
-      setParentOptions([{ value: '', label: 'Default (Direct Under Admin Platform)' }]);
-      setParentPartyId('');
-    }
-  }, [formData.roleName]);
+  useEffect(() => {
+    setDocuments({}); setLoadingDocuments(true);
+    kycService.getDocumentTypesForPartyType(formData.roleName as 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER')
+      .then((response) => setDocumentTypes(response.data ?? []))
+      .catch((error) => { setDocumentTypes([]); toastError(error instanceof Error ? error.message : 'Unable to load KYC document lookup'); })
+      .finally(() => setLoadingDocuments(false));
+  }, [formData.roleName, toastError]);
 
   const handleVerifyAadhaar = () => {
     if (!formData.aadharNo || formData.aadharNo.length < 12) {
@@ -113,6 +104,11 @@ export const CreateUserForm: React.FC = () => {
       toastError('Valid 10-digit Mobile Number is required.');
       return;
     }
+    const missingDocuments = documentTypes.filter((item) => item.configuration.required && !documents[item.code]);
+    if (missingDocuments.length) {
+      toastError(`Upload all required KYC documents: ${missingDocuments.map((item) => item.label).join(', ')}`);
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -120,21 +116,32 @@ export const CreateUserForm: React.FC = () => {
       const autoPassword = `QinStar@${last4}`;
       const userPassword = !formData.isAutoPassword && formData.password ? formData.password : autoPassword;
 
-      const res = await userService.createUser({
-        role: formData.roleName as 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER',
-        fullName: formData.fullName.trim(),
-        email: formData.email.trim() || `${formData.contactNo}@qinstarpay.com`,
-        mobile: formData.contactNo.trim(),
-        displayName: formData.fullName.trim(),
-        parentPartyId: parentPartyId || undefined,
-        password: userPassword,
-      });
+      let partyId = createdPartyId;
+      if (!partyId) {
+        const res = await userService.createUser({
+          role: formData.roleName as 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER',
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim() || `${formData.contactNo}@qinstarpay.com`,
+          mobile: formData.contactNo.trim(),
+          displayName: formData.fullName.trim(),
+          parentPartyId,
+          password: userPassword,
+        });
+        if (!res?.success || !res.data?.partyId) throw new Error(res?.message || 'Failed to create user account.');
+        partyId = res.data.partyId;
+        setCreatedPartyId(partyId);
+      }
 
-      if (res && res.success) {
+      if (partyId) {
+        for (const requirement of documentTypes) {
+          const file = documents[requirement.code];
+          if (file) await kycService.uploadDocumentForParty(partyId, requirement.code, file);
+        }
+        await kycService.submitPartyApplication(partyId);
+        setCreatedPartyId(null);
         toastSuccess(`New ${formData.roleName.replace('_', ' ')} user "${formData.fullName}" created successfully!`);
         handleCancel();
-      } else {
-        toastError(res?.message || 'Failed to create user account.');
+        onCompleted?.();
       }
     } catch (err: any) {
       toastError(err.message || 'Failed to create user account. Please check server logs.');
@@ -160,29 +167,30 @@ export const CreateUserForm: React.FC = () => {
       fullName: '',
       email: '',
       contactNo: '',
-      roleName: 'RETAILER',
-      statusValue: 'ACTIVE',
+      roleName: fixedRole || 'RETAILER',
       isAutoPassword: true,
       password: '',
-      isActive: true,
     });
-    toastInfo('Form reset to blank.');
+    setDocuments({});
+    setCreatedPartyId(null);
+    if (onCancel) onCancel();
+    else toastInfo('Form reset to blank.');
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-[#E5EAF1] p-6 shadow-xs flex items-center justify-between">
+      {!embedded && <div className="bg-white rounded-2xl border border-[#E5EAF1] p-6 shadow-xs flex items-center justify-between">
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-[#155EEF]" />
-            Add User (CreateUser)
+            Onboard User
           </h1>
           <p className="text-xs text-[#64748B] mt-1 font-medium">
             Onboard new downline users into the platform hierarchy under Master Distributor, Distributor, or Retailer roles.
           </p>
         </div>
-      </div>
+      </div>}
 
       {/* Section 1: Identity Verification */}
       <Card title="1. Identity Verification" subtitle="Verify Aadhaar & PAN credentials via real-time API integrations">
@@ -278,7 +286,7 @@ export const CreateUserForm: React.FC = () => {
       </Card>
 
       {/* Section 2: Personal & Role Details */}
-      <Card title="2. Personal & Role Details" subtitle="User contact information, downline network role and initial status">
+      <Card title="2. Personal & Role Details" subtitle="User contact information and downline network role">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
           <Input
             label="Full Name (fullName)"
@@ -311,7 +319,8 @@ export const CreateUserForm: React.FC = () => {
           <Select
             label="Downline Network Role (roleName)"
             value={formData.roleName}
-            onChange={(e) => setFormData((p) => ({ ...p, roleName: e.target.value }))}
+            onChange={(e) => setFormData((p) => ({ ...p, roleName: e.target.value as 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER' }))}
+            disabled={Boolean(fixedRole)}
             options={[
               { value: 'MASTER_DISTRIBUTOR', label: 'Master Distributor (MD)' },
               { value: 'DISTRIBUTOR', label: 'Distributor (DS)' },
@@ -319,31 +328,44 @@ export const CreateUserForm: React.FC = () => {
             ]}
           />
 
-          {formData.roleName !== 'MASTER_DISTRIBUTOR' && (
-            <Select
-              label={`Assign Specific Parent ${formData.roleName === 'RETAILER' ? 'Distributor' : 'Master Distributor'} (Optional - Defaults to Logged-in Creator)`}
-              value={parentPartyId}
-              onChange={(e) => setParentPartyId(e.target.value)}
-              options={parentOptions}
-            />
-          )}
-
-          <Select
-            label="Initial Account Status (statusValue)"
-            value={formData.statusValue}
-            onChange={(e) => setFormData((p) => ({ ...p, statusValue: e.target.value }))}
-            options={[
-              { value: 'ACTIVE', label: 'Active' },
-              { value: 'PENDING_APPROVAL', label: 'Pending Approval' },
-              { value: 'SUSPENDED', label: 'Suspended' },
-            ]}
-          />
         </div>
       </Card>
 
+      <Card title="3. KYC Document Uploads" subtitle="Complete all four verification documents to submit this account for KYC review">
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 via-indigo-50/50 to-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm"><ShieldCheck className="h-4 w-4" /></span>
+            <div><p className="text-xs font-bold text-slate-900">Secure document collection</p><p className="mt-0.5 text-[11px] text-slate-500">Files are securely linked with the new user&apos;s onboarding application.</p></div>
+          </div>
+          <div className="self-start rounded-full border border-blue-200 bg-white px-3 py-1.5 text-[10px] font-extrabold text-blue-700 sm:self-auto">{Object.keys(documents).length} OF {documentTypes.length} UPLOADED</div>
+        </div>
+        {loadingDocuments ? <div className="py-8 text-center text-xs text-slate-500">Loading document requirements…</div> : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {documentTypes.map((requirement) => {
+              const file = documents[requirement.code];
+              const DocumentIcon = requirement.code === 'ID_PROOF' ? IdCard : requirement.code === 'ADDRESS_PROOF' ? MapPin : requirement.code === 'BANK_PROOF' ? Landmark : Camera;
+              return <label key={requirement.id} className={`group relative min-h-60 cursor-pointer overflow-hidden rounded-2xl border bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${file ? 'border-emerald-300 shadow-emerald-100/70' : 'border-slate-200 hover:border-blue-300 hover:shadow-blue-100/70'}`}>
+                <span className={`absolute inset-x-0 top-0 h-1 ${file ? 'bg-emerald-500' : 'bg-gradient-to-r from-blue-600 to-indigo-500'}`} />
+                <div className="flex items-start gap-3 pt-1">
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${file ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>{file ? <FileCheck2 className="h-5 w-5" /> : <DocumentIcon className="h-5 w-5" />}</span>
+                  <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-bold text-slate-900">{requirement.label}</p>{requirement.configuration.required && <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-700">REQUIRED</span>}</div><p className="mt-1 truncate text-[11px] text-slate-500">{file ? file.name : requirement.description || 'Click to select a file'}</p><p className="mt-2 text-[10px] font-semibold text-blue-700">{file ? 'Click to replace' : `${requirement.configuration.acceptedMimeTypes?.includes('application/pdf') ? 'PDF, JPG or PNG' : 'JPG or PNG'} • Max ${requirement.configuration.maxSizeMb ?? 5} MB`}</p></div>
+                </div>
+                <div className={`mt-4 flex min-h-20 flex-col items-center justify-center rounded-xl border border-dashed px-3 py-3 text-center transition-colors ${file ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-300 bg-slate-50 group-hover:border-blue-400 group-hover:bg-blue-50/60'}`}>
+                  {file ? <><CheckCircle2 className="mb-1 h-5 w-5 text-emerald-600" /><p className="max-w-full truncate text-[11px] font-bold text-emerald-800">{file.name}</p><p className="mt-1 text-[10px] text-emerald-600">{(file.size / 1024 / 1024).toFixed(2)} MB · Click to replace</p></> : <><UploadCloud className="mb-1.5 h-5 w-5 text-blue-600" /><p className="text-[11px] font-bold text-slate-700">Choose file to upload</p><p className="mt-1 text-[10px] text-slate-400">Click anywhere on this card</p></>}
+                </div>
+                <input className="hidden" type="file" accept={requirement.configuration.acceptedMimeTypes?.includes('application/pdf') ? '.pdf,.jpg,.jpeg,.png' : '.jpg,.jpeg,.png'} onChange={(event) => { const selected = event.target.files?.[0]; if (!selected) return; const maxBytes = (requirement.configuration.maxSizeMb ?? 5) * 1024 * 1024; if (selected.size > maxBytes) { toastError(`${requirement.label} must be within ${requirement.configuration.maxSizeMb ?? 5} MB`); return; } if (requirement.configuration.acceptedMimeTypes?.length && !requirement.configuration.acceptedMimeTypes.includes(selected.type)) { toastError(`${requirement.label} has an unsupported file format`); return; } setDocuments((current) => ({ ...current, [requirement.code]: selected })); }} />
+              </label>;
+            })}
+          </div>
+        )}
+      </Card>
+
       {/* Section 3: Account Settings */}
-      <Card title="3. Account Security Settings" subtitle="Credentials generation and immediate operational activation switch">
+      <Card title="4. Account Security Settings" subtitle="Temporary credentials for use after KYC approval">
         <div className="space-y-4 pt-1">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+            <span className="font-bold">Approval-controlled access:</span> the account will be created as KYC Pending. Login is enabled automatically only after all required documents are verified and KYC is approved.
+          </div>
           <div className="flex items-center justify-between p-4 bg-[#F8FAFC] border border-[#E5EAF1] rounded-xl">
             <div>
               <span className="text-xs font-bold text-[#0F172A] block">Auto-generate Password (isAutoPassword)</span>
@@ -375,25 +397,6 @@ export const CreateUserForm: React.FC = () => {
             />
           )}
 
-          <div className="flex items-center justify-between p-4 bg-[#F8FAFC] border border-[#E5EAF1] rounded-xl">
-            <div>
-              <span className="text-xs font-bold text-[#0F172A] block">Account Active Status (isActive)</span>
-              <span className="text-[11px] text-[#64748B]">Set user account to active state immediately upon creation.</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setFormData((p) => ({ ...p, isActive: !p.isActive }))}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                formData.isActive ? 'bg-emerald-600' : 'bg-slate-200'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                  formData.isActive ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
         </div>
       </Card>
 
@@ -409,15 +412,6 @@ export const CreateUserForm: React.FC = () => {
         </Button>
 
         <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleSendCredentials}
-            leftIcon={<Send className="w-4 h-4" />}
-          >
-            Send Credentials
-          </Button>
-
           <Button
             type="submit"
             variant="primary"

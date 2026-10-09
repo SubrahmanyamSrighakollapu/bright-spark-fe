@@ -18,7 +18,6 @@ import {
   SearchInput,
   Select,
   Pagination,
-  Tabs,
   StatusBadge,
   Table,
   Tooltip,
@@ -47,11 +46,12 @@ export default function AdminApprovalsPage() {
     isAuthenticated && session && (session.role === 'ADMIN' || session.role === 'SUPER_ADMIN');
 
   const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
-  const [typeFilter, setTypeFilter] = useState<'ALL' | 'DISTRIBUTOR' | 'RETAILER'>('ALL');
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER'>('ALL');
 
   const [approvalItems, setApprovalItems] = useState<PendingApprovalItem[]>([]);
   const [summary, setSummary] = useState<ApprovalSummary>({
     totalPending: 0,
+    pendingMasterDistributors: 0,
     pendingDistributors: 0,
     pendingRetailers: 0,
     recentlyApproved: 0,
@@ -75,13 +75,21 @@ export default function AdminApprovalsPage() {
   const [rejectingItem, setRejectingItem] = useState<PendingApprovalItem | null>(null);
   const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
 
-  const loadData = () => {
+  const loadData = async () => {
     setIsLoading(true);
     try {
-      const items = approvalService.getApprovalItems(activeTab, typeFilter);
-      setApprovalItems(items);
-      const sum = approvalService.getPendingApprovalsSummary();
-      setSummary(sum);
+      const allItems = await approvalService.getNetworkApprovalItems();
+      const status = activeTab === 'PENDING' ? 'PENDING_APPROVAL' : activeTab;
+      setApprovalItems(allItems.filter((item) => item.approvalStatus === status && (activeTab !== 'PENDING' || item.kycStatus === 'APPROVED') && (typeFilter === 'ALL' || item.entityType === typeFilter)));
+      const awaitingNetworkApproval = allItems.filter((item) => item.approvalStatus === 'PENDING_APPROVAL' && item.kycStatus === 'APPROVED');
+      setSummary({
+        totalPending: awaitingNetworkApproval.length,
+        pendingMasterDistributors: awaitingNetworkApproval.filter((item) => item.entityType === 'MASTER_DISTRIBUTOR').length,
+        pendingDistributors: awaitingNetworkApproval.filter((item) => item.entityType === 'DISTRIBUTOR').length,
+        pendingRetailers: awaitingNetworkApproval.filter((item) => item.entityType === 'RETAILER').length,
+        recentlyApproved: allItems.filter((item) => item.approvalStatus === 'APPROVED').length,
+        recentlyRejected: allItems.filter((item) => item.approvalStatus === 'REJECTED').length,
+      });
     } catch (err) {
       console.error('Failed to load approvals:', err);
       toastError('Failed to load approval center items');
@@ -92,7 +100,7 @@ export default function AdminApprovalsPage() {
 
   useEffect(() => {
     if (isAuthorized) {
-      loadData();
+      void loadData();
     }
   }, [isAuthorized, activeTab, typeFilter]);
 
@@ -141,23 +149,12 @@ export default function AdminApprovalsPage() {
   const handleConfirmApprove = async () => {
     if (!approvingItem) return;
 
-    if (approvingItem.entityType === 'DISTRIBUTOR') {
-      const res = await approvalService.approveDistributor(approvingItem.id, session?.userId || 'usr_admin_01');
-      if (res.success && res.data) {
-        toastSuccess(`Distributor "${res.data.code}" approved successfully! Login is now enabled.`);
-        loadData();
-      } else {
-        toastError(res.error?.message || 'Failed to approve distributor.');
-      }
-    } else {
-      const res = await approvalService.approveRetailer(approvingItem.id, session?.userId || 'usr_admin_01');
-      if (res.success && res.data) {
-        toastSuccess(`Retailer "${res.data.code}" approved successfully! Login is now enabled.`);
-        loadData();
-      } else {
-        toastError(res.error?.message || 'Failed to approve retailer.');
-      }
-    }
+    try {
+      const res = await approvalService.reviewNetworkParty(approvingItem, 'APPROVED', 'Network onboarding approved by Admin');
+      if (!res.success) throw new Error(res.error?.message || 'Approval failed.');
+      toastSuccess(`${approvingItem.code} approved successfully. Login is now enabled.`);
+      await loadData();
+    } catch (error: any) { toastError(error?.message || 'Failed to approve account.'); }
 
     setApproveDialogOpen(false);
     setApprovingItem(null);
@@ -171,31 +168,12 @@ export default function AdminApprovalsPage() {
   const handleConfirmReject = async (reason: string) => {
     if (!rejectingItem) return;
 
-    if (rejectingItem.entityType === 'DISTRIBUTOR') {
-      const res = await approvalService.rejectDistributor(
-        rejectingItem.id,
-        reason,
-        session?.userId || 'usr_admin_01'
-      );
-      if (res.success && res.data) {
-        toastSuccess(`Distributor "${res.data.code}" application rejected.`);
-        loadData();
-      } else {
-        toastError(res.error?.message || 'Failed to reject distributor.');
-      }
-    } else {
-      const res = await approvalService.rejectRetailer(
-        rejectingItem.id,
-        reason,
-        session?.userId || 'usr_admin_01'
-      );
-      if (res.success && res.data) {
-        toastSuccess(`Retailer "${res.data.code}" application rejected.`);
-        loadData();
-      } else {
-        toastError(res.error?.message || 'Failed to reject retailer.');
-      }
-    }
+    try {
+      const res = await approvalService.reviewNetworkParty(rejectingItem, 'REJECTED', reason);
+      if (!res.success) throw new Error(res.error?.message || 'Rejection failed.');
+      toastSuccess(`${rejectingItem.code} application rejected.`);
+      await loadData();
+    } catch (error: any) { toastError(error?.message || 'Failed to reject account.'); throw error; }
 
     setRejectingItem(null);
   };
@@ -263,12 +241,15 @@ export default function AdminApprovalsPage() {
     {
       key: 'createdByRole',
       header: 'Submitted By',
-      render: (row) => (
-        <div className="text-xs">
-          <span className="font-semibold text-indigo-900">{row.createdByRole || 'MASTER_DISTRIBUTOR'}</span>
-          <p className="font-mono text-[11px] text-slate-500">{row.createdByUserId || 'usr_md_01'}</p>
-        </div>
-      ),
+      render: (row) => {
+        const role = row.createdByRole === 'SUPER_ADMIN' || row.createdByRole === 'ADMIN' ? 'Admin' : (row.createdByRole || 'Unknown');
+        return (
+          <div className="text-xs">
+            <span className="font-semibold text-indigo-900">{role.replaceAll('_', ' ')}</span>
+            {row.createdByName && <p className="text-[11px] text-slate-500">{row.createdByName}</p>}
+          </div>
+        );
+      },
     },
     {
       key: 'kycStatus',
@@ -308,13 +289,13 @@ export default function AdminApprovalsPage() {
   return (
     <div className="space-y-6 pb-12">
       <PageHeader
-        title="Central Admin Approval Center"
-        description="Review, evaluate, approve, or reject pending Distributor and Retailer onboarding applications submitted across the network"
+        title="Network Approval Management"
+        description="Final admin activation queue for KYC-approved Master Distributor, Distributor, and Retailer accounts"
         actions={
           <Button
             variant="outline"
             size="sm"
-            onClick={loadData}
+            onClick={() => void loadData()}
             leftIcon={<RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
           >
             Refresh
@@ -323,7 +304,7 @@ export default function AdminApprovalsPage() {
       />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 shadow-xs flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
@@ -337,6 +318,12 @@ export default function AdminApprovalsPage() {
           <div className="p-3 rounded-xl bg-amber-100 text-amber-700">
             <Clock className="w-6 h-6" />
           </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Pending Master Distributors</p>
+          <h3 className="text-2xl font-bold text-slate-900 mt-1">{summary.pendingMasterDistributors}</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Top-tier network accounts</p>
         </div>
 
         <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs">
@@ -366,12 +353,23 @@ export default function AdminApprovalsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs
-        items={tabItems}
-        activeTab={activeTab}
-        onChange={(tId) => setActiveTab(tId as 'PENDING' | 'APPROVED' | 'REJECTED')}
-      />
+      {/* Approval status tabs */}
+      <div className="inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-slate-100/80 p-1.5 shadow-xs">
+        {tabItems.map((tab) => {
+          const selected = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id as 'PENDING' | 'APPROVED' | 'REJECTED')}
+              className={`inline-flex min-h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-xs font-bold transition-all ${selected ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'}`}
+            >
+              <span>{tab.label}</span>
+              <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${selected ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'}`}>{tab.badge}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* Filter Bar */}
       <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4">
@@ -387,9 +385,10 @@ export default function AdminApprovalsPage() {
           <div className="w-44">
             <Select
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as 'ALL' | 'DISTRIBUTOR' | 'RETAILER')}
+              onChange={(e) => setTypeFilter(e.target.value as 'ALL' | 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER')}
               options={[
                 { label: 'All Entity Types', value: 'ALL' },
+                { label: 'Master Distributors', value: 'MASTER_DISTRIBUTOR' },
                 { label: 'Distributors Only', value: 'DISTRIBUTOR' },
                 { label: 'Retailers Only', value: 'RETAILER' },
               ]}

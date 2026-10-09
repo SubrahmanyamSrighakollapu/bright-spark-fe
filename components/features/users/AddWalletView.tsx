@@ -311,7 +311,7 @@ export const AddWalletView: React.FC = () => {
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
               options={[
-                { value: 'ALL', label: 'All Roles (MD, DS, Retailer)' },
+                { value: 'ALL', label: 'All Roles' },
                 { value: 'MASTER_DISTRIBUTOR', label: 'Master Distributor' },
                 { value: 'DISTRIBUTOR', label: 'Distributor' },
                 { value: 'RETAILER', label: 'Retailer' },

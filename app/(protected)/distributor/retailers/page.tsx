@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -328,9 +329,7 @@ export default function DistributorRetailersPage() {
           <Button variant="outline" size="sm" onClick={loadData} leftIcon={<RefreshCw className="w-4 h-4" />}>
             Refresh
           </Button>
-          <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />} onClick={handleOpenCreateModal}>
-            Add Retailer
-          </Button>
+          <Link href="/distributor/retailers/add"><Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>Add Retailer</Button></Link>
         </div>
       }
     >
@@ -550,6 +549,7 @@ export default function DistributorRetailersPage() {
         onSubmit={handleFormSubmit}
         initialData={selectedRetailer}
         mode={formMode}
+        onCreated={loadData}
         distributorId={distributorId}
       />
 

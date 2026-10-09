@@ -11,7 +11,39 @@ export interface KYCListResult {
   pagination: PaginationState;
 }
 
+export interface KYCDocumentRequirement {
+  id: string;
+  code: string;
+  label: string;
+  description?: string;
+  configuration: { required?: boolean; acceptedMimeTypes?: string[]; maxSizeMb?: number; applicablePartyTypes?: string[] };
+}
+
 export const kycService = {
+  getRequirements: () => apiClient.get<ApiResponse<KYCDocumentRequirement[]>>('/kyc/requirements'),
+  getDocumentTypesForPartyType: (partyType: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER') =>
+    apiClient.get<ApiResponse<KYCDocumentRequirement[]>>('/kyc/document-types', { params: { partyType } }),
+  getMyApplication: () => apiClient.get<ApiResponse<KYCApplication>>('/kyc/me'),
+  async uploadDocument(documentType: string, file: File, documentNumberMasked?: string) {
+    const data = new FormData();
+    data.append('documentType', documentType);
+    if (documentNumberMasked) data.append('documentNumberMasked', documentNumberMasked);
+    data.append('file', file);
+    return apiClient.upload<ApiResponse<KYCApplication>>('/kyc/documents', data);
+  },
+  submitMyApplication: () => apiClient.post<ApiResponse<KYCApplication>>('/kyc/submit'),
+  async uploadDocumentForParty(partyId: string, documentType: string, file: File) {
+    const data = new FormData(); data.append('documentType', documentType); data.append('file', file);
+    return apiClient.upload<ApiResponse<KYCApplication>>(`/kyc/parties/${partyId}/documents`, data);
+  },
+  submitPartyApplication: (partyId: string) => apiClient.post<ApiResponse<KYCApplication>>(`/kyc/parties/${partyId}/submit`),
+  getDocumentBlob: (documentId: string) => apiClient.blob(`/kyc/documents/${documentId}/download`),
+  async openDocument(documentId: string) {
+    const blob = await this.getDocumentBlob(documentId);
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  },
   async getKYCApplications(
     status = 'ALL',
     page = 1,

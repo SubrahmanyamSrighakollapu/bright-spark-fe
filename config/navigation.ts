@@ -58,7 +58,11 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
     label: 'KYC & Onboarding',
     iconName: 'ShieldCheck',
     path: '/admin/kyc',
-    roles: ['SUPER_ADMIN', 'KYC', 'OPERATIONS'],
+    roles: ['SUPER_ADMIN', 'ADMIN', 'KYC', 'OPERATIONS'],
+    children: [
+      { id: 'kyc-review', label: 'KYC Review', path: '/admin/kyc', roles: ['SUPER_ADMIN', 'ADMIN', 'KYC', 'OPERATIONS'] },
+      { id: 'network-approvals', label: 'Network Approvals', path: '/admin/network/approvals', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    ],
   },
   {
     id: 'wallet-management',
@@ -205,6 +209,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
       ],
     },
     { id: 'md-reports', label: 'Reports', iconName: 'BarChart3', path: '/master-distributor/reports' },
+    { id: 'md-kyc-documents', label: 'KYC & Documents', iconName: 'ShieldCheck', path: '/kyc/documents' },
     { id: 'md-notifications', label: 'Notifications', iconName: 'Bell', path: '/notifications' },
   ],
   DISTRIBUTOR: [
@@ -241,6 +246,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
     },
     { id: 'dst-commissions', label: 'Commissions', iconName: 'Percent', path: '/distributor/commissions' },
     { id: 'dst-reports', label: 'Reports', iconName: 'BarChart3', path: '/distributor/reports' },
+    { id: 'dst-kyc-documents', label: 'KYC & Documents', iconName: 'ShieldCheck', path: '/kyc/documents' },
     { id: 'dst-notifications', label: 'Notifications', iconName: 'Bell', path: '/distributor/notifications' },
     { id: 'dst-profile', label: 'Profile', iconName: 'User', path: '/distributor/profile' },
   ],
@@ -269,6 +275,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
       { id: 'ret-unsettled', label: 'Unsettled (T+1)', path: '/retailer/reports/unsettled' },
       { id: 'ret-chargebacks', label: 'Chargebacks', path: '/retailer/reports/chargebacks' },
     ] },
+    { id: 'ret-kyc-documents', label: 'KYC & Documents', iconName: 'ShieldCheck', path: '/kyc/documents' },
     { id: 'ret-notifications', label: 'Notifications', iconName: 'Bell', path: '/retailer/notifications' },
     { id: 'ret-profile', label: 'Profile', iconName: 'User', path: '/retailer/profile' },
   ],

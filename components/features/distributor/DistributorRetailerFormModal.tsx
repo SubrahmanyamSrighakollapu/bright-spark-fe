@@ -4,6 +4,7 @@ import { CreateRetailerInput, UpdateRetailerInput } from '@/services/retailerSer
 import { retailerPlanService } from '@/services/retailerPlanService';
 import { Modal, Button, Input, Select, FormField, MobileInput } from '@/components/ui';
 import { User, ShieldCheck, Tag, Info, AlertTriangle } from 'lucide-react';
+import { CreateUserForm } from '@/components/features/users/CreateUserForm';
 
 interface DistributorRetailerFormModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface DistributorRetailerFormModalProps {
   initialData?: Retailer | null;
   mode: 'create' | 'edit';
   distributorId: string;
+  onCreated?: () => void;
 }
 
 export const DistributorRetailerFormModal: React.FC<DistributorRetailerFormModalProps> = ({
@@ -21,6 +23,7 @@ export const DistributorRetailerFormModal: React.FC<DistributorRetailerFormModal
   initialData,
   mode,
   distributorId,
+  onCreated,
 }) => {
   const [formData, setFormData] = useState({
     planId: '',
@@ -150,6 +153,12 @@ export const DistributorRetailerFormModal: React.FC<DistributorRetailerFormModal
       setIsSubmitting(false);
     }
   };
+
+  if (String(mode) === 'create') return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Retailer" size="xl">
+      <CreateUserForm fixedRole="RETAILER" embedded onCancel={onClose} onCompleted={() => { onCreated?.(); onClose(); }} />
+    </Modal>
+  );
 
   return (
     <Modal

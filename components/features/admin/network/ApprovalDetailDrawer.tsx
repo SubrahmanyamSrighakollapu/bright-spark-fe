@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PendingApprovalItem, approvalService } from '@/services/approvalService';
+import { PendingApprovalItem } from '@/services/approvalService';
 import { Drawer, StatusBadge, Button, ConfirmationDialog } from '@/components/ui';
 import { DocumentViewerModal } from '@/components/features/kyc/DocumentViewerModal';
 import { KYCDocument } from '@/types/domain';
@@ -11,7 +11,6 @@ import {
   XCircle,
   Clock,
   FileText,
-  Ban,
   Eye,
 } from 'lucide-react';
 
@@ -33,28 +32,14 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
   onRefresh,
 }) => {
   const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
-  const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<KYCDocument | null>(null);
 
   if (!item) return null;
-
-  const isBlocked = item.kycStatus === 'BLOCKED' || item.accountStatus === 'SUSPENDED';
 
   const handleConfirmApprove = () => {
     setConfirmApproveOpen(false);
     onClose();
     onApprove(item);
-  };
-
-  const handleToggleBlock = async () => {
-    setConfirmBlockOpen(false);
-    if (isBlocked) {
-      await approvalService.unblockEntity(item.id, item.entityType);
-    } else {
-      await approvalService.blockEntity(item.id, item.entityType, 'Security SLA Audit Hold');
-    }
-    if (onRefresh) onRefresh();
-    onClose();
   };
 
   const fallbackDocs: KYCDocument[] = [
@@ -91,7 +76,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
       uploadedAt: item.createdAt,
     },
   ];
-  const documents = item.rawEntity.documents?.length ? item.rawEntity.documents : fallbackDocs;
+  const documents = item.rawEntity.documents || [];
 
   return (
     <>
@@ -115,16 +100,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
             </Button>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setConfirmBlockOpen(true)}
-                leftIcon={<Ban className="w-4 h-4 text-amber-600" />}
-                className="text-amber-700 border-amber-300 hover:bg-amber-50 font-semibold"
-              >
-                {isBlocked ? 'Unblock Partner' : 'Block Partner'}
-              </Button>
-
-              {item.approvalStatus !== 'APPROVED' && (
+              {item.approvalStatus === 'PENDING_APPROVAL' && (
                 <>
                   <Button
                     variant="outline"
@@ -144,7 +120,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
                     leftIcon={<CheckCircle2 className="w-4 h-4" />}
                     className="font-semibold"
                   >
-                    Approve KYC & Activate
+                    Approve & Activate
                   </Button>
                 </>
               )}
@@ -235,7 +211,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
           </div>
 
           {/* Uploaded Documents Grid with Visual Document Modal Trigger */}
-          <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+          {documents.length > 0 && <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
                 <FileText className="w-4 h-4 text-[var(--primary)]" /> Uploaded Verification Documents
@@ -264,7 +240,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
                 </div>
               ))}
             </div>
-          </div>
+          </div>}
         </div>
       </Drawer>
 
@@ -277,20 +253,6 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
         message={`Are you sure you want to approve onboarding request for ${item.name} (${item.businessName})? This will transition entity approval status to APPROVED and activate login access.`}
         confirmText="Confirm Approval"
         variant="info"
-      />
-
-      <ConfirmationDialog
-        isOpen={confirmBlockOpen}
-        onCancel={() => setConfirmBlockOpen(false)}
-        onConfirm={handleToggleBlock}
-        title={`${isBlocked ? 'Unblock' : 'Block'} ${item.entityType} "${item.code}"?`}
-        message={
-          isBlocked
-            ? `Are you sure you want to restore active status for ${item.name}?`
-            : `Are you sure you want to block ${item.name}? This will suspend transaction processing.`
-        }
-        confirmText={isBlocked ? 'Confirm Unblock' : 'Confirm Block'}
-        variant={isBlocked ? 'info' : 'danger'}
       />
 
       {/* Visual Document Viewer Modal */}

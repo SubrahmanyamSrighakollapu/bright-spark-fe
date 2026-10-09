@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { AccessDeniedView } from '@/components/features/auth/AccessDeniedView';
 import { Retailer, Distributor, RetailerPlan } from '@/types/domain';
@@ -289,14 +290,7 @@ export default function MasterDistributorRetailersPage() {
             >
               Refresh
             </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleOpenCreate}
-              leftIcon={<Plus className="w-4 h-4" />}
-            >
-              Add Retailer
-            </Button>
+            <Link href="/master-distributor/retailers/add"><Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>Add Retailer</Button></Link>
           </div>
         }
       />
@@ -433,6 +427,7 @@ export default function MasterDistributorRetailersPage() {
         onSubmit={handleFormSubmit}
         initialData={selectedRetailer}
         mode={formMode}
+        onCreated={loadData}
         masterDistributorId={masterDistributorId}
       />
 

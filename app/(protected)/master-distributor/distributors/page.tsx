@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { AccessDeniedView } from '@/components/features/auth/AccessDeniedView';
 import { Distributor, AccountStatus, KYCStatus } from '@/types/domain';
@@ -248,14 +249,7 @@ export default function MasterDistributorDistributorsPage() {
             >
               Refresh
             </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleOpenCreate}
-              leftIcon={<Plus className="w-4 h-4" />}
-            >
-              Add Distributor
-            </Button>
+            <Link href="/master-distributor/distributors/add"><Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>Add Distributor</Button></Link>
           </div>
         }
       />
@@ -349,6 +343,7 @@ export default function MasterDistributorDistributorsPage() {
         onSubmit={handleFormSubmit}
         initialData={selectedDistributor}
         mode={formMode}
+        onCreated={loadData}
       />
 
       {/* Details Drawer */}

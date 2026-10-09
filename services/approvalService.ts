@@ -1,10 +1,11 @@
 import { UserRole } from '@/config/roles';
 import { Distributor, Retailer, ApprovalStatus, AccountStatus, ApiResponse } from '@/types/domain';
 import { hierarchyService } from '@/services/hierarchyService';
+import { apiClient } from './apiClient';
 
 export interface PendingApprovalItem {
   id: string;
-  entityType: 'DISTRIBUTOR' | 'RETAILER';
+  entityType: 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER';
   code: string;
   name: string;
   businessName: string;
@@ -18,15 +19,18 @@ export interface PendingApprovalItem {
   parentDistributorName?: string;
   parentDistributorCode?: string;
   createdByUserId?: string;
+  createdByName?: string;
   createdByRole?: UserRole;
   createdByEntityId?: string;
   createdAt: string;
   planId?: string;
   rawEntity: Distributor | Retailer;
+  version?: number;
 }
 
 export interface ApprovalSummary {
   totalPending: number;
+  pendingMasterDistributors: number;
   pendingDistributors: number;
   pendingRetailers: number;
   recentlyApproved: number;
@@ -34,6 +38,41 @@ export interface ApprovalSummary {
 }
 
 class ApprovalService {
+  async getNetworkApprovalItems(): Promise<PendingApprovalItem[]> {
+    const response = await apiClient.get<ApiResponse<{ items: Array<Record<string, any>> }>>('/parties', { params: { page: 1, pageSize: 100 } });
+    if (!response.success || !response.data) return [];
+    return response.data.items
+      .filter((party) => ['MASTER_DISTRIBUTOR', 'DISTRIBUTOR', 'RETAILER'].includes(party.partyType))
+      .map((party) => ({
+        id: party.id,
+        entityType: party.partyType,
+        code: party.code,
+        name: party.displayName,
+        businessName: party.legalName || party.displayName,
+        email: party.email || '',
+        mobile: party.mobile || '',
+        kycStatus: party.kycStatus,
+        approvalStatus: party.approvalStatus,
+        accountStatus: party.accountStatus,
+        parentMasterDistributorName: party.parentName,
+        parentDistributorName: party.parentName,
+        createdByUserId: party.createdByUserId,
+        createdByRole: party.createdByRole,
+        createdByName: party.createdByName,
+        createdAt: party.createdAt,
+        version: party.version,
+        rawEntity: party as Distributor | Retailer,
+      }))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  reviewNetworkParty(item: PendingApprovalItem, decision: 'APPROVED' | 'REJECTED', remarks: string) {
+    return apiClient.post<ApiResponse<Record<string, any>>>(`/parties/${item.id}/review`, {
+      decision,
+      remarks,
+      version: item.version,
+    });
+  }
   requiresAdminApproval(
     entityType: 'DISTRIBUTOR' | 'RETAILER' | 'MASTER_DISTRIBUTOR',
     createdByRole: UserRole
@@ -87,6 +126,7 @@ class ApprovalService {
 
     return {
       totalPending: pendingDistributors + pendingRetailers,
+      pendingMasterDistributors: 0,
       pendingDistributors,
       pendingRetailers,
       recentlyApproved: recentlyApprovedDistributors + recentlyApprovedRetailers,
@@ -346,54 +386,6 @@ class ApprovalService {
       data: updated,
       timestamp: new Date().toISOString(),
     };
-  }
-  async blockEntity(
-    entityId: string,
-    entityType: 'DISTRIBUTOR' | 'RETAILER',
-    reason: string = 'Security Compliance Hold',
-    adminUserId: string = 'usr_admin_01'
-  ): Promise<ApiResponse<any>> {
-    if (entityType === 'DISTRIBUTOR') {
-      const updated = hierarchyService.updateDistributorRecord(entityId, {
-        kycStatus: 'BLOCKED',
-        status: 'SUSPENDED',
-        rejectionReason: reason,
-        updatedAt: new Date().toISOString(),
-      });
-      return { success: !!updated, data: updated, timestamp: new Date().toISOString() };
-    } else {
-      const updated = hierarchyService.updateRetailerRecord(entityId, {
-        kycStatus: 'BLOCKED',
-        accountStatus: 'SUSPENDED',
-        rejectionReason: reason,
-        updatedAt: new Date().toISOString(),
-      });
-      return { success: !!updated, data: updated, timestamp: new Date().toISOString() };
-    }
-  }
-
-  async unblockEntity(
-    entityId: string,
-    entityType: 'DISTRIBUTOR' | 'RETAILER',
-    adminUserId: string = 'usr_admin_01'
-  ): Promise<ApiResponse<any>> {
-    if (entityType === 'DISTRIBUTOR') {
-      const updated = hierarchyService.updateDistributorRecord(entityId, {
-        kycStatus: 'APPROVED',
-        status: 'ACTIVE',
-        approvalStatus: 'APPROVED',
-        updatedAt: new Date().toISOString(),
-      });
-      return { success: !!updated, data: updated, timestamp: new Date().toISOString() };
-    } else {
-      const updated = hierarchyService.updateRetailerRecord(entityId, {
-        kycStatus: 'APPROVED',
-        accountStatus: 'ACTIVE',
-        approvalStatus: 'APPROVED',
-        updatedAt: new Date().toISOString(),
-      });
-      return { success: !!updated, data: updated, timestamp: new Date().toISOString() };
-    }
   }
 }
 

@@ -3,6 +3,7 @@ import { Distributor, AccountStatus, KYCStatus } from '@/types/domain';
 import { CreateDistributorInput, UpdateDistributorInput } from '@/services/distributorService';
 import { Modal, Button, Input, Select, FormField, MobileInput } from '@/components/ui';
 import { User, Building2, Mail, Phone, MapPin, ShieldCheck, Tag } from 'lucide-react';
+import { CreateUserForm } from '@/components/features/users/CreateUserForm';
 
 interface DistributorFormModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface DistributorFormModalProps {
   onSubmit: (data: CreateDistributorInput | UpdateDistributorInput) => Promise<boolean>;
   initialData?: Distributor | null;
   mode: 'create' | 'edit';
+  onCreated?: () => void;
 }
 
 export const DistributorFormModal: React.FC<DistributorFormModalProps> = ({
@@ -18,6 +20,7 @@ export const DistributorFormModal: React.FC<DistributorFormModalProps> = ({
   onSubmit,
   initialData,
   mode,
+  onCreated,
 }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -135,6 +138,12 @@ export const DistributorFormModal: React.FC<DistributorFormModalProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  if (String(mode) === 'create') return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Distributor" size="xl">
+      <CreateUserForm fixedRole="DISTRIBUTOR" embedded onCancel={onClose} onCompleted={() => { onCreated?.(); onClose(); }} />
+    </Modal>
+  );
 
   return (
     <Modal

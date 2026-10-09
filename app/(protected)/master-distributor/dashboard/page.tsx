@@ -32,8 +32,14 @@ export default function MasterDistributorDashboardPage() {
     try {
       const res = await masterDistributorService.getDashboardSummary(targetMdId);
       if (res.success && res.data) {
-        const walletRes = await walletService.getMasterDistributorWallet(targetMdId);
-        setSummary({ ...res.data, walletBalance: walletRes.data?.availableBalance ?? 0 });
+        let walletBalance = res.data.walletBalance;
+        try {
+          const walletRes = await walletService.getMasterDistributorWallet(targetMdId);
+          if (walletRes.success && walletRes.data) walletBalance = walletRes.data.availableBalance;
+        } catch {
+          // Wallet API is independent from the dashboard. Keep demo balance until its API is available.
+        }
+        setSummary({ ...res.data, walletBalance });
         setError(null);
       } else {
         setError(res.message || 'Failed to load Master Distributor dashboard metrics.');

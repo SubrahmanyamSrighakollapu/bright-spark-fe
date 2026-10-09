@@ -35,7 +35,15 @@ export function Table<T extends object>({
 }: TableProps<T>) {
   void keyExtractor;
   if (isLoading) return <LoadingSkeleton variant="table" count={5} />;
-  if (!data?.length) return <EmptyState title={emptyTitle} description={emptyDescription} className="my-4" />;
+  if (!data?.length) {
+    return (
+      <EmptyState
+        title={emptyTitle}
+        description={emptyDescription}
+        className="min-h-[280px] rounded-none border-0 bg-transparent shadow-none"
+      />
+    );
+  }
 
   const rowIndex = (row: T) => data.indexOf(row);
   const alignment = (align?: ColumnDefinition<T>['align']) =>
@@ -46,7 +54,7 @@ export function Table<T extends object>({
       value={data}
       rowHover
       onRowClick={onRowClick ? (event: DataTableRowClickEvent) => onRowClick(event.data as T) : undefined}
-      className={cn('qs-datatable w-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-white shadow-xs', onRowClick && 'qs-datatable-clickable', className)}
+      className={cn('qs-datatable w-full overflow-auto bg-transparent', onRowClick && 'qs-datatable-clickable', className)}
       tableClassName="w-full border-collapse text-left text-sm"
       unstyled
     >
@@ -57,7 +65,7 @@ export function Table<T extends object>({
           header={col.header}
           sortable={col.sortable}
           style={{ width: col.width, minWidth: col.minWidth }}
-          headerClassName={cn('px-4 py-3 font-semibold select-none whitespace-nowrap', alignment(col.align), col.headerClassName)}
+          headerClassName={cn('sticky top-0 z-10 bg-slate-50 px-4 py-3 font-semibold select-none whitespace-nowrap shadow-[inset_0_-1px_0_#e2e8f0]', alignment(col.align), col.headerClassName)}
           bodyClassName={cn('px-4 py-3.5 align-middle text-xs font-normal tabular-nums', alignment(col.align), col.className)}
           body={(row: T) => {
             const index = rowIndex(row);
@@ -69,7 +77,7 @@ export function Table<T extends object>({
       {renderActions && (
         <Column
           header={actionHeader}
-          headerClassName="px-4 py-3 text-right font-semibold select-none whitespace-nowrap"
+          headerClassName="sticky top-0 z-10 bg-slate-50 px-4 py-3 text-right font-semibold select-none whitespace-nowrap shadow-[inset_0_-1px_0_#e2e8f0]"
           bodyClassName="px-4 py-3 text-right align-middle"
           body={(row: T) => (
             <div className="flex items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>

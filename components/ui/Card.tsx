@@ -8,10 +8,11 @@ export interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 't
   footer?: React.ReactNode;
   noPadding?: boolean;
   bordered?: boolean;
+  contentClassName?: string;
 }
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ title, subtitle, action, footer, noPadding = false, bordered = true, className, children, ...props }, ref) => {
+  ({ title, subtitle, action, footer, noPadding = false, bordered = true, className, contentClassName, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -38,7 +39,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
           </div>
         )}
 
-        <div className={cn(noPadding ? '' : 'p-5')}>{children}</div>
+        <div className={cn(noPadding ? '' : 'p-5', contentClassName)}>{children}</div>
 
         {footer && (
           <div className="px-5 py-3.5 bg-[var(--bg-secondary)] border-t border-[var(--border-subtle)] rounded-b-[var(--radius-lg)] flex items-center justify-between text-xs text-[var(--text-muted)]">

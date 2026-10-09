@@ -254,9 +254,9 @@ export const EmployeesListView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-8rem)] lg:min-h-[600px] lg:overflow-hidden">
       {/* Header & Quick Action */}
-      <div className="bg-white rounded-2xl border border-[#E5EAF1] p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="shrink-0 bg-white rounded-2xl border border-[#E5EAF1] p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
             <UserCheck className="w-5 h-5 text-[#155EEF]" />
@@ -303,7 +303,7 @@ export const EmployeesListView: React.FC = () => {
       )}
 
       {/* 4 Departments Summary Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid shrink-0 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { code: 'OPERATIONS', name: 'Operations', label: 'Ops & Support', count: deptCounts.OPERATIONS },
           { code: 'ACCOUNTS', name: 'Accounts', label: 'Finance & Payouts', count: deptCounts.ACCOUNTS },
@@ -315,7 +315,7 @@ export const EmployeesListView: React.FC = () => {
           return (
             <div
               key={dept.code}
-              onClick={() => setDepartmentFilter(isSelected ? 'ALL' : dept.code)}
+              onClick={() => { setDepartmentFilter(isSelected ? 'ALL' : dept.code); setPagination((current) => ({ ...current, page: 1 })); }}
               className={`p-4 rounded-xl border transition-all cursor-pointer ${
                 isSelected
                   ? `${colors.bg} ${colors.border} ring-2 ring-blue-500/20 shadow-sm`
@@ -341,21 +341,21 @@ export const EmployeesListView: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <Card noPadding>
-        <div className="p-4 border-b border-[#E5EAF1] flex flex-wrap items-center justify-between gap-3 bg-[#F8FAFC]">
-          <div className="flex-1 min-w-[240px]">
+      <Card noPadding className="flex min-h-0 flex-1 flex-col overflow-hidden" contentClassName="flex min-h-0 flex-1 flex-col">
+        <div className="grid shrink-0 grid-cols-1 items-center gap-3 border-b border-[#E5EAF1] bg-[#F8FAFC] px-4 py-3 lg:grid-cols-[minmax(300px,1fr)_430px]">
+          <div className="min-w-0">
             <Input
               placeholder="Search by Name, Employee Code (EMP_OPS_001), or Email..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setPagination((current) => ({ ...current, page: 1 })); }}
               leftIcon={<Search className="w-4 h-4 text-slate-400" />}
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Select
               value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
+              onChange={(e) => { setDepartmentFilter(e.target.value); setPagination((current) => ({ ...current, page: 1 })); }}
               options={[
                 { value: 'ALL', label: 'All 4 Departments' },
                 { value: 'OPERATIONS', label: 'Operations' },
@@ -367,7 +367,7 @@ export const EmployeesListView: React.FC = () => {
 
             <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setPagination((current) => ({ ...current, page: 1 })); }}
               options={[
                 { value: 'ALL', label: 'All Statuses' },
                 { value: 'ACTIVE', label: 'Active Staff' },
@@ -380,7 +380,7 @@ export const EmployeesListView: React.FC = () => {
         </div>
 
         {/* Employees Table */}
-        <div className="overflow-x-auto">
+        <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
           {isLoading ? (
             <div className="flex items-center justify-center p-12 text-slate-500 gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-[#155EEF]" />
@@ -396,6 +396,7 @@ export const EmployeesListView: React.FC = () => {
             <Table
               columns={columns}
               data={employees}
+              className="rounded-none border-0 shadow-none"
               keyExtractor={(r) => r.id}
               renderActions={(row) => {
                 const isAct = row.employmentStatus === 'ACTIVE';
@@ -429,11 +430,9 @@ export const EmployeesListView: React.FC = () => {
             />
           )}
         </div>
-        {pagination.totalPages > 1 && (
-          <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+          <Pagination className="shrink-0" currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} pageSize={pagination.pageSize}
             onPageChange={(page) => setPagination((current) => ({ ...current, page }))}
             onPageSizeChange={(pageSize) => setPagination((current) => ({ ...current, page: 1, pageSize }))} />
-        )}
       </Card>
 
       {/* View / Edit Employee Modal */}

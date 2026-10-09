@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Drawer } from '@/components/ui/Drawer';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -10,6 +10,7 @@ import { DocumentViewerModal } from './DocumentViewerModal';
 import { KYCApplication, KYCDocument } from '@/types/domain';
 import { kycService } from '@/services/kycService';
 import { formatDate } from '@/utils/formatters';
+import { useToast } from '@/components/ui/Toast';
 import { ShieldCheck, ShieldAlert, FileText, CheckCircle2 } from 'lucide-react';
 
 export interface KYCReviewDrawerProps {
@@ -25,45 +26,52 @@ export const KYCReviewDrawer: React.FC<KYCReviewDrawerProps> = ({
   application: initialApp,
   onRefresh,
 }) => {
+  const { toastSuccess, toastError } = useToast();
   const [app, setApp] = useState<KYCApplication | null>(initialApp);
   const [selectedDoc, setSelectedDoc] = useState<KYCDocument | null>(null);
   const [remarks, setRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [decisionMode, setDecisionMode] = useState<'APPROVE' | 'REJECT' | 'REQUEST_INFO' | null>(null);
 
+  useEffect(() => { setApp(initialApp); }, [initialApp]);
+
   if (!app) return null;
 
   const handleVerifyDoc = async (docId: string) => {
-    const res = await kycService.verifyDocument(app.id, docId);
-    if (res.success && res.data) {
-      setApp(res.data);
-      if (onRefresh) onRefresh();
-    }
+    try {
+      const res = await kycService.verifyDocument(app.id, docId);
+      if (!res.success || !res.data) throw new Error('Document verification failed.');
+      setApp(res.data); toastSuccess('Document verified.'); onRefresh?.();
+    } catch (error: any) { toastError(error?.message || 'Document verification failed.'); throw error; }
   };
 
   const handleRejectDoc = async (docId: string, reason: string) => {
-    const res = await kycService.rejectDocument(app.id, docId, reason);
-    if (res.success && res.data) {
-      setApp(res.data);
-      if (onRefresh) onRefresh();
-    }
+    try {
+      const res = await kycService.rejectDocument(app.id, docId, reason);
+      if (!res.success || !res.data) throw new Error('Document rejection failed.');
+      setApp(res.data); toastSuccess('Document rejected.'); onRefresh?.();
+    } catch (error: any) { toastError(error?.message || 'Document rejection failed.'); throw error; }
   };
 
   const handleFinalDecision = async () => {
     if (!decisionMode) return;
+    if (!remarks.trim()) { toastError('Reviewer remarks are required.'); return; }
     setIsSubmitting(true);
     try {
       if (decisionMode === 'APPROVE') {
-        const res = await kycService.approveKYC(app.id, remarks);
-        if (res.success && res.data) setApp(res.data);
+        const res = await kycService.approveKYC(app.id, remarks.trim());
+        if (!res.success || !res.data) throw new Error('KYC approval failed.');
+        setApp(res.data); toastSuccess('KYC approved and the user account is now active.');
       } else if (decisionMode === 'REJECT') {
-        const res = await kycService.rejectKYC(app.id, remarks || 'Document criteria not met');
-        if (res.success && res.data) setApp(res.data);
+        const res = await kycService.rejectKYC(app.id, remarks.trim());
+        if (!res.success || !res.data) throw new Error('KYC rejection failed.');
+        setApp(res.data); toastSuccess('KYC rejected and account access remains disabled.');
       }
-      if (onRefresh) onRefresh();
+      onRefresh?.();
       setDecisionMode(null);
-    } catch {
-      // Fallback
+      setRemarks('');
+    } catch (error: any) {
+      toastError(error?.message || 'Unable to save the KYC decision.');
     } finally {
       setIsSubmitting(false);
     }
@@ -82,9 +90,8 @@ export const KYCReviewDrawer: React.FC<KYCReviewDrawerProps> = ({
         <div className="sticky top-0 z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white/95 backdrop-blur-xs border border-[var(--border)] rounded-[var(--radius-xl)] shadow-xs">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="font-mono font-extrabold text-base md:text-lg text-[var(--primary)]">
-                {app.id}
-              </span>
+              <span className="font-extrabold text-base md:text-lg text-slate-900">{app.entityName}</span>
+              {app.entityCode && <span className="rounded-md bg-blue-50 px-2 py-1 font-mono text-[10px] font-bold text-[var(--primary)]">{app.entityCode}</span>}
               <StatusBadge status={app.status} size="sm" />
               {app.riskLevel && (
                 <span
@@ -99,7 +106,7 @@ export const KYCReviewDrawer: React.FC<KYCReviewDrawerProps> = ({
               )}
             </div>
             <div className="text-xs text-[var(--text-muted)] mt-0.5">
-              Submitted: <strong>{formatDate(app.submittedAt)}</strong> | Assigned: <strong>{app.assignedTo || 'Unassigned'}</strong>
+              {app.entityType.replaceAll('_', ' ')} · Submitted <strong>{formatDate(app.submittedAt)}</strong>
             </div>
           </div>
 
@@ -139,6 +146,7 @@ export const KYCReviewDrawer: React.FC<KYCReviewDrawerProps> = ({
                 size="sm"
                 onClick={handleFinalDecision}
                 isLoading={isSubmitting}
+                disabled={!remarks.trim()}
               >
                 Confirm {decisionMode}
               </Button>
@@ -147,33 +155,33 @@ export const KYCReviewDrawer: React.FC<KYCReviewDrawerProps> = ({
         )}
 
         {/* Main Grid: Details & Documents */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-          <Card title="Applicant & Business Details" subtitle="Registration metadata">
+        <div className="text-xs">
+          <Card title="User Details" subtitle="Account being reviewed">
             <div className="space-y-2">
               <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Entity Name:</span>
+                <span className="text-slate-500">User Name:</span>
                 <span className="font-semibold">{app.entityName}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
+              <div className={`flex justify-between py-1 border-b border-slate-100 ${app.businessName === app.entityName ? 'hidden' : ''}`}>
                 <span className="text-slate-500">Business Name:</span>
                 <span className="font-semibold">{app.businessName}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Business Type:</span>
-                <span>{app.businessType}</span>
+                <span className="text-slate-500">Role:</span>
+                <span className="font-semibold">{app.entityType.replaceAll('_', ' ')}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
+              <div className="hidden">
                 <span className="text-slate-500">PAN Number:</span>
                 <span className="font-mono">{app.panNumberMasked}</span>
               </div>
-              <div className="flex justify-between py-1">
+              <div className="hidden">
                 <span className="text-slate-500">GST Number:</span>
                 <span className="font-mono">{app.gstNumber || '—'}</span>
               </div>
             </div>
           </Card>
 
-          <Card title="Review Status & Assigned Officer" subtitle="Compliance audit track">
+          <Card title="Review Status & Assigned Officer" subtitle="Compliance audit track" className="hidden">
             <div className="space-y-2">
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Review Status:</span>
@@ -196,7 +204,7 @@ export const KYCReviewDrawer: React.FC<KYCReviewDrawerProps> = ({
         </div>
 
         {/* Documents Review Section */}
-        <Card title="Uploaded KYC Documents" subtitle="Verify identity and business proofs">
+        <Card title="Uploaded KYC Documents" subtitle="Inspect and verify each required onboarding document">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {app.documents.map((doc) => (
               <div
@@ -206,9 +214,9 @@ export const KYCReviewDrawer: React.FC<KYCReviewDrawerProps> = ({
                 <div>
                   <div className="flex items-center gap-1.5 font-semibold text-slate-900 mb-1">
                     <FileText className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                    <span>{doc.title}</span>
+                    <span>{doc.title.replaceAll('_', ' ')}</span>
                   </div>
-                  <div className="font-mono text-[11px] text-slate-500">{doc.documentNumberMasked}</div>
+                  {doc.documentNumberMasked && <div className="font-mono text-[11px] text-slate-500">{doc.documentNumberMasked}</div>}
                 </div>
 
                 <div className="pt-2 border-t border-slate-200 flex items-center justify-between">

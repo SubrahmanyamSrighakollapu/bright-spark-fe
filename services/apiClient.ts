@@ -150,9 +150,11 @@ class ApiClient {
     const url = this.buildUrl(endpoint, params);
 
     try {
+      const requestHeaders = this.getHeaders(headers, authToken) as Record<string, string>;
+      if (customOptions.body instanceof FormData) delete requestHeaders['Content-Type'];
       const response = await fetch(url, {
         ...customOptions,
-        headers: this.getHeaders(headers, authToken),
+        headers: requestHeaders,
       });
 
       if (response.status === 401 && !isRetry && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
@@ -223,6 +225,16 @@ class ApiClient {
 
   public delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+  }
+
+  public upload<T>(endpoint: string, data: FormData, options?: RequestOptions): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'POST', body: data });
+  }
+
+  public async blob(endpoint: string): Promise<Blob> {
+    const response = await fetch(this.buildUrl(endpoint), { headers: this.getHeaders() });
+    if (!response.ok) throw new ApiError('Unable to open document', response.status);
+    return response.blob();
   }
 }
 

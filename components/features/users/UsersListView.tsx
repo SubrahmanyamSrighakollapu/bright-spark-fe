@@ -8,9 +8,11 @@ import { Select } from '@/components/ui/Select';
 import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { Pagination } from '@/components/ui/Pagination';
 import { useToast } from '@/components/ui/Toast';
 import { ActionKebabMenu, ActionMenuItem } from '@/components/ui/ActionKebabMenu';
 import { ColumnDefinition } from '@/types/common';
+import { PaginationState } from '@/types/domain';
 import { userService, NetworkUserItem } from '@/services/userService';
 import { formatCurrency } from '@/utils/formatters';
 import { useConfirmation } from '@/context/ConfirmationContext';
@@ -37,6 +39,7 @@ export const UsersListView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 20, totalItems: 0, totalPages: 1 });
 
   // Edit User Modal State
   const [editingUser, setEditingUser] = useState<NetworkUserItem | null>(null);
@@ -63,17 +66,20 @@ export const UsersListView: React.FC = () => {
         role: roleFilter !== 'ALL' ? roleFilter : undefined,
         status: statusFilter !== 'ALL' ? statusFilter : undefined,
         search: searchTerm.trim() || undefined,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
       });
 
       if (response && response.success && response.data) {
         setUsers(response.data.items || []);
+        setPagination(response.data.pagination);
       }
     } catch (err) {
       console.error('Failed to load users:', err);
     } finally {
       setLoading(false);
     }
-  }, [roleFilter, statusFilter, searchTerm]);
+  }, [roleFilter, statusFilter, searchTerm, pagination.page, pagination.pageSize]);
 
   useEffect(() => {
     fetchUsers();
@@ -81,6 +87,10 @@ export const UsersListView: React.FC = () => {
 
   const handleToggleStatus = async (user: NetworkUserItem) => {
     const nextStatus = user.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    if (nextStatus === 'ACTIVE' && user.kycStatus !== 'APPROVED') {
+      toastError('This user cannot be activated until KYC is approved.');
+      return;
+    }
     if (!(await confirm({
       title: `${nextStatus === 'SUSPENDED' ? 'Suspend' : 'Activate'} user?`,
       message: `Are you sure you want to change ${user.fullName || user.userId} to ${nextStatus}? This affects account access immediately.`,
@@ -249,16 +259,21 @@ export const UsersListView: React.FC = () => {
     },
     {
       key: 'verificationStatus',
-      header: 'Verification',
+      header: 'KYC Status',
       align: 'center',
       render: (row) => (
-        <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold">
+        <div className="flex items-center justify-center text-[10px] font-bold">
+          <span className={`inline-flex rounded-full border px-2.5 py-0.5 ${row.kycStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : row.kycStatus === 'REJECTED' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+            {(row.kycStatus || 'NOT_STARTED').replaceAll('_', ' ')}
+          </span>
+          <div className="hidden">
           <span className={`px-2 py-0.5 rounded ${row.isAadharVerify ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}`}>
             Aadhaar {row.isAadharVerify ? '✓' : '✗'}
           </span>
           <span className={`px-2 py-0.5 rounded ${row.panNoVerify ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}`}>
             PAN {row.panNoVerify ? '✓' : '✗'}
           </span>
+          </div>
         </div>
       ),
     },
@@ -284,7 +299,7 @@ export const UsersListView: React.FC = () => {
             }`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${isAct ? 'bg-emerald-500' : isPend ? 'bg-amber-500' : 'bg-rose-500'}`} />
-            {row.status}
+            {isPend && row.kycStatus !== 'APPROVED' ? 'KYC PENDING' : row.status}
           </span>
         );
       },
@@ -292,9 +307,9 @@ export const UsersListView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-5 lg:h-[calc(100dvh-8rem)] lg:min-h-[560px] lg:overflow-hidden">
       {/* Header & Quick Actions */}
-      <div className="bg-white rounded-2xl border border-[#E5EAF1] p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="shrink-0 bg-white rounded-2xl border border-[#E5EAF1] p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
             <Users className="w-5 h-5 text-[#155EEF]" />
@@ -318,23 +333,23 @@ export const UsersListView: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <Card noPadding>
-        <div className="p-4 border-b border-[#E5EAF1] flex flex-wrap items-center justify-between gap-3 bg-[#F8FAFC]">
-          <div className="flex-1 min-w-[240px]">
+      <Card noPadding className="flex min-h-0 flex-1 flex-col overflow-hidden" contentClassName="flex min-h-0 flex-1 flex-col">
+        <div className="grid shrink-0 grid-cols-1 items-center gap-3 border-b border-[#E5EAF1] bg-[#F8FAFC] px-4 py-3 lg:grid-cols-[minmax(300px,1fr)_430px]">
+          <div className="min-w-0">
             <Input
               placeholder="Search by Name, Email, Mobile, or User ID..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setPagination((current) => ({ ...current, page: 1 })); }}
               leftIcon={<Search className="w-4 h-4 text-slate-400" />}
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Select
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => { setRoleFilter(e.target.value); setPagination((current) => ({ ...current, page: 1 })); }}
               options={[
-                { value: 'ALL', label: 'All Roles (MD, DS, Retailer)' },
+                { value: 'ALL', label: 'All Roles' },
                 { value: 'MASTER_DISTRIBUTOR', label: 'Master Distributor (MD)' },
                 { value: 'DISTRIBUTOR', label: 'Distributor (DS)' },
                 { value: 'RETAILER', label: 'Retailer' },
@@ -343,7 +358,7 @@ export const UsersListView: React.FC = () => {
 
             <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setPagination((current) => ({ ...current, page: 1 })); }}
               options={[
                 { value: 'ALL', label: 'All Statuses' },
                 { value: 'ACTIVE', label: 'Active Only' },
@@ -356,11 +371,12 @@ export const UsersListView: React.FC = () => {
         </div>
 
         {/* Master Users Table with ActionKebabMenu */}
-        <div className="overflow-x-auto overflow-y-visible">
+        <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
           <Table
             columns={columns}
             data={users}
             isLoading={loading}
+            className="rounded-none border-0 shadow-none"
             keyExtractor={(row) => row.id}
             renderActions={(row) => {
               const menuItems: ActionMenuItem[] = [
@@ -375,9 +391,10 @@ export const UsersListView: React.FC = () => {
                 },
                 {
                   key: 'toggleStatus',
-                  label: row.status === 'ACTIVE' ? 'Suspend Account' : 'Activate Account',
+                  label: row.status === 'ACTIVE' ? 'Suspend Account' : row.kycStatus === 'APPROVED' ? 'Activate Account' : 'KYC Approval Required',
                   icon: row.status === 'ACTIVE' ? <UserX className="w-4 h-4 text-amber-600" /> : <UserCheck className="w-4 h-4 text-emerald-600" />,
                   danger: row.status === 'ACTIVE',
+                  disabled: row.status !== 'ACTIVE' && row.kycStatus !== 'APPROVED',
                   onClick: () => handleToggleStatus(row),
                 },
                 {
@@ -417,6 +434,9 @@ export const UsersListView: React.FC = () => {
             }}
           />
         </div>
+        <Pagination className="shrink-0" currentPage={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} pageSize={pagination.pageSize}
+          onPageChange={(page) => setPagination((current) => ({ ...current, page }))}
+          onPageSizeChange={(pageSize) => setPagination((current) => ({ ...current, page: 1, pageSize }))} />
       </Card>
 
       {/* Edit User Modal */}
@@ -453,7 +473,7 @@ export const UsersListView: React.FC = () => {
               value={editingUser.status}
               onChange={(e) => setEditingUser({ ...editingUser, status: e.target.value })}
               options={[
-                { value: 'ACTIVE', label: 'Active' },
+                ...(editingUser.kycStatus === 'APPROVED' ? [{ value: 'ACTIVE', label: 'Active' }] : []),
                 { value: 'PENDING', label: 'Pending Verification' },
                 { value: 'SUSPENDED', label: 'Suspended' },
                 { value: 'INACTIVE', label: 'Inactive' },

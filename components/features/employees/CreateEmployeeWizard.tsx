@@ -1,336 +1,75 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BriefcaseBusiness, CalendarDays, CheckCircle2, KeyRound, Loader2, ShieldCheck, UserCheck } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
-import {
-  employeeService,
-  EmployeeMetaDepartment,
-  EmployeeMetaRole,
-} from '@/services/employeeService';
-import {
-  UserCheck,
-  ArrowRight,
-  ArrowLeft,
-  CheckCircle2,
-  Plus,
-  Loader2,
-} from 'lucide-react';
+import { employeeService, type EmployeeMetaDepartment } from '@/services/employeeService';
+
+const initialForm = () => ({
+  fullName: '', email: '', mobile: '', departmentCode: '',
+  joiningDate: new Date().toISOString().split('T')[0], shiftCode: 'MORNING' as 'MORNING' | 'EVENING' | 'NIGHT',
+});
 
 export const CreateEmployeeWizard: React.FC = () => {
-  const router = useRouter();
-  const { toastSuccess, toastError } = useToast();
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [departments, setDepartments] = useState<EmployeeMetaDepartment[]>([
-    { code: 'OPERATIONS', label: 'Operations', description: 'Operations & Technical Support' },
-    { code: 'ACCOUNTS', label: 'Accounts', description: 'Finance & Accounts Management' },
-    { code: 'KYC', label: 'KYC', description: 'Verification & KYC Compliance' },
-    { code: 'SALES', label: 'Sales', description: 'Business Development & Growth' },
-  ]);
-
-  const [roles, setRoles] = useState<EmployeeMetaRole[]>([
-    { id: 5, code: 'OPERATIONS', name: 'Operations', description: null },
-    { id: 6, code: 'ACCOUNTS', name: 'Accounts', description: null },
-    { id: 7, code: 'KYC', name: 'KYC', description: null },
-    { id: 8, code: 'SALES', name: 'Sales', description: null },
-  ]);
-
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    mobile: '',
-    employeeCode: '',
-    departmentCode: 'OPERATIONS',
-    roleId: 5,
-    designation: 'Operations Staff',
-    joiningDate: new Date().toISOString().split('T')[0],
-    shift: 'MORNING',
-  });
+  const router = useRouter(); const { toastSuccess, toastError } = useToast();
+  const [departments, setDepartments] = useState<EmployeeMetaDepartment[]>([]);
+  const [form, setForm] = useState(initialForm);
+  const [loadingMeta, setLoadingMeta] = useState(true); const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    employeeService.getEmployeeMeta().then((meta) => {
-      if (meta.departments.length > 0) setDepartments(meta.departments);
-      if (meta.roles.length > 0) {
-        setRoles(meta.roles);
-        // Default roleId to first role
-        if (meta.roles[0]) {
-          setFormData((p) => ({ ...p, roleId: meta.roles[0].id, departmentCode: meta.departments[0]?.code || 'OPERATIONS' }));
-        }
-      }
-    }).catch((err) => {
-      console.warn('Failed to load employee meta', err);
-    });
-  }, []);
+    employeeService.getEmployeeMeta().then((meta) => setDepartments(meta.departments)).catch((error) => toastError(error instanceof Error ? error.message : 'Unable to load departments')).finally(() => setLoadingMeta(false));
+  }, [toastError]);
 
-  // When department changes, update default role and designation matching that department
-  const handleDepartmentChange = (deptCode: string) => {
-    const matchedRole = roles.find((r) => r.code === deptCode) || roles[0];
-    const roleId = matchedRole ? matchedRole.id : 5;
-    const defaultDesignations: Record<string, string> = {
-      OPERATIONS: 'Operations Lead',
-      ACCOUNTS: 'Staff Accountant',
-      KYC: 'KYC Specialist',
-      SALES: 'Sales Lead',
-    };
-    setFormData((p) => ({
-      ...p,
-      departmentCode: deptCode,
-      roleId: roleId,
-      designation: defaultDesignations[deptCode] || 'Staff Member',
-    }));
+  const validate = () => {
+    if (form.fullName.trim().length < 2) return 'Enter the employee full name.';
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) return 'Enter a valid official email address.';
+    if (!/^[6-9]\d{9}$/.test(form.mobile)) return 'Enter a valid 10-digit Indian mobile number.';
+    if (!form.departmentCode) return 'Department is mandatory.';
+    if (!form.joiningDate) return 'Joining date is mandatory.';
+    return null;
   };
 
-  const handleNextStep = () => {
-    if (!formData.fullName.trim()) {
-      toastError('Please enter Full Name before proceeding.');
-      return;
-    }
-    if (!formData.email.trim()) {
-      toastError('Please enter Official Email ID before proceeding.');
-      return;
-    }
-    if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
-      toastError('Please enter a valid 10-digit mobile number. It is required for the initial password.');
-      return;
-    }
-    setCurrentStep(2);
-  };
-
-  const handleSaveEmployee = async (addAnother: boolean = false) => {
+  const save = async () => {
+    const error = validate(); if (error) return toastError(error);
+    setSubmitting(true);
     try {
-      setIsSubmitting(true);
-      const created = await employeeService.createEmployee({
-        employeeCode: formData.employeeCode,
-        fullName: formData.fullName,
-        email: formData.email,
-        mobile: formData.mobile,
-        departmentCode: formData.departmentCode,
-        roleId: Number(formData.roleId),
-        designation: formData.designation,
-        joiningDate: formData.joiningDate,
-        shiftCode: formData.shift as 'MORNING' | 'EVENING' | 'NIGHT',
-      });
-
-      toastSuccess(`Employee ${created.employeeCode} ("${created.fullName}") onboarded successfully!`);
-
-      if (addAnother) {
-        setFormData({
-          fullName: '',
-          email: '',
-          mobile: '',
-          employeeCode: '',
-          departmentCode: 'OPERATIONS',
-          roleId: roles[0]?.id || 5,
-          designation: 'Operations Staff',
-          joiningDate: new Date().toISOString().split('T')[0],
-          shift: 'MORNING',
-        });
-        setCurrentStep(1);
-      } else {
-        router.push('/admin/employees');
-      }
-    } catch (err: unknown) {
-      toastError((err as Error).message || 'Failed to onboard employee.');
-    } finally {
-      setIsSubmitting(false);
-    }
+      const employee = await employeeService.createEmployee({ ...form, fullName: form.fullName.trim(), email: form.email.trim().toLowerCase() });
+      toastSuccess(`Employee ${employee.employeeCode} (${employee.fullName}) created successfully.`);
+      router.push('/admin/employees');
+    } catch (error) { toastError(error instanceof Error ? error.message : 'Failed to create employee'); }
+    finally { setSubmitting(false); }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header & Step Wizard Indicator */}
-      <div className="bg-white rounded-2xl border border-[#E5EAF1] p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-[#155EEF]" />
-            Onboard New Employee
-          </h1>
-          <p className="text-xs text-[#64748B] mt-1 font-medium">
-            Multi-step wizard to create staff under role <strong className="text-slate-800">Employee</strong> across the 4 departments: Operations, Accounts, KYC, and Sales.
-          </p>
-        </div>
+  return <div className="space-y-5">
+    <div className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center">
+      <div><h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-950"><UserCheck className="h-5 w-5 text-blue-600" />Onboard New Employee</h1><p className="mt-1 text-xs font-medium text-slate-500">Create an employee account and assign its department in one step.</p></div>
+      <span className="inline-flex self-start items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-700 md:self-auto"><ShieldCheck className="h-4 w-4" />Employee code generated automatically</span>
+    </div>
 
-        {/* Step Indicator Badges */}
-        <div className="flex items-center gap-3">
-          <div
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 border ${
-              currentStep === 1
-                ? 'bg-[#155EEF] text-white border-[#155EEF]'
-                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            }`}
-          >
-            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">1</span>
-            Basic & Department Details
-          </div>
-
-          <div
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 border ${
-              currentStep === 2
-                ? 'bg-[#155EEF] text-white border-[#155EEF]'
-                : 'bg-slate-100 text-slate-500 border-slate-200'
-            }`}
-          >
-            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">2</span>
-            Schedule & Credentials
-          </div>
-        </div>
+    <Card title="Employee Details" subtitle="Enter the required identity, department and work-schedule information">
+      <div className="grid grid-cols-1 gap-5 pt-1 md:grid-cols-2 xl:grid-cols-3">
+        <Input label="Full Name" placeholder="e.g. Rajesh Kumar" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))} required />
+        <Input label="Official Email ID" type="email" placeholder="rajesh@qinstarpay.com" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
+        <Input label="Mobile Number" placeholder="9876543210" maxLength={10} value={form.mobile} onChange={(event) => setForm((current) => ({ ...current, mobile: event.target.value.replace(/\D/g, '') }))} required />
+        <Select label="Department" placeholder={loadingMeta ? 'Loading departments…' : 'Select department'} value={form.departmentCode} disabled={loadingMeta} onChange={(event) => setForm((current) => ({ ...current, departmentCode: event.target.value }))} options={departments.map((department) => ({ value: department.code, label: department.label }))} required />
+        <Input label="Joining Date" type="date" value={form.joiningDate} onChange={(event) => setForm((current) => ({ ...current, joiningDate: event.target.value }))} leftIcon={<CalendarDays className="h-4 w-4 text-slate-400" />} required />
+        <Select label="Assigned Shift" value={form.shiftCode} onChange={(event) => setForm((current) => ({ ...current, shiftCode: event.target.value as typeof current.shiftCode }))} options={[{ value: 'MORNING', label: 'Morning (09:00 AM – 06:00 PM)' }, { value: 'EVENING', label: 'Evening (02:00 PM – 11:00 PM)' }, { value: 'NIGHT', label: 'Night (10:00 PM – 07:00 AM)' }]} required />
       </div>
 
-      {/* STEP 1: Basic & Department Details */}
-      {currentStep === 1 && (
-        <div className="space-y-6">
-          <Card title="Category 1: Personal Info & Department Assignment" subtitle="Employee identity, contact, and department assignment">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
-              <Input
-                label="Full Name"
-                placeholder="e.g. Rajesh Kumar"
-                value={formData.fullName}
-                onChange={(e) => setFormData((p) => ({ ...p, fullName: e.target.value }))}
-                required
-              />
+      <div className="mt-6 grid gap-3 md:grid-cols-2">
+        <div className="flex gap-3 rounded-xl border border-blue-100 bg-blue-50/70 p-4"><BriefcaseBusiness className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" /><div><p className="text-xs font-bold text-slate-900">Department controls access</p><p className="mt-1 text-[11px] leading-4 text-slate-600">The matching employee role and permissions are assigned automatically from the selected department.</p></div></div>
+        <div className="flex gap-3 rounded-xl border border-amber-100 bg-amber-50/70 p-4"><KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><div><p className="text-xs font-bold text-slate-900">Temporary password</p><p className="mt-1 text-[11px] leading-4 text-slate-600">Generated as QinStarEmp@ plus the last four mobile digits. It must be changed on first login.</p></div></div>
+      </div>
+    </Card>
 
-              <Input
-                label="Official Email ID"
-                type="email"
-                placeholder="rajesh.ops@qinstarpay.com"
-                value={formData.email}
-                onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="Mobile Number"
-                placeholder="9876543210"
-                maxLength={10}
-                value={formData.mobile}
-                onChange={(e) => setFormData((p) => ({ ...p, mobile: e.target.value.replace(/\D/g, '') }))}
-                required
-              />
-
-              <Input
-                label="Employee Code"
-                value={formData.employeeCode}
-                onChange={(e) => setFormData((p) => ({ ...p, employeeCode: e.target.value }))}
-                required
-              />
-
-              <Select
-                label="Department (4 Core Options)"
-                value={formData.departmentCode}
-                onChange={(e) => handleDepartmentChange(e.target.value)}
-                options={departments.map((d) => ({
-                  value: d.code,
-                  label: `${d.label} (${d.code})`,
-                }))}
-              />
-
-              <Select
-                label="Role Category Role"
-                value={formData.roleId.toString()}
-                onChange={(e) => setFormData((p) => ({ ...p, roleId: Number(e.target.value) }))}
-                options={roles.map((r) => ({
-                  value: r.id.toString(),
-                  label: `${r.name} (Role: Employee)`,
-                }))}
-              />
-
-              <Input
-                label="Designation"
-                placeholder="e.g. Operations Executive"
-                value={formData.designation}
-                onChange={(e) => setFormData((p) => ({ ...p, designation: e.target.value }))}
-              />
-            </div>
-          </Card>
-
-          <div className="bg-white rounded-2xl border border-[#E5EAF1] p-4 shadow-xs flex justify-end">
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleNextStep}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              Next: Schedule & Credentials
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 2: Schedule & Credentials */}
-      {currentStep === 2 && (
-        <div className="space-y-6">
-          <Card title="Step 2: Work Schedule & Password Security" subtitle="Joining date, assigned shift, and account password">
-            <div className="space-y-5 pt-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Input
-                  label="Joining Date"
-                  type="date"
-                  value={formData.joiningDate}
-                  onChange={(e) => setFormData((p) => ({ ...p, joiningDate: e.target.value }))}
-                  required
-                />
-
-                <Select
-                  label="Assigned Shift"
-                  value={formData.shift}
-                  onChange={(e) => setFormData((p) => ({ ...p, shift: e.target.value }))}
-                  options={[
-                    { value: 'MORNING', label: 'Morning Shift (09:00 AM - 06:00 PM)' },
-                    { value: 'EVENING', label: 'Evening Shift (02:00 PM - 11:00 PM)' },
-                    { value: 'NIGHT', label: 'Night Shift (10:00 PM - 07:00 AM)' },
-                  ]}
-                />
-              </div>
-
-              <div className="p-4 bg-[#F8FAFC] border border-[#E5EAF1] rounded-xl">
-                <div>
-                  <span className="text-xs font-bold text-[#0F172A] block">Temporary Password</span>
-                  <span className="text-[11px] text-[#64748B]">The initial password is the last 4 digits of the employee mobile number. The employee must create a new secure password immediately after first login.</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <div className="bg-white rounded-2xl border border-[#E5EAF1] p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCurrentStep(1)}
-              leftIcon={<ArrowLeft className="w-4 h-4" />}
-            >
-              Back to Step 1
-            </Button>
-
-            <div className="flex items-center gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={isSubmitting}
-                onClick={() => handleSaveEmployee(true)}
-                leftIcon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              >
-                Save & Add Another
-              </Button>
-
-              <Button
-                type="button"
-                variant="primary"
-                disabled={isSubmitting}
-                onClick={() => handleSaveEmployee(false)}
-                leftIcon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              >
-                {isSubmitting ? 'Onboarding...' : 'Save Employee'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <Button variant="outline" onClick={() => router.push('/admin/employees')}>Cancel</Button>
+      <Button disabled={submitting} onClick={() => void save()} leftIcon={submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>{submitting ? 'Creating…' : 'Create Employee'}</Button>
     </div>
-  );
+  </div>;
 };

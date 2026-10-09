@@ -59,14 +59,11 @@ export interface EmployeeListResult {
 }
 
 export interface CreateEmployeeInput {
-  employeeCode: string;
   fullName: string;
   email: string;
   mobile: string;
   departmentCode: string;
-  roleId: number;
-  designation?: string;
-  joiningDate?: string;
+  joiningDate: string;
   shiftCode?: 'MORNING' | 'EVENING' | 'NIGHT';
 }
 
@@ -143,18 +140,18 @@ export const employeeService = {
       return {
         id: `emp_${Date.now()}`,
         userId: `usr_emp_${Date.now()}`,
-        employeeCode: input.employeeCode || `EMP_${Math.floor(1000 + Math.random() * 9000)}`,
+        employeeCode: `EMP_${input.departmentCode.slice(0, 3)}_${Math.floor(100 + Math.random() * 900)}`,
         fullName: input.fullName,
         email: input.email,
         mobile: input.mobile || null,
         accountStatus: 'ACTIVE',
         departmentCode: input.departmentCode,
-        designation: input.designation || 'Staff',
+        designation: null,
         managerUserId: null,
         joiningDate: input.joiningDate || new Date().toISOString().split('T')[0],
         shiftCode: input.shiftCode || 'MORNING',
         employmentStatus: 'ACTIVE',
-        role: { id: input.roleId, code: 'EMPLOYEE', name: 'Employee' },
+        role: { id: 0, code: input.departmentCode, name: input.departmentCode },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

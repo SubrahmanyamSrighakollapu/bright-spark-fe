@@ -4,6 +4,7 @@ import { CreateRetailerInput, UpdateRetailerInput, retailerService } from '@/ser
 import { retailerPlanService } from '@/services/retailerPlanService';
 import { Modal, Button, Input, Select, FormField, MobileInput } from '@/components/ui';
 import { User, Building2, Mail, Phone, MapPin, ShieldCheck, Tag, Info, AlertTriangle } from 'lucide-react';
+import { CreateUserForm } from '@/components/features/users/CreateUserForm';
 
 interface RetailerFormModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface RetailerFormModalProps {
   initialData?: Retailer | null;
   mode: 'create' | 'edit';
   masterDistributorId: string;
+  onCreated?: () => void;
 }
 
 export const RetailerFormModal: React.FC<RetailerFormModalProps> = ({
@@ -21,6 +23,7 @@ export const RetailerFormModal: React.FC<RetailerFormModalProps> = ({
   initialData,
   mode,
   masterDistributorId,
+  onCreated,
 }) => {
   const [formData, setFormData] = useState({
     distributorId: '',
@@ -164,6 +167,17 @@ export const RetailerFormModal: React.FC<RetailerFormModalProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  if (String(mode) === 'create') return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Retailer" size="xl">
+      <div className="mb-4">
+        <FormField label="Parent Distributor *" error={errors.distributorId}>
+          <Select value={formData.distributorId} onChange={(e) => handleChange('distributorId', e.target.value)} options={eligibleDistributors.length ? eligibleDistributors.map((item) => ({ label: `${item.name} (${item.code})`, value: item.id })) : [{ label: 'No approved distributor available', value: '' }]} />
+        </FormField>
+      </div>
+      {formData.distributorId && <CreateUserForm fixedRole="RETAILER" parentPartyId={formData.distributorId} embedded onCancel={onClose} onCompleted={() => { onCreated?.(); onClose(); }} />}
+    </Modal>
+  );
 
   return (
     <Modal

@@ -1310,10 +1310,13 @@ export interface EntityMapping {
 
 export interface KYCDocument {
   id: string;
-  type: 'PAN' | 'AADHAAR' | 'GST_CERTIFICATE' | 'BUSINESS_PROOF' | 'CANCELLED_CHEQUE';
+  type: 'ID_PROOF' | 'ADDRESS_PROOF' | 'BANK_PROOF' | 'PROFILE_PHOTO' | 'PAN' | 'AADHAAR' | 'GST_CERTIFICATE' | 'BUSINESS_PROOF' | 'CANCELLED_CHEQUE';
   title: string;
   documentNumberMasked: string;
   fileUrl?: string;
+  fileName?: string;
+  mimeType?: string;
+  sizeBytes?: number;
   uploadedAt: string;
   status: 'PENDING' | 'VERIFIED' | 'REJECTED';
   rejectionReason?: string;
@@ -1328,7 +1331,9 @@ export interface KYCReviewTimeline {
 
 export interface KYCApplication {
   id: string;
+  applicationReference?: string;
   entityId: string;
+  entityCode?: string;
   entityName: string;
   entityType: EntityType;
   businessName: string;
