@@ -8,6 +8,9 @@ import { AlertCircle, ArrowRight, BadgeIndianRupee, Building2, CheckCircle2, Che
 import { useAuth } from '@/context/AuthContext';
 import { getDefaultRouteForRole } from '@/services/mockAuthService';
 import { DEV_FEATURES } from '@/config/devFeatures';
+import { captureLoginLocation } from '@/utils/geolocation';
+import type { LoginLocation } from '@/utils/geolocation';
+import { authService } from '@/services/authService';
 import { Input } from '@/components/ui/Input';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Checkbox } from '@/components/ui/Checkbox';
@@ -25,6 +28,17 @@ const demoAccounts = [
   ['Distributor', 'distributor@qinstarpay.com', 'Demo@123456'],
   ['Retailer', 'retailer@qinstarpay.com', 'Demo@123456'],
 ] as const;
+
+const INITIAL_LOCATION_BUDGET_MS = 900;
+
+async function locationWithinLoginBudget(locationPromise: Promise<LoginLocation>): Promise<LoginLocation> {
+  return Promise.race([
+    locationPromise,
+    new Promise<LoginLocation>((resolve) => {
+      window.setTimeout(() => resolve({ locationStatus: 'PENDING' }), INITIAL_LOCATION_BUDGET_MS);
+    }),
+  ]);
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,9 +64,21 @@ export default function LoginPage() {
     if (errors.identifier || errors.password) return;
     setIsSubmitting(true);
     try {
-      const result = await login(identifier, password, rememberMe);
-      if (result.success && result.defaultRoute) router.push(result.defaultRoute);
-      else setErrorMessage(result.error || 'Invalid credentials or account restricted.');
+      const locationPromise = captureLoginLocation();
+      const initialLocation = await locationWithinLoginBudget(locationPromise);
+      const result = await login(identifier, password, rememberMe, initialLocation);
+      if (result.success && result.defaultRoute) {
+        if (initialLocation.locationStatus === 'PENDING' && result.sessionId && result.accessToken) {
+          // Permission prompts can outlive authentication. Complete the exact
+          // session's audit records in the background without delaying login.
+          void locationPromise.then((location) =>
+            authService.updateLoginLocation(result.sessionId!, location, result.accessToken!)
+          );
+        }
+        router.push(result.defaultRoute);
+      } else {
+        setErrorMessage(result.error || 'Invalid credentials or account restricted.');
+      }
     } catch {
       setErrorMessage('Unable to sign in right now. Please try again.');
     } finally {
@@ -93,6 +119,7 @@ export default function LoginPage() {
           <div className="w-full max-w-md">
             <div className="mb-9 flex items-center gap-3 lg:hidden"><Image src="/logo.jpeg" alt="Qin Star Pay" width={46} height={46} className="h-12 w-12 rounded-xl border border-slate-200 object-contain" /><div><p className="font-extrabold text-slate-950">QIN STAR PAY</p><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Fintech workspace</p></div></div>
             <div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0F4C81]">Secure sign in</p><h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">Welcome back</h2><p className="mt-2 text-sm leading-6 text-slate-500">Access the workspace assigned to your Qin Star Pay role.</p></div>
+            <div className="mt-4 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-[11px] leading-5 text-blue-900"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" /><div><p className="font-bold">Location &amp; device security</p><p className="mt-0.5 text-blue-800/80">To protect your account, your browser may prompt for location permission. We capture latitude, longitude, accuracy, and a timestamp alongside your public IP and device details for every login audit. You can deny permission—login still works and the denial is recorded.</p></div></div>
             {errorMessage && <div className="mt-6 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-medium leading-5 text-rose-800"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{errorMessage}</div>}
             <form onSubmit={submit} className="mt-7 space-y-4">
               <FormField label="Username, email or mobile" required error={fieldErrors.identifier}><Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="Enter your registered identity" className="h-11" leftIcon={<Mail className="h-4 w-4" />} autoComplete="username" /></FormField>

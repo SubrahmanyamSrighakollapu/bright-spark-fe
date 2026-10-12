@@ -1,219 +1,326 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Table } from '@/components/ui/Table';
 import { useToast } from '@/components/ui/Toast';
 import { ColumnDefinition } from '@/types/common';
 import { formatCurrency, formatDateTime } from '@/utils/formatters';
+import { userService, NetworkUserItem } from '@/services/userService';
+import { walletService } from '@/services/walletService';
+import { ledgerService } from '@/services/ledgerService';
 import {
   Wallet,
   PlusCircle,
   MinusCircle,
-  Upload,
+  ShieldAlert,
   Search,
-  CheckCircle2,
-  XCircle,
-  FileCheck,
-  UserCheck,
   ArrowUpRight,
   ArrowDownLeft,
   RefreshCw,
+  Lock,
+  Unlock,
+  CheckCircle2,
 } from 'lucide-react';
 
-export interface WalletLedgerRecord {
+export interface WalletLedgerDisplayItem {
   id: string;
-  txType: 'CREDIT' | 'DEBIT';
-  userId: string;
+  txType: string;
   userName: string;
-  walletType: 'Main Wallet' | 'Lean Wallet';
+  userCode: string;
   amount: number;
-  paymentMode: string;
+  mode: string;
   referenceNo: string;
-  attachmentUrl?: string;
+  narration: string;
   balanceAfter: number;
   timestamp: string;
 }
 
-const MOCK_USER_DATABASE: Record<string, { userName: string; mainBalance: number; leanBalance: number }> = {
-  'USR-204': { userName: 'Rajesh Kumar (SD)', mainBalance: 14000, leanBalance: 5000 },
-  'USR-205': { userName: 'Venkatesh Rao (MD)', mainBalance: 28500, leanBalance: 8000 },
-  'USR-206': { userName: 'Suresh Patel (DS)', mainBalance: 9200, leanBalance: 2000 },
-  'USR-207': { userName: 'Anil Reddy (Retailer)', mainBalance: 4500, leanBalance: 1200 },
-};
-
-const INITIAL_LEDGER: WalletLedgerRecord[] = [
-  {
-    id: 'TX-904812',
-    txType: 'CREDIT',
-    userId: 'USR-204',
-    userName: 'Rajesh Kumar (SD)',
-    walletType: 'Main Wallet',
-    amount: 5000,
-    paymentMode: 'Bank Transfer (NEFT)',
-    referenceNo: 'UTR98471203948',
-    balanceAfter: 14000,
-    timestamp: '2026-09-26T15:30:00Z',
-  },
-  {
-    id: 'TX-904811',
-    txType: 'DEBIT',
-    userId: 'USR-207',
-    userName: 'Anil Reddy (Retailer)',
-    walletType: 'Lean Wallet',
-    amount: 800,
-    paymentMode: 'Cash',
-    referenceNo: 'MANUAL_DEBIT_ADJ_02',
-    balanceAfter: 1200,
-    timestamp: '2026-09-26T12:15:00Z',
-  },
-];
-
 export const WalletManagementView: React.FC = () => {
-  const { toastSuccess, toastInfo, toastError } = useToast();
+  const { toastSuccess, toastError, toastInfo } = useToast();
 
-  // Tab: CREDIT vs DEBIT
-  const [txType, setTxType] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
+  // Tab Selection: CREDIT | DEBIT | HOLD
+  const [activeTab, setActiveTab] = useState<'CREDIT' | 'DEBIT' | 'HOLD'>('CREDIT');
+
+  // Search & User Selection State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<NetworkUserItem[]>([]);
+  const [selectedUser, setSelectedUser] = useState<NetworkUserItem | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Balances State for Selected User
+  const [balances, setBalances] = useState<{ available: number; hold: number; ledger: number }>({
+    available: 0,
+    hold: 0,
+    ledger: 0,
+  });
 
   // Form Fields
-  const [userIdInput, setUserIdInput] = useState('USR-204');
-  const [userName, setUserName] = useState('Rajesh Kumar (SD)');
-  const [walletType, setWalletType] = useState<'Main Wallet' | 'Lean Wallet'>('Main Wallet');
-  const [currentBalance, setCurrentBalance] = useState<number>(14000);
   const [amount, setAmount] = useState<number | ''>('');
-  const [paymentMode, setPaymentMode] = useState<string>('Bank Transfer');
+  const [paymentMode, setPaymentMode] = useState<string>('Bank Transfer (NEFT/RTGS)');
   const [referenceNo, setReferenceNo] = useState<string>('');
-  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [reason, setReason] = useState<string>('');
+  const [holdMode, setHoldMode] = useState<'HOLD' | 'RELEASE'>('HOLD');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Recent Ledger Activity
-  const [ledger, setLedger] = useState<WalletLedgerRecord[]>(INITIAL_LEDGER);
+  const [ledgerLogs, setLedgerLogs] = useState<WalletLedgerDisplayItem[]>([]);
+  const [isLoadingLedger, setIsLoadingLedger] = useState(false);
 
-  // Auto-fill User Name and Current Balance when User ID changes
-  const handleUserIdSearch = (id: string) => {
-    setUserIdInput(id);
-    const found = MOCK_USER_DATABASE[id.trim().toUpperCase()];
-    if (found) {
-      setUserName(found.userName);
-      setCurrentBalance(walletType === 'Main Wallet' ? found.mainBalance : found.leanBalance);
-    } else if (id.trim().length >= 3) {
-      setUserName('User ID not found');
-      setCurrentBalance(0);
-    } else {
-      setUserName('');
-      setCurrentBalance(0);
+  // Dynamic User Search
+  const handleSearchUsers = useCallback(async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await userService.getUsers({ search: query.trim(), pageSize: 8 });
+      if (res.success && res.data && res.data.items) {
+        setSearchResults(res.data.items);
+
+        // Exact code match auto-select
+        const exactMatch = res.data.items.find(
+          (u) => u.code.toLowerCase() === query.trim().toLowerCase() || u.userId.toLowerCase() === query.trim().toLowerCase()
+        );
+        if (exactMatch) {
+          handleSelectUser(exactMatch);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to search users:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const handleSelectUser = (user: NetworkUserItem) => {
+    setSelectedUser(user);
+    setSearchQuery(`${user.fullName} (${user.code})`);
+    setSearchResults([]);
+    setBalances({
+      available: Number(user.availableBalance || 0),
+      hold: Number(user.holdBalance || 0),
+      ledger: Number(user.ledgerBalance || 0),
+    });
+    fetchUserWalletDetails(user.partyId || user.id);
+  };
+
+  const fetchUserWalletDetails = async (partyId: string) => {
+    try {
+      const res = await walletService.getWalletByEntityId(partyId);
+      if (res.success && res.data) {
+        setBalances({
+          available: res.data.availableBalance,
+          hold: res.data.holdBalance,
+          ledger: res.data.ledgerBalance,
+        });
+      }
+    } catch (err) {
+      console.warn('Wallet fetch error:', err);
     }
   };
 
-  const handleWalletTypeChange = (type: 'Main Wallet' | 'Lean Wallet') => {
-    setWalletType(type);
-    const found = MOCK_USER_DATABASE[userIdInput.trim().toUpperCase()];
-    if (found) {
-      setCurrentBalance(type === 'Main Wallet' ? found.mainBalance : found.leanBalance);
+  // Fetch Ledger Log Table
+  const fetchRecentLedger = useCallback(async () => {
+    setIsLoadingLedger(true);
+    try {
+      const targetParty = selectedUser ? (selectedUser.partyId || selectedUser.id || selectedUser.code) : 'admin';
+      const res = await ledgerService.getPartyLedger(targetParty, {}, 1, 15);
+      if (res.success && res.data && res.data.items) {
+        const mapped: WalletLedgerDisplayItem[] = res.data.items.map((item: any) => ({
+          id: item.id || `TX-${Math.floor(100000 + Math.random() * 900000)}`,
+          txType: item.type || item.entryType || 'CREDIT',
+          userName: item.partyName || item.entityName || selectedUser?.fullName || item.createdBy || 'Network User',
+          userCode: item.partyCode || item.partyId || item.entityId || selectedUser?.code || item.walletId || '',
+          amount: Number(item.amount || 0),
+          mode: item.referenceType || 'Direct Adjustment',
+          referenceNo: item.referenceId || 'N/A',
+          narration: item.narration || item.description || '',
+          balanceAfter: Number(item.availableBalanceAfter || item.closingBalance || 0),
+          timestamp: item.createdAt || new Date().toISOString(),
+        }));
+        setLedgerLogs(mapped);
+      }
+    } catch (err) {
+      console.error('Failed to load ledger entries:', err);
+    } finally {
+      setIsLoadingLedger(false);
     }
-  };
+  }, [selectedUser]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProofFile(file);
-      toastSuccess(`Attached payment proof: ${file.name}`);
-    }
-  };
+  useEffect(() => {
+    fetchRecentLedger();
+  }, [fetchRecentLedger]);
 
   const handleClearForm = () => {
     setAmount('');
     setReferenceNo('');
-    setProofFile(null);
+    setReason('');
   };
 
-  const handleExecuteTransaction = (e: React.FormEvent) => {
+  const handleExecuteTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userIdInput.trim() || !userName || userName.includes('not found')) {
-      toastError('Please enter a valid platform User ID.');
+
+    if (!selectedUser) {
+      toastError('Please select a valid user using their Retailer Code (e.g. RET219), Mobile, or Name.');
       return;
     }
+
     const numAmt = Number(amount);
     if (!numAmt || numAmt <= 0) {
       toastError('Please enter a valid numeric transaction amount.');
       return;
     }
 
-    if (txType === 'DEBIT' && numAmt > currentBalance) {
-      toastError(`Insufficient balance! User balance is ${formatCurrency(currentBalance)}.`);
-      return;
+    const targetPartyId = selectedUser.partyId || selectedUser.id;
+    setIsSubmitting(true);
+
+    try {
+      if (activeTab === 'CREDIT') {
+        const res = await walletService.creditWallet(
+          targetPartyId,
+          numAmt,
+          reason || `Manual credit to ${selectedUser.fullName}`,
+          referenceNo || `CR_${Date.now()}`
+        );
+
+        if (res.success) {
+          toastSuccess(`Successfully credited ${formatCurrency(numAmt)} to ${selectedUser.fullName}!`);
+          fetchUserWalletDetails(targetPartyId);
+          fetchRecentLedger();
+          handleClearForm();
+        } else {
+          toastError(res.message || 'Failed to credit wallet');
+        }
+      } else if (activeTab === 'DEBIT') {
+        if (numAmt > balances.available) {
+          toastError(`Insufficient available balance! Maximum spendable is ${formatCurrency(balances.available)}.`);
+          setIsSubmitting(false);
+          return;
+        }
+
+        const res = await walletService.debitWallet(
+          targetPartyId,
+          numAmt,
+          reason || `Manual debit from ${selectedUser.fullName}`,
+          referenceNo || `DB_${Date.now()}`
+        );
+
+        if (res.success) {
+          toastSuccess(`Successfully debited ${formatCurrency(numAmt)} from ${selectedUser.fullName}!`);
+          fetchUserWalletDetails(targetPartyId);
+          fetchRecentLedger();
+          handleClearForm();
+        } else {
+          toastError(res.message || 'Failed to debit wallet');
+        }
+      } else if (activeTab === 'HOLD') {
+        const res = await walletService.holdFunds(
+          targetPartyId,
+          holdMode,
+          numAmt,
+          reason || `${holdMode === 'HOLD' ? 'Security Hold' : 'Release Hold'} for ${selectedUser.fullName}`
+        );
+
+        if (res.success) {
+          toastSuccess(
+            `Successfully ${holdMode === 'HOLD' ? 'placed ₹' + numAmt + ' on Hold' : 'released ₹' + numAmt + ' from Hold'} for ${selectedUser.fullName}!`
+          );
+          fetchUserWalletDetails(targetPartyId);
+          fetchRecentLedger();
+          handleClearForm();
+        } else {
+          toastError(res.message || 'Failed to process fund hold operation');
+        }
+      }
+    } catch (err: any) {
+      toastError(err?.message || 'An error occurred while processing transaction.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const nextBalance = txType === 'CREDIT' ? currentBalance + numAmt : currentBalance - numAmt;
-    setCurrentBalance(nextBalance);
-
-    // Record in local user database
-    const found = MOCK_USER_DATABASE[userIdInput.trim().toUpperCase()];
-    if (found) {
-      if (walletType === 'Main Wallet') found.mainBalance = nextBalance;
-      else found.leanBalance = nextBalance;
-    }
-
-    const newRecord: WalletLedgerRecord = {
-      id: `TX-${Math.floor(100000 + Math.random() * 900000)}`,
-      txType,
-      userId: userIdInput.trim().toUpperCase(),
-      userName,
-      walletType,
-      amount: numAmt,
-      paymentMode,
-      referenceNo: referenceNo || 'DIRECT_ADJUSTMENT',
-      attachmentUrl: proofFile ? proofFile.name : undefined,
-      balanceAfter: nextBalance,
-      timestamp: new Date().toISOString(),
-    };
-
-    setLedger([newRecord, ...ledger]);
-
-    toastSuccess(
-      `Successfully ${txType === 'CREDIT' ? 'credited' : 'debited'} ${formatCurrency(numAmt)} for ${userName}!`
-    );
-
-    handleClearForm();
   };
 
-  const columns: ColumnDefinition<WalletLedgerRecord>[] = [
+  const formatTxId = (id: string) => {
+    if (!id) return 'TX-000000';
+    if (id.startsWith('TX-') && !id.includes('-')) return id;
+    const parts = id.split('-');
+    if (parts.length > 1) {
+      return `TX-${parts[parts.length - 1].toUpperCase()}`;
+    }
+    return `TX-${id.slice(-8).toUpperCase()}`;
+  };
+
+  const formatModeName = (mode: string) => {
+    if (!mode || mode === 'N/A') return 'Direct Adjustment';
+    return mode
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const columns: ColumnDefinition<WalletLedgerDisplayItem>[] = [
     {
       key: 'id',
-      header: 'Tx ID & Time',
+      header: 'Transaction ID & Time',
       render: (row) => (
         <div>
-          <div className="font-bold text-[#0F172A]">{row.id}</div>
-          <div className="text-[11px] text-[#64748B]">{formatDateTime(row.timestamp)}</div>
+          <div className="font-bold text-[#0F172A] text-xs font-mono tracking-tight" title={row.id}>
+            {formatTxId(row.id)}
+          </div>
+          <div className="text-[11px] text-[#64748B] font-medium">{formatDateTime(row.timestamp)}</div>
         </div>
       ),
     },
     {
       key: 'txType',
       header: 'Action',
-      render: (row) => (
-        <span
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
-            row.txType === 'CREDIT'
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-rose-50 text-rose-700 border-rose-200'
-          }`}
-        >
-          {row.txType === 'CREDIT' ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
-          {row.txType}
-        </span>
-      ),
+      render: (row) => {
+        const isCredit = row.txType === 'CREDIT';
+        const isHold = row.txType === 'HOLD';
+        const isRelease = row.txType === 'RELEASE';
+
+        return (
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+              isCredit
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : isHold
+                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                : isRelease
+                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                : 'bg-rose-50 text-rose-700 border-rose-200'
+            }`}
+          >
+            {isCredit ? (
+              <ArrowDownLeft className="w-3 h-3" />
+            ) : isHold ? (
+              <Lock className="w-3 h-3" />
+            ) : isRelease ? (
+              <Unlock className="w-3 h-3" />
+            ) : (
+              <ArrowUpRight className="w-3 h-3" />
+            )}
+            {row.txType}
+          </span>
+        );
+      },
     },
     {
       key: 'user',
-      header: 'User & Wallet',
+      header: 'User Account',
       render: (row) => (
         <div>
-          <div className="font-semibold text-[#0F172A]">{row.userName}</div>
-          <div className="text-xs text-[#64748B]">
-            {row.userId} • <span className="font-medium text-[#155EEF]">{row.walletType}</span>
-          </div>
+          <div className="font-semibold text-[#0F172A] text-xs">{row.userName}</div>
+          {row.userCode && (
+            <span className="inline-block mt-0.5 font-mono text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.2 rounded">
+              {row.userCode}
+            </span>
+          )}
         </div>
       ),
     },
@@ -222,26 +329,39 @@ export const WalletManagementView: React.FC = () => {
       header: 'Amount (₹)',
       render: (row) => (
         <span
-          className={`font-bold ${row.txType === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'}`}
+          className={`font-extrabold text-xs font-mono ${
+            row.txType === 'CREDIT' || row.txType === 'RELEASE' ? 'text-emerald-600' : 'text-rose-600'
+          }`}
         >
-          {row.txType === 'CREDIT' ? '+' : '-'}{formatCurrency(row.amount)}
+          {row.txType === 'CREDIT' || row.txType === 'RELEASE' ? '+' : '-'}{formatCurrency(row.amount)}
         </span>
       ),
     },
     {
       key: 'mode',
-      header: 'Mode & UTR',
+      header: 'Mode / Reference',
       render: (row) => (
         <div className="text-xs text-[#334155]">
-          <div>{row.paymentMode}</div>
-          <div className="font-mono text-[11px] text-[#64748B]">{row.referenceNo}</div>
+          <div className="font-semibold">{formatModeName(row.mode)}</div>
+          {row.referenceNo && row.referenceNo !== 'N/A' && (
+            <div className="font-mono text-[11px] text-[#64748B]">Ref: {row.referenceNo}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'narration',
+      header: 'Remarks / Narration',
+      render: (row) => (
+        <div className="text-xs text-[#475569] max-w-[220px] truncate" title={row.narration}>
+          {row.narration || '-'}
         </div>
       ),
     },
     {
       key: 'balanceAfter',
-      header: 'Balance After',
-      render: (row) => <span className="font-semibold text-[#0F172A]">{formatCurrency(row.balanceAfter)}</span>,
+      header: 'Closing Balance',
+      render: (row) => <span className="font-bold text-[#0F172A] text-xs font-mono">{formatCurrency(row.balanceAfter)}</span>,
     },
   ];
 
@@ -254,168 +374,234 @@ export const WalletManagementView: React.FC = () => {
             <Wallet className="w-6 h-6 text-[#155EEF]" />
             Master Wallet Management & Adjustment Hub
           </h1>
-          <p className="text-sm text-[#64748B] mt-0.5">
-            Manual wallet balance credits/debits, payment proof uploads, and real-time ledger audit trails.
+          <p className="text-xs text-[#64748B] mt-1">
+            Perform real-time wallet credits, debits, dispute holds, and audit complete ledger transaction histories.
           </p>
         </div>
+        <Button variant="outline" size="sm" onClick={fetchRecentLedger} isLoading={isLoadingLedger}>
+          <RefreshCw className="w-4 h-4 mr-1.5" />
+          Refresh Ledger
+        </Button>
       </div>
 
-      {/* Main Workflow Form Card */}
+      {/* Main Form Card */}
       <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-6">
-        {/* Action Tab Selection */}
-        <div className="flex items-center gap-3 border-b border-[#E2E8F0] pb-4">
+        {/* Action Tabs: CREDIT | DEBIT | HOLD */}
+        <div className="grid grid-cols-3 gap-3 border-b border-[#E2E8F0] pb-4">
           <button
             type="button"
-            onClick={() => setTxType('CREDIT')}
-            className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border ${
-              txType === 'CREDIT'
+            onClick={() => setActiveTab('CREDIT')}
+            className={`py-3 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+              activeTab === 'CREDIT'
                 ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            <PlusCircle className="w-5 h-5" />
-            Credit Wallet Tab (Add Funds)
+            <PlusCircle className="w-4 h-4" />
+            Credit Wallet (Top-Up)
           </button>
           <button
             type="button"
-            onClick={() => setTxType('DEBIT')}
-            className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border ${
-              txType === 'DEBIT'
+            onClick={() => setActiveTab('DEBIT')}
+            className={`py-3 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+              activeTab === 'DEBIT'
                 ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            <MinusCircle className="w-5 h-5" />
-            Debit Wallet Tab (Deduct Funds)
+            <MinusCircle className="w-4 h-4" />
+            Debit Wallet (Deduct)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('HOLD')}
+            className={`py-3 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+              activeTab === 'HOLD'
+                ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4" />
+            Hold / Release Funds
           </button>
         </div>
 
         <form onSubmit={handleExecuteTransaction} className="space-y-5">
-          {/* User ID Search & Auto-fill */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Platform User ID (userId) <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <Input
-                  placeholder="e.g. USR-204"
-                  value={userIdInput}
-                  onChange={(e) => handleUserIdSearch(e.target.value)}
-                  className="pr-8"
-                  required
-                />
-                <Search className="w-4 h-4 text-[#64748B] absolute right-3 top-2.5" />
-              </div>
-              <div className="text-[10px] text-[#64748B] mt-1">Available test IDs: USR-204, USR-205, USR-206, USR-207</div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">User Name (Auto-filled)</label>
+          {/* User Search & Auto-fill */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
               <Input
-                value={userName}
-                readOnly
-                className="bg-[#F8FAFC] text-[#0F172A] font-semibold"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Wallet Type</label>
-              <select
-                value={walletType}
-                onChange={(e) => handleWalletTypeChange(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-semibold text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
-              >
-                <option value="Main Wallet">Main Wallet</option>
-                <option value="Lean Wallet">Lean Wallet</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Current Balance Display Badge & Amount Input */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-[#E2E8F0] grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            <div>
-              <div className="text-xs text-[#64748B] font-medium">Current Selected Balance (currentBalance)</div>
-              <div className="text-xl font-extrabold text-[#0F172A] mt-0.5">
-                {formatCurrency(currentBalance)}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Transaction Amount (₹) <span className="text-rose-500">*</span>
-              </label>
-              <Input
-                type="number"
-                placeholder="Enter amount in ₹"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value ? parseFloat(e.target.value) : '')}
+                label="Search User ID / Code / Mobile / Name"
+                placeholder="Type Code (e.g. RET219, DST001, MD001) or Mobile..."
+                value={searchQuery}
+                onChange={(e) => handleSearchUsers(e.target.value)}
+                rightIcon={<Search className="w-4 h-4 text-[#64748B]" />}
                 required
               />
+
+              {/* Autocomplete Suggestions Dropdown */}
+              {searchResults.length > 0 && (
+                <div className="absolute z-30 left-0 right-0 mt-1 bg-white rounded-xl border border-slate-200 shadow-lg max-h-56 overflow-y-auto">
+                  {searchResults.map((u) => (
+                    <div
+                      key={u.id}
+                      onClick={() => handleSelectUser(u)}
+                      className="p-2.5 hover:bg-blue-50 cursor-pointer border-b border-slate-100 last:border-0 flex items-center justify-between text-xs"
+                    >
+                      <div>
+                        <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                          {u.fullName}
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-mono">
+                            {u.code}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {u.roleName || u.role} • Mobile: {u.mobile}
+                        </div>
+                      </div>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Payment Mode</label>
-              <select
-                value={paymentMode}
-                onChange={(e) => setPaymentMode(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] bg-white"
-              >
-                <option value="UPI">UPI Direct</option>
-                <option value="Bank Transfer">Bank Transfer (NEFT/RTGS)</option>
-                <option value="Cash">Cash Deposit</option>
-                <option value="System Adjustment">System Manual Adjustment</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Reference No & Proof Upload */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Bank UTR / Reference Number (referenceNo)
-              </label>
               <Input
-                placeholder="e.g. UTR98471203948"
-                value={referenceNo}
-                onChange={(e) => setReferenceNo(e.target.value)}
+                label="Selected Account Details"
+                value={
+                  selectedUser
+                    ? `${selectedUser.fullName} (${selectedUser.code}) - Role: ${selectedUser.roleName || selectedUser.role}`
+                    : 'Search & select user account'
+                }
+                readOnly
+                className="bg-[#F8FAFC] text-[#0F172A] font-semibold text-xs"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Upload Payment Proof Attachment (PNG, JPG, PDF)
-              </label>
-              <div className="flex items-center gap-2">
-                <label className="flex-1 cursor-pointer">
-                  <input type="file" accept="image/*,.pdf" onChange={handleFileUpload} className="hidden" />
-                  <div className="px-3 py-2 rounded-lg border border-dashed border-[#CBD5E1] bg-[#F8FAFC] text-xs font-medium text-[#334155] hover:bg-[#F1F5F9] flex items-center justify-center gap-2">
-                    <Upload className="w-4 h-4 text-[#155EEF]" />
-                    {proofFile ? proofFile.name : 'Choose File / Drag & Drop'}
-                  </div>
-                </label>
-                {proofFile && (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setProofFile(null)} className="text-rose-600">
-                    Remove
-                  </Button>
-                )}
-              </div>
-            </div>
           </div>
 
+          {/* Real-time Balances Display Badge */}
+          {selectedUser && (
+            <div className="p-4 rounded-xl bg-slate-50 border border-[#E2E8F0] grid grid-cols-3 gap-4 items-center">
+              <div>
+                <div className="text-xs text-[#64748B] font-medium">Available Balance (Spendable)</div>
+                <div className="text-lg font-extrabold text-emerald-600 mt-0.5">
+                  {formatCurrency(balances.available)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-[#64748B] font-medium">Hold Balance (Reserved)</div>
+                <div className="text-lg font-extrabold text-amber-600 mt-0.5">
+                  {formatCurrency(balances.hold)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-[#64748B] font-medium">Total Ledger Balance</div>
+                <div className="text-lg font-extrabold text-slate-900 mt-0.5">
+                  {formatCurrency(balances.ledger)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Form Inputs based on Active Tab */}
+          {activeTab === 'HOLD' ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Select
+                  label="Hold Mode"
+                  value={holdMode}
+                  onChange={(e) => setHoldMode(e.target.value as any)}
+                  options={[
+                    { label: 'Lock Funds on Security Hold', value: 'HOLD' },
+                    { label: 'Release Funds from Hold', value: 'RELEASE' },
+                  ]}
+                />
+              </div>
+
+              <div>
+                <Input
+                  label="Hold Amount (₹)"
+                  type="number"
+                  placeholder="Enter amount in ₹"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value ? parseFloat(e.target.value) : '')}
+                  required
+                />
+              </div>
+
+              <div>
+                <Input
+                  label="Reason / Dispute Reference"
+                  placeholder="e.g. Chargeback Security Deposit #DS88"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Input
+                  label="Transaction Amount (₹)"
+                  type="number"
+                  placeholder="Enter amount in ₹"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value ? parseFloat(e.target.value) : '')}
+                  required
+                />
+              </div>
+
+              <div>
+                <Select
+                  label="Payment Mode / Category"
+                  value={paymentMode}
+                  onChange={(e) => setPaymentMode(e.target.value)}
+                  options={[
+                    { label: 'Bank Transfer (NEFT/RTGS)', value: 'Bank Transfer (NEFT/RTGS)' },
+                    { label: 'UPI Direct', value: 'UPI Direct' },
+                    { label: 'Cash Deposit', value: 'Cash Deposit' },
+                    { label: 'System Adjustment', value: 'System Adjustment' },
+                  ]}
+                />
+              </div>
+
+              <div>
+                <Input
+                  label="Bank UTR / Reference / Remarks"
+                  placeholder="e.g. UTR98471203948"
+                  value={referenceNo}
+                  onChange={(e) => setReferenceNo(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-200">
             <Button type="button" variant="outline" onClick={handleClearForm}>
-              Cancel
+              Clear
             </Button>
             <Button
               type="submit"
               variant="primary"
+              isLoading={isSubmitting}
               className={`px-8 font-bold ${
-                txType === 'CREDIT' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
+                activeTab === 'CREDIT'
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : activeTab === 'DEBIT'
+                  ? 'bg-rose-600 hover:bg-rose-700'
+                  : 'bg-amber-600 hover:bg-amber-700'
               }`}
             >
-              {txType === 'CREDIT' ? 'Credit Wallet Now' : 'Debit Wallet Now'}
+              {activeTab === 'CREDIT'
+                ? 'Credit Wallet Now'
+                : activeTab === 'DEBIT'
+                ? 'Debit Wallet Now'
+                : holdMode === 'HOLD'
+                ? 'Place Funds on Hold'
+                : 'Release Held Funds'}
             </Button>
           </div>
         </form>
@@ -424,9 +610,9 @@ export const WalletManagementView: React.FC = () => {
       {/* Audit Log Table */}
       <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#0F172A]">Recent Wallet Adjustment Ledger ({ledger.length})</h2>
+          <h2 className="text-lg font-bold text-[#0F172A]">Recent Wallet Adjustment Ledger ({ledgerLogs.length})</h2>
         </div>
-        <Table columns={columns} data={ledger} keyExtractor={(r) => r.id} />
+        <Table columns={columns} data={ledgerLogs} keyExtractor={(r) => r.id} isLoading={isLoadingLedger} />
       </Card>
     </div>
   );

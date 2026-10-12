@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Table } from '@/components/ui/Table';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
@@ -259,16 +260,16 @@ export const NoticeBoardManagerView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Notice Type</label>
-            <select
+            <Select
+              label="Notice Type"
               value={noticeType}
               onChange={(e) => setNoticeType(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0F4C81]"
-            >
-              <option value="Information">Information (Blue)</option>
-              <option value="Important">Important (Yellow)</option>
-              <option value="Urgent Alert">Urgent Alert (Red)</option>
-            </select>
+              options={[
+                { label: 'Information (Blue)', value: 'Information' },
+                { label: 'Important (Yellow)', value: 'Important' },
+                { label: 'Urgent Alert (Red)', value: 'Urgent Alert' },
+              ]}
+            />
           </div>
 
           <div>

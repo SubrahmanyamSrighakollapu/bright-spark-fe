@@ -13,7 +13,7 @@ import { ApiLogTable } from '@/components/features/logs/ApiLogTable';
 import { LogDetailsDrawer } from '@/components/features/logs/LogDetailsDrawer';
 import { TraceSearchDrawer } from '@/components/features/logs/TraceSearchDrawer';
 import { Search, Download, GitCommit } from 'lucide-react';
-import { reportService } from '@/services/reportService';
+import { useToast } from '@/components/ui';
 
 export default function ApiLogsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +21,8 @@ export default function ApiLogsPage() {
   const [summary, setSummary] = useState<ApiLogSummary | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const { toastSuccess, toastError } = useToast();
 
   // Modals & Drawers
   const detailsDrawer = useModal<ApiLog>();
@@ -48,9 +50,16 @@ export default function ApiLogsPage() {
     };
   }, [searchQuery, pagination.page, pagination.pageSize]);
 
-  const handleExportCsv = () => {
-    if (!data?.items) return;
-    reportService.exportToCsv('API_Logs', data.items as unknown as Record<string, unknown>[]);
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      await logService.exportApiLogsCsv({ searchQuery });
+      toastSuccess('API logs exported successfully');
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Failed to export API logs');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const sum = summary || {
@@ -71,7 +80,7 @@ export default function ApiLogsPage() {
           <Button variant="outline" size="sm" onClick={() => traceDrawer.open('TRACE_20260903_001')} leftIcon={<GitCommit className="w-3.5 h-3.5" />}>
             Trace Search
           </Button>
-          <Button variant="primary" size="sm" onClick={handleExportCsv} leftIcon={<Download className="w-3.5 h-3.5" />}>
+          <Button variant="primary" size="sm" onClick={handleExportCsv} isLoading={isExporting} leftIcon={<Download className="w-3.5 h-3.5" />}>
             Export
           </Button>
         </div>

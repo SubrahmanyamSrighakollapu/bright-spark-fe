@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { ColumnDefinition } from '@/types/common';
 import { LedgerEntry, PaginationState } from '@/types/domain';
-import { formatCurrency, formatDate } from '@/utils/formatters';
+import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
 import { Eye, ArrowUpRight, ArrowDownLeft, ExternalLink } from 'lucide-react';
 
 export interface LedgerTableProps {
@@ -31,16 +31,21 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
     {
       key: 'id',
       header: 'Ledger ID',
-      render: (row) => (
-        <span className="font-mono font-bold text-[var(--primary)] text-xs">{row.id}</span>
-      ),
+      render: (row) => {
+        const formattedId = row.id && row.id.length > 20 ? `TX-${row.id.split('-').pop()?.toUpperCase()}` : row.id;
+        return (
+          <span className="font-mono font-bold text-[var(--primary)] text-xs" title={row.id}>
+            {formattedId}
+          </span>
+        );
+      },
     },
     {
       key: 'createdAt',
       header: 'Date & Time',
       render: (row) => (
         <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
-          {formatDate(row.createdAt)}
+          {formatDateTime(row.createdAt)}
         </span>
       ),
     },
@@ -49,8 +54,8 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
       header: 'Entity / Wallet',
       render: (row) => (
         <div>
-          <div className="font-semibold text-xs text-[var(--text-primary)]">{row.entityName}</div>
-          <div className="text-[11px] font-mono text-slate-500">{row.walletId}</div>
+          <div className="font-semibold text-xs text-[var(--text-primary)]">{row.entityName || (row as any).partyName || 'Wallet Holder'}</div>
+          <div className="text-[11px] font-mono text-slate-500">{row.walletId || (row as any).partyCode || '—'}</div>
         </div>
       ),
     },
@@ -58,32 +63,39 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
       key: 'entryType',
       header: 'Entry Type',
       align: 'center',
-      render: (row) => (
-        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
-          {row.entryType}
-        </span>
-      ),
+      render: (row) => {
+        const type = (row as any).type || row.entryType || 'ADJUSTMENT';
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200 uppercase">
+            {type}
+          </span>
+        );
+      },
     },
     {
       key: 'direction',
       header: 'Direction',
       align: 'center',
-      render: (row) => (
-        <span
-          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-            row.direction === 'CREDIT'
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : 'bg-rose-50 text-rose-700 border border-rose-200'
-          }`}
-        >
-          {row.direction === 'CREDIT' ? (
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          ) : (
-            <ArrowDownLeft className="w-3.5 h-3.5" />
-          )}
-          {row.direction}
-        </span>
-      ),
+      render: (row) => {
+        const type = (row as any).type || row.entryType || '';
+        const isCredit = row.direction === 'CREDIT' || type === 'CREDIT' || type === 'RELEASE' || type === 'PAY_IN' || type === 'WALLET_CREDIT';
+        return (
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+              isCredit
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-rose-50 text-rose-700 border border-rose-200'
+            }`}
+          >
+            {isCredit ? (
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            ) : (
+              <ArrowDownLeft className="w-3.5 h-3.5" />
+            )}
+            {isCredit ? 'CREDIT' : 'DEBIT'}
+          </span>
+        );
+      },
     },
     {
       key: 'referenceId',
@@ -99,7 +111,7 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
               <ExternalLink className="w-3 h-3" />
             </Link>
           ) : (
-            <span className="font-mono text-xs text-slate-700">{row.referenceId || '—'}</span>
+            <span className="font-mono text-xs text-slate-700">{row.referenceId || (row as any).reference_id || 'SYSTEM'}</span>
           )}
         </div>
       ),
@@ -108,33 +120,41 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
       key: 'openingBalance',
       header: 'Opening Bal',
       align: 'right',
-      render: (row) => (
-        <span className="font-mono text-xs text-slate-600">{formatCurrency(row.openingBalance)}</span>
-      ),
+      render: (row) => {
+        const openBal = row.openingBalance ?? (row as any).availableBalanceBefore ?? 0;
+        return <span className="font-mono text-xs text-slate-600">{formatCurrency(openBal)}</span>;
+      },
     },
     {
       key: 'amount',
       header: 'Amount',
       align: 'right',
-      render: (row) => (
-        <span
-          className={`font-mono font-extrabold text-xs ${
-            row.direction === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
-          }`}
-        >
-          {row.direction === 'CREDIT' ? '+' : '-'}{formatCurrency(row.amount)}
-        </span>
-      ),
+      render: (row) => {
+        const type = (row as any).type || row.entryType || '';
+        const isCredit = row.direction === 'CREDIT' || type === 'CREDIT' || type === 'RELEASE' || type === 'PAY_IN' || type === 'WALLET_CREDIT';
+        return (
+          <span
+            className={`font-mono font-extrabold text-xs ${
+              isCredit ? 'text-emerald-600' : 'text-rose-600'
+            }`}
+          >
+            {isCredit ? '+' : '-'}{formatCurrency(row.amount)}
+          </span>
+        );
+      },
     },
     {
       key: 'closingBalance',
       header: 'Closing Bal',
       align: 'right',
-      render: (row) => (
-        <span className="font-mono font-bold text-xs text-slate-900">
-          {formatCurrency(row.closingBalance)}
-        </span>
-      ),
+      render: (row) => {
+        const closeBal = row.closingBalance ?? (row as any).availableBalanceAfter ?? 0;
+        return (
+          <span className="font-mono font-bold text-xs text-slate-900">
+            {formatCurrency(closeBal)}
+          </span>
+        );
+      },
     },
   ];
 

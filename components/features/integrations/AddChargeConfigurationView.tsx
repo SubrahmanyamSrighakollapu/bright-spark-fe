@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Table } from '@/components/ui/Table';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
@@ -269,45 +270,33 @@ export const AddChargeConfigurationView: React.FC = () => {
         <form onSubmit={handleAddCharge} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Select Gateway</label>
-              <select
+              <Select
+                label="Select Gateway"
                 value={gatewayId}
                 onChange={(e) => setGatewayId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
-              >
-                {GATEWAYS.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
+                options={GATEWAYS.map((g) => ({ label: g.name, value: g.id }))}
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Payment Method</label>
-              <select
+              <Select
+                label="Payment Method"
                 value={methodId}
                 onChange={(e) => setMethodId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
-              >
-                {METHODS.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+                options={METHODS.map((m) => ({ label: m.name, value: m.id }))}
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Charge Type</label>
-              <select
+              <Select
+                label="Charge Type"
                 value={chargeType}
                 onChange={(e) => setChargeType(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
-              >
-                <option value="percentage">Percentage (%)</option>
-                <option value="flat">Flat Fee (₹)</option>
-              </select>
+                options={[
+                  { label: 'Percentage (%)', value: 'percentage' },
+                  { label: 'Flat Fee (₹)', value: 'flat' },
+                ]}
+              />
             </div>
 
             <div>
@@ -366,43 +355,31 @@ export const AddChargeConfigurationView: React.FC = () => {
         >
           <form onSubmit={handleSaveEdit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Gateway</label>
-              <select
+              <Select
+                label="Gateway"
                 value={gatewayId}
                 onChange={(e) => setGatewayId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs"
-              >
-                {GATEWAYS.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
+                options={GATEWAYS.map((g) => ({ label: g.name, value: g.id }))}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Payment Method</label>
-              <select
+              <Select
+                label="Payment Method"
                 value={methodId}
                 onChange={(e) => setMethodId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs"
-              >
-                {METHODS.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+                options={METHODS.map((m) => ({ label: m.name, value: m.id }))}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Charge Type</label>
-              <select
+              <Select
+                label="Charge Type"
                 value={chargeType}
                 onChange={(e) => setChargeType(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs"
-              >
-                <option value="percentage">Percentage (%)</option>
-                <option value="flat">Flat Fee (₹)</option>
-              </select>
+                options={[
+                  { label: 'Percentage (%)', value: 'percentage' },
+                  { label: 'Flat Fee (₹)', value: 'flat' },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#334155] mb-1">Charge Rate / Value</label>

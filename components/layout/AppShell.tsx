@@ -5,6 +5,7 @@ import { MOCK_CURRENT_USER, UserContext, UserRole } from '@/config/roles';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { RetailerHeadlineTicker } from './RetailerHeadlineTicker';
+import { AnnouncementBanner } from '@/components/features/notifications/AnnouncementBanner';
 import { Drawer } from '@/components/ui/Drawer';
 import { useAuth } from '@/context/AuthContext';
 import { ExcelExportProvider } from '@/components/features/reports/ExcelExportProvider';
@@ -104,6 +105,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
         {/* Global Continuous Headline Alerts Ticker for Retailers */}
         <RetailerHeadlineTicker />
+
+        {/* System Announcement Sticky Banner */}
+        <AnnouncementBanner />
 
         <main className="flex-1 overflow-y-auto min-h-0 bg-workspace-atmospheric scroll-smooth">
           <div className="min-h-full w-full px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6 xl:px-8 xl:py-7">

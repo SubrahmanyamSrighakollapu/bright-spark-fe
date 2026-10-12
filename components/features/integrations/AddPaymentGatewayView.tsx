@@ -1,288 +1,56 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Table } from '@/components/ui/Table';
-import { Modal } from '@/components/ui/Modal';
-import { useToast } from '@/components/ui/Toast';
-import { ColumnDefinition } from '@/types/common';
+import React, { useEffect, useState } from 'react';
+import { CreditCard, Edit2, Layers, Plus, Trash2 } from 'lucide-react';
+import { Button, Card, Input, Modal, Table, useToast } from '@/components/ui';
+import { useConfirmation } from '@/context/ConfirmationContext';
+import type { ColumnDefinition } from '@/types/common';
 import { formatDateTime } from '@/utils/formatters';
-import {
-  Plug,
-  Plus,
-  Edit2,
-  Trash2,
-  CheckCircle2,
-  XCircle,
-  Activity,
-  Layers,
-  Power,
-} from 'lucide-react';
+import { configurationService } from '@/services/configurationService';
 
-export interface PaymentGatewayItem {
-  id: string;
-  gatewayName: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-const INITIAL_GATEWAYS: PaymentGatewayItem[] = [
-  { id: 'gw_1', gatewayName: 'Razorpay PG', isActive: true, createdAt: '2026-08-10T10:00:00Z' },
-  { id: 'gw_2', gatewayName: 'Cashfree Payments', isActive: true, createdAt: '2026-08-15T14:30:00Z' },
-  { id: 'gw_3', gatewayName: 'PhonePe PG Direct', isActive: true, createdAt: '2026-09-01T09:15:00Z' },
-  { id: 'gw_4', gatewayName: 'Paytm Payment Gateway', isActive: false, createdAt: '2026-09-05T16:00:00Z' },
-  { id: 'gw_5', gatewayName: 'Stripe India', isActive: false, createdAt: '2026-09-12T11:45:00Z' },
-];
-
+export interface PaymentGatewayItem { id: string; gatewayName: string; isActive: boolean; createdAt: string; }
 export const AddPaymentGatewayView: React.FC = () => {
-  const { toastSuccess, toastInfo } = useToast();
-  const [gateways, setGateways] = useState<PaymentGatewayItem[]>(INITIAL_GATEWAYS);
+  const { toastSuccess, toastError } = useToast();
+  const confirm = useConfirmation();
+  const [gateways, setGateways] = useState<PaymentGatewayItem[]>([]);
+  const [editing, setEditing] = useState<PaymentGatewayItem | null>(null);
+  const [name, setName] = useState('');
+  const [open, setOpen] = useState(false);
 
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingGateway, setEditingGateway] = useState<PaymentGatewayItem | null>(null);
-  const [gatewayNameInput, setGatewayNameInput] = useState('');
-  const [isActiveInput, setIsActiveInput] = useState(true);
+  useEffect(() => { configurationService.list<PaymentGatewayItem>('gateways').then((response) => setGateways(response.data ?? [])).catch((error: unknown) => toastError(error instanceof Error ? error.message : 'Unable to load gateways.')); }, [toastError]);
 
-  const totalGateways = gateways.length;
-  const activeGateways = gateways.filter((g) => g.isActive).length;
-  const inactiveGateways = totalGateways - activeGateways;
-
-  const handleOpenAdd = () => {
-    setEditingGateway(null);
-    setGatewayNameInput('');
-    setIsActiveInput(true);
-    setIsModalOpen(true);
+  const showAdd = () => { setEditing(null); setName(''); setOpen(true); };
+  const showEdit = (gateway: PaymentGatewayItem) => { setEditing(gateway); setName(gateway.gatewayName); setOpen(true); };
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const gatewayName = name.trim();
+    if (gatewayName.length < 2) { toastError('Enter a valid gateway name.'); return; }
+    try {
+      const response = editing ? await configurationService.update<PaymentGatewayItem>('gateways', editing.id, { gatewayName, isActive: editing.isActive }) : await configurationService.create<PaymentGatewayItem>('gateways', { gatewayName, isActive: true });
+      if (!response.data) throw new Error('Gateway API returned no record.');
+      setGateways((items) => editing ? items.map((item) => item.id === editing.id ? response.data! : item) : [response.data!, ...items]);
+    } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to save gateway.'); return; }
+    toastSuccess(editing ? 'Gateway updated successfully.' : 'Gateway added successfully.');
+    setOpen(false);
   };
-
-  const handleOpenEdit = (gw: PaymentGatewayItem) => {
-    setEditingGateway(gw);
-    setGatewayNameInput(gw.gatewayName);
-    setIsActiveInput(gw.isActive);
-    setIsModalOpen(true);
+  const remove = async (gateway: PaymentGatewayItem) => {
+    if (!(await confirm({ title: 'Delete gateway?', message: `Delete “${gateway.gatewayName}”? This action cannot be undone.`, confirmText: 'Yes, delete gateway', variant: 'danger' }))) return;
+    try { await configurationService.remove('gateways', gateway.id); } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to delete gateway.'); return; }
+    setGateways((items) => items.filter((item) => item.id !== gateway.id));
+    toastSuccess('Gateway deleted successfully.');
   };
-
-  const handleSaveGateway = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!gatewayNameInput.trim()) return;
-
-    if (editingGateway) {
-      setGateways((prev) =>
-        prev.map((g) => (g.id === editingGateway.id ? { ...g, gatewayName: gatewayNameInput, isActive: isActiveInput } : g))
-      );
-      toastSuccess(`Gateway "${gatewayNameInput}" updated successfully!`);
-    } else {
-      const newGw: PaymentGatewayItem = {
-        id: `gw_${Date.now()}`,
-        gatewayName: gatewayNameInput,
-        isActive: isActiveInput,
-        createdAt: new Date().toISOString(),
-      };
-      setGateways([newGw, ...gateways]);
-      toastSuccess(`Payment Gateway "${gatewayNameInput}" registered successfully!`);
-    }
-
-    setIsModalOpen(false);
-  };
-
-  const handleToggleStatus = (id: string, name: string) => {
-    setGateways((prev) =>
-      prev.map((g) => {
-        if (g.id === id) {
-          const next = !g.isActive;
-          toastInfo(`Gateway "${name}" is now ${next ? 'Active' : 'Inactive'}.`);
-          return { ...g, isActive: next };
-        }
-        return g;
-      })
-    );
-  };
-
-  const handleDelete = (id: string, name: string) => {
-    setGateways((prev) => prev.filter((g) => g.id !== id));
-    toastInfo(`Gateway "${name}" has been deleted.`);
-  };
-
   const columns: ColumnDefinition<PaymentGatewayItem>[] = [
-    {
-      key: 'gatewayName',
-      header: 'Gateway Name',
-      render: (r) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#155EEF] flex items-center justify-center font-bold text-xs shrink-0 border border-blue-100">
-            <Plug className="w-4 h-4" />
-          </div>
-          <span className="font-bold text-xs text-[#0F172A]">{r.gatewayName}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'isActive',
-      header: 'Global Status',
-      align: 'center',
-      render: (r) => (
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1 ${
-            r.isActive
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : 'bg-slate-100 text-slate-600 border border-slate-200'
-          }`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${r.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-          {r.isActive ? 'Active' : 'Inactive'}
-        </span>
-      ),
-    },
-    {
-      key: 'createdAt',
-      header: 'Created At',
-      render: (r) => <span className="font-mono text-xs text-[#64748B]">{formatDateTime(r.createdAt)}</span>,
-    },
+    { key: 'name', header: 'Gateway Name', render: (row) => <span className="flex items-center gap-2 font-bold text-slate-900"><span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-[#155EEF]"><CreditCard className="h-4 w-4" /></span>{row.gatewayName}</span> },
+    { key: 'status', header: 'Status', render: (row) => <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${row.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{row.isActive ? 'Active' : 'Inactive'}</span> },
+    { key: 'created', header: 'Created At', render: (row) => <span className="text-sm text-slate-500">{formatDateTime(row.createdAt)}</span> },
+    { key: 'actions', header: 'Actions', render: (row) => <div className="flex gap-1"><Button variant="ghost" size="sm" leftIcon={<Edit2 className="h-4 w-4" />} onClick={() => showEdit(row)}>Edit</Button><Button variant="ghost" size="sm" className="text-rose-600 hover:bg-rose-50" leftIcon={<Trash2 className="h-4 w-4" />} onClick={() => remove(row)}>Delete</Button></div> },
   ];
+  const active = gateways.filter((item) => item.isActive).length;
 
-  return (
-    <div className="space-y-6">
-      {/* Top Header */}
-      <div className="bg-white rounded-2xl border border-[#E5EAF1] p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
-            <Plug className="w-5 h-5 text-[#155EEF]" />
-            Add Payment Gateway (AddPaymentGateway)
-          </h1>
-          <p className="text-xs text-[#64748B] mt-1 font-medium">
-            Register and manage external payment processing gateway providers across your platform switch.
-          </p>
-        </div>
-
-        <Button variant="primary" onClick={handleOpenAdd} leftIcon={<Plus className="w-4 h-4" />}>
-          + Register New Gateway
-        </Button>
-      </div>
-
-      {/* Summary Stats Dashboard */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold uppercase text-[#64748B]">Total Gateways</span>
-            <div className="text-2xl font-extrabold text-[#0F172A] font-mono mt-1">{totalGateways}</div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#155EEF] flex items-center justify-center">
-            <Layers className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold uppercase text-emerald-700">Active Gateways</span>
-            <div className="text-2xl font-extrabold text-[#0F172A] font-mono mt-1">{activeGateways}</div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold uppercase text-slate-500">Inactive Gateways</span>
-            <div className="text-2xl font-extrabold text-[#0F172A] font-mono mt-1">{inactiveGateways}</div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center">
-            <XCircle className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      {/* Registered Gateways Directory Table */}
-      <Card title="Registered Payment Gateway Master" subtitle="Global gateway status and configuration status" noPadding>
-        <div className="overflow-x-auto">
-          <Table
-            columns={columns}
-            data={gateways}
-            keyExtractor={(r) => r.id}
-            renderActions={(row) => (
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleOpenEdit(row)}
-                  className="p-1.5 text-slate-600 hover:text-[#155EEF] hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-                  title="Edit Gateway Name"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToggleStatus(row.id, row.gatewayName)}
-                  className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                    row.isActive ? 'text-emerald-600 hover:text-amber-600 hover:bg-amber-50' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
-                  }`}
-                  title={row.isActive ? 'Disable Gateway Globally' : 'Enable Gateway Globally'}
-                >
-                  <Power className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDelete(row.id, row.gatewayName)}
-                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
-                  title="Delete Gateway"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-          />
-        </div>
-      </Card>
-
-      {/* Register / Edit Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={editingGateway ? `Edit Gateway: ${editingGateway.gatewayName}` : 'Register New Payment Gateway'}
-        size="sm"
-      >
-        <form onSubmit={handleSaveGateway} className="space-y-4 text-xs pt-2">
-          <Input
-            label="Gateway Name (gatewayName)"
-            placeholder="e.g. Razorpay PG, Cashfree, PhonePe Direct"
-            value={gatewayNameInput}
-            onChange={(e) => setGatewayNameInput(e.target.value)}
-            required
-          />
-
-          <div className="flex items-center justify-between p-3.5 bg-[#F8FAFC] border border-[#E5EAF1] rounded-xl">
-            <div>
-              <span className="text-xs font-bold text-[#0F172A] block">Enable Globally (isActive)</span>
-              <span className="text-[11px] text-[#64748B]">Activate gateway for live transaction routing.</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsActiveInput(!isActiveInput)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                isActiveInput ? 'bg-[#155EEF]' : 'bg-slate-200'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                  isActiveInput ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5EAF1]">
-            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              {editingGateway ? 'Save Gateway Changes' : 'Register Gateway'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-    </div>
-  );
+  return <div className="space-y-6">
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between"><div><h1 className="text-xl font-extrabold text-slate-950">Payment Gateways</h1><p className="mt-1 text-sm text-slate-500">Configure and manage payment gateways.</p></div><Button leftIcon={<Plus className="h-4 w-4" />} onClick={showAdd}>Add Gateway</Button></div>
+    <div className="grid gap-4 sm:grid-cols-3">{[['Total Gateways', gateways.length, 'text-blue-600'], ['Active', active, 'text-emerald-600'], ['Inactive', gateways.length - active, 'text-amber-600']].map(([label, value, color]) => <Card key={String(label)} className="flex items-center justify-between rounded-2xl border-slate-200 p-5"><div><p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-2 text-3xl font-extrabold text-slate-950">{value}</p></div><Layers className={`h-6 w-6 ${color}`} /></Card>)}</div>
+    <Card className="overflow-hidden rounded-2xl border-slate-200 p-0"><div className="border-b border-slate-100 px-6 py-5"><h2 className="font-bold text-slate-900">Registered Payment Gateways</h2></div><Table columns={columns} data={gateways} keyExtractor={(row) => row.id} /></Card>
+    <Modal isOpen={open} onClose={() => setOpen(false)} title={editing ? 'Edit Payment Gateway' : 'Add Payment Gateway'}><form className="space-y-5" onSubmit={save}><Input label="Gateway Name" required value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Razorpay, PayU, Stripe" /><div className="flex justify-end gap-3 border-t border-slate-100 pt-5"><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit">{editing ? 'Update' : 'Add Gateway'}</Button></div></form></Modal>
+  </div>;
 };

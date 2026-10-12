@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Table } from '@/components/ui/Table';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
@@ -201,17 +202,17 @@ export const SetBalanceRequirementView: React.FC = () => {
         >
           <form onSubmit={handleSave} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Target User Role</label>
-              <select
+              <Select
+                label="Target User Role"
                 value={targetRole}
                 onChange={(e) => setTargetRole(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A]"
-              >
-                <option value="Super Distributor">Super Distributor</option>
-                <option value="Master Distributor">Master Distributor</option>
-                <option value="Distributor">Distributor</option>
-                <option value="Retailer">Retailer</option>
-              </select>
+                options={[
+                  { label: 'Super Distributor', value: 'Super Distributor' },
+                  { label: 'Master Distributor', value: 'Master Distributor' },
+                  { label: 'Distributor', value: 'Distributor' },
+                  { label: 'Retailer', value: 'Retailer' },
+                ]}
+              />
             </div>
 
             <div>

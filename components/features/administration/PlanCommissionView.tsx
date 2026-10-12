@@ -1,339 +1,114 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Table } from '@/components/ui/Table';
-import { Modal } from '@/components/ui/Modal';
-import { useToast } from '@/components/ui/Toast';
-import { ColumnDefinition } from '@/types/common';
-import { Percent, Plus, Edit, Trash2, GitBranch, ArrowRight } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Edit2, Info, Save, Trash2, X } from 'lucide-react';
+import { Button, Card, Modal, SearchInput, Select, Table, useToast } from '@/components/ui';
+import { useConfirmation } from '@/context/ConfirmationContext';
+import { configurationService } from '@/services/configurationService';
+import { roleService } from '@/services/roleService';
+import type { ColumnDefinition } from '@/types/common';
+import { usePathname } from 'next/navigation';
 
-export interface CommissionConfig {
-  id: string;
-  categoryName: string; // e.g. Paddy / Rice Crops, Seeds & Fertilisers, Financial Payouts
-  calcType: 'Percentage' | 'Fixed';
-  sdCommission: number; // Super Distributor
-  mdCommission: number; // Master Distributor
-  dsCommission: number; // Distributor
-  retCommission: number; // Retailer
-  updatedAt: string;
-}
+type Named = { id: string; name: string };
+type Configuration = { id: string; planId: string; gatewayId: string; roleId: string; isActive: boolean };
+type Commission = { id: string; planConfigId: string; methodId: string; methodOptionId: string | null; commissionRate: number; isActive: boolean };
+type ApiPlan = { id: string; planName: string; isActive: boolean };
+type ApiGateway = { id: string; gatewayName: string; isActive: boolean };
+type ApiMethod = { id: string; methodName: string; isActive: boolean };
+type ApiOption = { id: string; methodId: string; optionName: string; isActive: boolean };
+const blankConfig = { planId: '', gatewayId: '', roleId: '' };
+const nameOf = (items: Named[], id: string) => items.find((item) => item.id === id)?.name ?? 'N/A';
 
-const INITIAL_COMMISSIONS: CommissionConfig[] = [
-  {
-    id: 'comm_1',
-    categoryName: 'Paddy / Grain Procurement',
-    calcType: 'Percentage',
-    sdCommission: 0.50,
-    mdCommission: 0.75,
-    dsCommission: 1.00,
-    retCommission: 15.00, // ₹15 / Qtl
-    updatedAt: '2026-09-10T10:00:00Z',
-  },
-  {
-    id: 'comm_2',
-    categoryName: 'Seeds & Fertilizer Orders',
-    calcType: 'Percentage',
-    sdCommission: 0.60,
-    mdCommission: 0.85,
-    dsCommission: 1.20,
-    retCommission: 25.00,
-    updatedAt: '2026-09-15T12:00:00Z',
-  },
-  {
-    id: 'comm_3',
-    categoryName: 'Instant Bank Payout Services',
-    calcType: 'Fixed',
-    sdCommission: 2.00,
-    mdCommission: 3.50,
-    dsCommission: 5.00,
-    retCommission: 10.00,
-    updatedAt: '2026-09-20T16:45:00Z',
-  },
-];
+const CommissionRateField = ({ initialValue, disabled, onValueChange }: { initialValue: string; disabled: boolean; onValueChange: (value: string) => void }) => {
+  const [value, setValue] = useState(initialValue);
+  return <input type="number" inputMode="decimal" min="0.01" step="0.01" placeholder="0.00" disabled={disabled} value={value} onChange={(event) => { const nextValue = event.target.value; setValue(nextValue); onValueChange(nextValue); }} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} className="h-10 w-32 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-[#155EEF] focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500" />;
+};
 
 export const PlanCommissionView: React.FC = () => {
-  const { toastSuccess, toastInfo } = useToast();
-  const [commissions, setCommissions] = useState<CommissionConfig[]>(INITIAL_COMMISSIONS);
+  const pathname = usePathname();
+  const isCommissionPage = pathname.includes('/commissions');
+  const { toastSuccess, toastError } = useToast();
+  const confirm = useConfirmation();
+  const [plans, setPlans] = useState<Named[]>([]); const [gateways, setGateways] = useState<Named[]>([]); const [roles, setRoles] = useState<Named[]>([]); const [methods, setMethods] = useState<Named[]>([]); const [options, setOptions] = useState<Array<Named & { methodId: string }>>([]);
+  const [configs, setConfigs] = useState<Configuration[]>([]); const [commissions, setCommissions] = useState<Commission[]>([]);
+  const [configForm, setConfigForm] = useState(blankConfig); const [editingConfig, setEditingConfig] = useState<Configuration | null>(null);
+  const [search, setSearch] = useState(''); const [filters, setFilters] = useState(blankConfig);
+  const [selection, setSelection] = useState(blankConfig); const [loadedConfigId, setLoadedConfigId] = useState(''); const [editingCommission, setEditingCommission] = useState(''); const [rateDrafts, setRateDrafts] = useState<Record<string, string>>({}); const [savingCommissions, setSavingCommissions] = useState(false);
+  const rateDraftsRef = useRef<Record<string, string>>({});
 
-  // Form / Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<CommissionConfig | null>(null);
-  const [categoryName, setCategoryName] = useState('');
-  const [calcType, setCalcType] = useState<'Percentage' | 'Fixed'>('Percentage');
-  const [sdCommission, setSdCommission] = useState<number>(0.5);
-  const [mdCommission, setMdCommission] = useState<number>(0.75);
-  const [dsCommission, setDsCommission] = useState<number>(1.0);
-  const [retCommission, setRetCommission] = useState<number>(15.0);
+  useEffect(() => {
+    Promise.all([configurationService.list<ApiPlan>('plans'), configurationService.list<ApiGateway>('gateways'), roleService.getRoles(), configurationService.list<ApiMethod>('methods'), configurationService.list<ApiOption>('options'), configurationService.list<Configuration>('plan-configurations'), configurationService.list<Commission>('commissions')])
+      .then(([planData, gatewayData, roleData, methodData, optionData, configData, commissionData]) => {
+        setPlans(planData.data.filter((item) => item.isActive).map((item) => ({ id: item.id, name: item.planName })));
+        setGateways(gatewayData.data.filter((item) => item.isActive).map((item) => ({ id: item.id, name: item.gatewayName })));
+        setRoles((roleData.data ?? []).filter((item) => item.isActive && (item.category === 'SYSTEM' || item.category === 'NETWORK')).map((item) => ({ id: String(item.id), name: item.name })));
+        setMethods(methodData.data.filter((item) => item.isActive).map((item) => ({ id: item.id, name: item.methodName })));
+        setOptions(optionData.data.filter((item) => item.isActive).map((item) => ({ id: item.id, methodId: item.methodId, name: item.optionName })));
+        setConfigs(configData.data.map((item) => ({ ...item, roleId: String(item.roleId) })));
+        setCommissions(commissionData.data.map((item) => ({ ...item, commissionRate: Number(item.commissionRate) })));
+      }).catch((error) => toastError(error instanceof Error ? error.message : 'Unable to load configuration data.'));
+  }, [toastError]);
 
-  const handleOpenAdd = () => {
-    setEditingItem(null);
-    setCategoryName('');
-    setCalcType('Percentage');
-    setSdCommission(0.5);
-    setMdCommission(0.75);
-    setDsCommission(1.0);
-    setRetCommission(15.0);
-    setIsModalOpen(true);
-  };
+  const filtered = useMemo(() => configs.filter((row) => { const text = `${nameOf(plans, row.planId)} ${nameOf(gateways, row.gatewayId)} ${nameOf(roles, row.roleId)}`.toLowerCase(); return (!search || text.includes(search.toLowerCase())) && (!filters.planId || row.planId === filters.planId) && (!filters.gatewayId || row.gatewayId === filters.gatewayId) && (!filters.roleId || row.roleId === filters.roleId); }), [configs, filters, gateways, plans, roles, search]);
+  const saveConfig = async () => { if (!configForm.planId || !configForm.gatewayId || !configForm.roleId) return toastError('Select plan, gateway, and role.'); if (configs.some((row) => row.id !== editingConfig?.id && row.planId === configForm.planId && row.gatewayId === configForm.gatewayId && row.roleId === configForm.roleId)) return toastError('This plan, gateway, and role configuration already exists.'); try { const payload = { ...configForm, roleId: Number(configForm.roleId), isActive: true }; const response = editingConfig ? await configurationService.update<Configuration>('plan-configurations', editingConfig.id, payload) : await configurationService.create<Configuration>('plan-configurations', payload); const saved = { ...response.data, roleId: String(response.data.roleId) }; setConfigs((items) => editingConfig ? items.map((item) => item.id === editingConfig.id ? saved : item) : [saved, ...items]); setConfigForm(blankConfig); setEditingConfig(null); toastSuccess('Plan configuration saved.'); } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to save configuration.'); } };
+  const removeConfig = async (row: Configuration) => { if (!(await confirm({ title: 'Delete configuration?', message: `Delete the ${nameOf(plans, row.planId)} / ${nameOf(gateways, row.gatewayId)} / ${nameOf(roles, row.roleId)} configuration?`, confirmText: 'Yes, delete configuration', variant: 'danger' }))) return; try { await configurationService.remove('plan-configurations', row.id); setConfigs((items) => items.filter((item) => item.id !== row.id)); setCommissions((items) => items.filter((item) => item.planConfigId !== row.id)); toastSuccess('Configuration deleted.'); } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to delete configuration.'); } };
+  const load = () => { const match = configs.find((row) => row.planId === selection.planId && row.gatewayId === selection.gatewayId && row.roleId === selection.roleId); if (!match) { setLoadedConfigId(''); return toastError('Create this plan configuration before setting commissions.'); } rateDraftsRef.current = {}; setLoadedConfigId(match.id); setEditingCommission(''); setRateDrafts({}); };
+  const displayedCommissions = useMemo(() => { if (!loadedConfigId) return []; const stored = commissions.filter((row) => row.planConfigId === loadedConfigId); return methods.flatMap((method) => { const methodOptions = options.filter((option) => option.methodId === method.id); const choices = methodOptions.length ? methodOptions : [{ id: '', methodId: method.id, name: 'N/A' }]; return choices.map((option) => stored.find((row) => row.methodId === method.id && (row.methodOptionId ?? '') === option.id) ?? { id: `new:${method.id}:${option.id}`, planConfigId: loadedConfigId, methodId: method.id, methodOptionId: option.id || null, commissionRate: 0, isActive: true }); }); }, [commissions, loadedConfigId, methods, options]);
+  const saveRate = async (row: Commission) => { const rate = Number(rateDraftsRef.current[row.id]); if (!Number.isFinite(rate) || rate <= 0) return toastError('Enter a valid commission rate.'); try { const response = await configurationService.update<Commission>('commissions', row.id, { planConfigId: row.planConfigId, methodId: row.methodId, methodOptionId: row.methodOptionId, commissionRate: rate, isActive: true }); const saved = { ...response.data, commissionRate: Number(response.data.commissionRate) }; setCommissions((items) => items.map((item) => item.id === row.id ? saved : item)); setEditingCommission(''); delete rateDraftsRef.current[row.id]; setRateDrafts((drafts) => { const next = { ...drafts }; delete next[row.id]; return next; }); toastSuccess('Commission updated.'); } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to update commission.'); } };
+  const saveNewRates = async () => { const newRows = displayedCommissions.filter((row) => row.id.startsWith('new:')); if (!newRows.length) return; if (newRows.some((row) => { const rate = Number(rateDraftsRef.current[row.id]); return !Number.isFinite(rate) || rate <= 0; })) return toastError('Enter a valid commission rate for every new record.'); setSavingCommissions(true); try { for (const row of newRows) { const response = await configurationService.create<Commission>('commissions', { planConfigId: row.planConfigId, methodId: row.methodId, methodOptionId: row.methodOptionId, commissionRate: Number(rateDraftsRef.current[row.id]), isActive: true }); const saved = { ...response.data, commissionRate: Number(response.data.commissionRate) }; setCommissions((items) => [saved, ...items]); } rateDraftsRef.current = {}; setRateDrafts({}); toastSuccess('New commissions saved.'); } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to save new commissions. Any completed rows remain safely saved.'); } finally { setSavingCommissions(false); } };
+  const updateRateDraft = (id: string, value: string) => { rateDraftsRef.current[id] = value; setRateDrafts((drafts) => ({ ...drafts, [id]: value })); };
+  const beginCommissionEdit = (row: Commission) => { const value = String(row.commissionRate); rateDraftsRef.current[row.id] = value; setRateDrafts((drafts) => ({ ...drafts, [row.id]: value })); setEditingCommission(row.id); };
+  const cancelCommissionEdit = (id: string) => { delete rateDraftsRef.current[id]; setEditingCommission(''); setRateDrafts((drafts) => { const next = { ...drafts }; delete next[id]; return next; }); };
 
-  const handleOpenEdit = (item: CommissionConfig) => {
-    setEditingItem(item);
-    setCategoryName(item.categoryName);
-    setCalcType(item.calcType);
-    setSdCommission(item.sdCommission);
-    setMdCommission(item.mdCommission);
-    setDsCommission(item.dsCommission);
-    setRetCommission(item.retCommission);
-    setIsModalOpen(true);
-  };
+  const configColumns: ColumnDefinition<Configuration>[] = [{ key: 'plan', header: 'Plan Name', render: (row) => <span className="font-bold text-slate-900">{nameOf(plans, row.planId)}</span> }, { key: 'role', header: 'Role Name', render: (row) => nameOf(roles, row.roleId) }, { key: 'gateway', header: 'Gateway Name', render: (row) => nameOf(gateways, row.gatewayId) }, { key: 'status', header: 'Status', render: () => <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Active</span> }, { key: 'actions', header: 'Actions', render: (row) => <div className="flex gap-1"><Button size="sm" variant="ghost" leftIcon={<Edit2 className="h-4 w-4" />} onClick={() => { setEditingConfig(row); setConfigForm({ planId: row.planId, gatewayId: row.gatewayId, roleId: row.roleId }); }}>Edit</Button><Button size="sm" variant="ghost" className="text-rose-600" leftIcon={<Trash2 className="h-4 w-4" />} onClick={() => removeConfig(row)}>Delete</Button></div> }];
+  const commissionColumns: ColumnDefinition<Commission>[] = [{ key: 'plan', header: 'Plan', render: () => nameOf(plans, selection.planId) }, { key: 'role', header: 'Role', render: () => nameOf(roles, selection.roleId) }, { key: 'gateway', header: 'Gateway', render: () => nameOf(gateways, selection.gatewayId) }, { key: 'method', header: 'Method', render: (row) => nameOf(methods, row.methodId) }, { key: 'option', header: 'Option', render: (row) => row.methodOptionId ? nameOf(options, row.methodOptionId) : 'N/A' }, { key: 'rate', header: 'Commission Rate (%)', render: (row) => { const isNew = row.id.startsWith('new:'); const editable = isNew || editingCommission === row.id; return <CommissionRateField key={`${row.id}:${editable}`} initialValue={rateDrafts[row.id] ?? (isNew ? '' : String(row.commissionRate))} disabled={!editable || savingCommissions} onValueChange={(value) => updateRateDraft(row.id, value)} />; } }, { key: 'action', header: 'Action', render: (row) => { if (row.id.startsWith('new:')) return <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-200">New</span>; if (editingCommission === row.id) return <div className="flex gap-1"><Button size="sm" variant="ghost" aria-label="Save commission" disabled={savingCommissions || !(Number(rateDrafts[row.id]) > 0)} onClick={() => saveRate(row)}><Save className="h-4 w-4" /></Button><Button size="sm" variant="ghost" aria-label="Cancel editing" disabled={savingCommissions} onClick={() => cancelCommissionEdit(row.id)}><X className="h-4 w-4" /></Button></div>; return <Button size="sm" variant="ghost" aria-label="Edit commission" disabled={savingCommissions} onClick={() => beginCommissionEdit(row)}><Edit2 className="h-4 w-4" /></Button>; } }];
+  const hasNewCommissions = displayedCommissions.some((row) => row.id.startsWith('new:'));
+  const newCommissionRows = displayedCommissions.filter((row) => row.id.startsWith('new:'));
+  const allNewRatesValid = newCommissionRows.length > 0 && newCommissionRows.every((row) => Number(rateDrafts[row.id]) > 0);
+  const selectionComplete = Boolean(selection.planId && selection.gatewayId && selection.roleId);
+  const changeSelection: React.Dispatch<React.SetStateAction<typeof blankConfig>> = (next) => { setSelection(next); setLoadedConfigId(''); setEditingCommission(''); setRateDrafts({}); };
+  const selectFields = (value: typeof blankConfig, setter: React.Dispatch<React.SetStateAction<typeof blankConfig>>) => <div className="grid gap-4 md:grid-cols-3"><Select label="Select Plan" required value={value.planId} onChange={(e) => setter((v) => ({ ...v, planId: e.target.value }))} placeholder="Choose Plan" options={plans.map((item) => ({ value: item.id, label: item.name }))} /><Select label="Select Gateway" required value={value.gatewayId} onChange={(e) => setter((v) => ({ ...v, gatewayId: e.target.value }))} placeholder="Choose Gateway" options={gateways.map((item) => ({ value: item.id, label: item.name }))} /><Select label="Select Role" required value={value.roleId} onChange={(e) => setter((v) => ({ ...v, roleId: e.target.value }))} placeholder="Choose system or network role" options={roles.map((item) => ({ value: item.id, label: item.name }))} /></div>;
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!categoryName.trim()) return;
-
-    if (editingItem) {
-      setCommissions((prev) =>
-        prev.map((c) =>
-          c.id === editingItem.id
-            ? {
-                ...c,
-                categoryName,
-                calcType,
-                sdCommission: Number(sdCommission),
-                mdCommission: Number(mdCommission),
-                dsCommission: Number(dsCommission),
-                retCommission: Number(retCommission),
-                updatedAt: new Date().toISOString(),
-              }
-            : c
-        )
-      );
-      toastSuccess(`Commission structure for "${categoryName}" updated!`);
-    } else {
-      const newItem: CommissionConfig = {
-        id: `comm_${Date.now()}`,
-        categoryName,
-        calcType,
-        sdCommission: Number(sdCommission),
-        mdCommission: Number(mdCommission),
-        dsCommission: Number(dsCommission),
-        retCommission: Number(retCommission),
-        updatedAt: new Date().toISOString(),
-      };
-      setCommissions([...commissions, newItem]);
-      toastSuccess(`Commission rule for "${categoryName}" created!`);
-    }
-
-    setIsModalOpen(false);
-  };
-
-  const handleDelete = (id: string, name: string) => {
-    setCommissions((prev) => prev.filter((c) => c.id !== id));
-    toastInfo(`Removed commission structure for "${name}".`);
-  };
-
-  const columns: ColumnDefinition<CommissionConfig>[] = [
-    {
-      key: 'categoryName',
-      header: 'Category / Product',
-      render: (row) => (
-        <div>
-          <div className="font-semibold text-[#0F172A]">{row.categoryName}</div>
-          <div className="text-xs text-[#64748B]">Type: {row.calcType} Rate</div>
-        </div>
-      ),
-    },
-    {
-      key: 'sdCommission',
-      header: 'Super Distributor (SD)',
-      render: (row) => (
-        <span className="font-medium text-[#0F172A]">
-          {row.calcType === 'Percentage' ? `${row.sdCommission}%` : `₹${row.sdCommission.toFixed(2)}`}
-        </span>
-      ),
-    },
-    {
-      key: 'mdCommission',
-      header: 'Master Distributor (MD)',
-      render: (row) => (
-        <span className="font-medium text-[#0F172A]">
-          {row.calcType === 'Percentage' ? `${row.mdCommission}%` : `₹${row.mdCommission.toFixed(2)}`}
-        </span>
-      ),
-    },
-    {
-      key: 'dsCommission',
-      header: 'Distributor (DS)',
-      render: (row) => (
-        <span className="font-medium text-[#0F172A]">
-          {row.calcType === 'Percentage' ? `${row.dsCommission}%` : `₹${row.dsCommission.toFixed(2)}`}
-        </span>
-      ),
-    },
-    {
-      key: 'retCommission',
-      header: 'Retailer (RET)',
-      render: (row) => (
-        <span className="font-bold text-[#155EEF]">
-          {row.calcType === 'Percentage' ? `${row.retCommission}%` : `₹${row.retCommission.toFixed(2)} / Unit`}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (row) => (
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleOpenEdit(row)}
-            className="h-8 px-2 text-[#155EEF] hover:bg-[#F1F5F9]"
-          >
-            <Edit className="w-3.5 h-3.5 mr-1" />
-            Edit
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDelete(row.id, row.categoryName)}
-            className="h-8 px-2 text-rose-600 hover:bg-rose-50"
-          >
-            <Trash2 className="w-3.5 h-3.5 mr-1" />
-            Delete
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
+  const title = isCommissionPage ? 'Commission Configuration' : 'Plan Configuration';
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
-        <div>
-          <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <GitBranch className="w-6 h-6 text-[#155EEF]" />
-            Multi-Level Plan Commission Configuration
-          </h1>
-          <p className="text-sm text-[#64748B] mt-0.5">
-            Set multi-tier revenue distribution margin rates across Super Distributors (SD), Master Distributors (MD), Distributors (DS), and Retailers.
-          </p>
-        </div>
-        <Button variant="primary" onClick={handleOpenAdd}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Rate Rule
-        </Button>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h1 className="text-xl font-extrabold text-slate-950">{title}</h1>
+        <p className="mt-1 text-sm text-slate-500">{isCommissionPage ? 'Configure payment-method commission rates for an existing plan mapping.' : 'Map plans to gateways and eligible system or network roles.'}</p>
       </div>
-
-      {/* Downline Flow Diagram Header Card */}
-      <Card className="p-4 bg-gradient-to-r from-blue-50/50 via-white to-slate-50 border border-[#E5EAF1] rounded-xl flex items-center justify-between text-xs text-[#475569]">
-        <div className="font-semibold text-[#0F172A]">Distribution Chain:</div>
-        <div className="flex items-center gap-2 font-medium">
-          <span className="px-2 py-1 bg-white border border-[#CBD5E1] rounded text-[#0F172A]">Super Admin</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#155EEF]" />
-          <span className="px-2 py-1 bg-white border border-blue-200 text-blue-700 rounded">SD (sdCommission)</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#155EEF]" />
-          <span className="px-2 py-1 bg-white border border-indigo-200 text-indigo-700 rounded">MD (mdCommission)</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#155EEF]" />
-          <span className="px-2 py-1 bg-white border border-violet-200 text-violet-700 rounded">DS (dsCommission)</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#155EEF]" />
-          <span className="px-2 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded font-bold">RET (retCommission)</span>
-        </div>
-      </Card>
-
-      <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-4">
-        <Table columns={columns} data={commissions} keyExtractor={(c) => c.id} />
-      </Card>
-
-      {isModalOpen && (
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={editingItem ? `Edit Commission: ${editingItem.categoryName}` : 'Add Plan Commission Structure'}
-        >
-          <form onSubmit={handleSave} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Category / Product Name <span className="text-rose-500">*</span>
-              </label>
-              <Input
-                placeholder="e.g. Paddy Procurement Tier 1"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Calculation Type</label>
-              <select
-                value={calcType}
-                onChange={(e) => setCalcType(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A]"
-              >
-                <option value="Percentage">Percentage (%)</option>
-                <option value="Fixed">Fixed Amount (₹)</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div>
-                <label className="block text-xs font-semibold text-[#334155] mb-1">Super Distributor (sdCommission)</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={sdCommission}
-                  onChange={(e) => setSdCommission(parseFloat(e.target.value) || 0)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#334155] mb-1">Master Distributor (mdCommission)</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={mdCommission}
-                  onChange={(e) => setMdCommission(parseFloat(e.target.value) || 0)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#334155] mb-1">Distributor (dsCommission)</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={dsCommission}
-                  onChange={(e) => setDsCommission(parseFloat(e.target.value) || 0)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#334155] mb-1">Retailer (retCommission)</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={retCommission}
-                  onChange={(e) => setRetCommission(parseFloat(e.target.value) || 0)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary">
-                Save Rate Rule
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
+      {!isCommissionPage ? <>
+        <Card className="rounded-2xl border-slate-200 p-6">
+          <h2 className="mb-5 font-bold text-slate-900">Select Plan, Gateway &amp; Role</h2>
+          {selectFields(configForm, setConfigForm)}
+          <div className="mt-5 flex justify-end"><Button onClick={saveConfig}>Save Config</Button></div>
+          <div className="mt-5 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><Info className="h-5 w-5 shrink-0" /><p>Only active system and network roles are available. Employee roles are excluded.</p></div>
+        </Card>
+        <Card className="overflow-hidden rounded-2xl border-slate-200 p-0">
+          <div className="grid gap-3 border-b border-slate-100 p-5 lg:grid-cols-4">
+            <SearchInput value={search} onChange={setSearch} placeholder="Search plan, role, gateway" />
+            <Select value={filters.planId} onChange={(e) => setFilters((v) => ({ ...v, planId: e.target.value }))} placeholder="All Plans" options={plans.map((item) => ({ value: item.id, label: item.name }))} />
+            <Select value={filters.roleId} onChange={(e) => setFilters((v) => ({ ...v, roleId: e.target.value }))} placeholder="All Roles" options={roles.map((item) => ({ value: item.id, label: item.name }))} />
+            <Select value={filters.gatewayId} onChange={(e) => setFilters((v) => ({ ...v, gatewayId: e.target.value }))} placeholder="All Gateways" options={gateways.map((item) => ({ value: item.id, label: item.name }))} />
+          </div>
+          <Table columns={configColumns} data={filtered} keyExtractor={(row) => row.id} />
+        </Card>
+      </> : <>
+        <Card className="rounded-2xl border-slate-200 p-6">
+          <h2 className="mb-5 font-bold text-slate-900">Select Existing Configuration</h2>
+          {selectFields(selection, changeSelection)}
+          <div className="mt-5 flex justify-end"><Button onClick={load} disabled={!selectionComplete || savingCommissions}>Load Data</Button></div>
+        </Card>
+        {loadedConfigId && <Card className="overflow-hidden rounded-2xl border-slate-200 p-0">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
+            <div><h2 className="font-bold">Commission Rates</h2><p className="mt-1 text-xs text-slate-500">Enter rates for every New row, then save them together.</p></div>
+            {hasNewCommissions && <Button onClick={saveNewRates} disabled={!allNewRatesValid || savingCommissions}>{savingCommissions ? 'Saving...' : 'Save New Commissions'}</Button>}
+          </div>
+          <Table key={`${loadedConfigId}:${editingCommission}:${savingCommissions}`} columns={commissionColumns} data={displayedCommissions} keyExtractor={(row) => row.id} />
+        </Card>}
+      </>}
+      <Modal isOpen={Boolean(editingConfig)} onClose={() => setEditingConfig(null)} title="Edit Configuration">
+        <div className="space-y-5">{selectFields(configForm, setConfigForm)}<div className="flex justify-end gap-3 border-t border-slate-100 pt-5"><Button variant="outline" onClick={() => setEditingConfig(null)}>Cancel</Button><Button onClick={saveConfig}>Update</Button></div></div>
+      </Modal>
     </div>
   );
 };

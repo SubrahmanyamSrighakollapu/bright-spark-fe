@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { PhoneInputWithCountryCode } from '@/components/ui/PhoneInputWithCountryCode';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { hierarchyService } from '@/services/hierarchyService';
@@ -30,6 +31,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
   const [memberType, setMemberType] = useState<MemberType>(defaultType);
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [parentName, setParentName] = useState('Apex National Network');
@@ -158,13 +160,14 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
         />
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Input
-            label="Mobile Number (+91)"
-            placeholder="9876543210"
+          <PhoneInputWithCountryCode
+            label="Mobile Number"
+            placeholder="10-digit mobile number"
             value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
+            countryCode={countryCode}
+            onPhoneChange={setMobile}
+            onCountryCodeChange={setCountryCode}
             required
-            leftIcon={<Phone className="w-4 h-4 text-slate-400" />}
           />
 
           <Input

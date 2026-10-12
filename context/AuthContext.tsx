@@ -4,7 +4,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { UserContext, UserRole } from '@/config/roles';
 import { AuthSession, mockAuthService, getDefaultRouteForRole } from '@/services/mockAuthService';
 import { authService } from '@/services/authService';
+import { kycService } from '@/services/kycService';
 import { APP_CONFIG } from '@/config';
+import type { LoginLocation } from '@/utils/geolocation';
 
 const STORAGE_KEY_SESSION_LOCAL = 'qin-star-pay-auth-session-local';
 const STORAGE_KEY_SESSION_SESSION = 'qin-star-pay-auth-session-session';
@@ -14,16 +16,19 @@ export interface AuthContextType {
   session: AuthSession | null;
   currentUser: UserContext | null;
   previewRole: UserRole | null;
+  profilePhotoUrl: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (
     identifier: string,
     password?: string,
-    rememberMe?: boolean
-  ) => Promise<{ success: boolean; error?: string; defaultRoute?: string }>;
+    rememberMe?: boolean,
+    location?: LoginLocation
+  ) => Promise<{ success: boolean; error?: string; defaultRoute?: string; sessionId?: string; accessToken?: string }>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   setPreviewRole: (role: UserRole | null) => void;
+  updateProfilePhotoUrl: (url: string | null) => void;
   hasRole: (roles: UserRole | UserRole[]) => boolean;
   hasPermission: (permission: string) => boolean;
 }
@@ -33,8 +38,122 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [previewRole, setPreviewRoleState] = useState<UserRole | null>(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const lastActivityRef = useRef(0);
+
+  const updateProfilePhotoUrl = useCallback(
+    (url: string | null) => {
+      setProfilePhotoUrl(url);
+      if (session?.userId) {
+        if (url) {
+          localStorage.setItem(`qsp_custom_profile_photo_${session.userId}`, url);
+          if (session.entityId) localStorage.setItem(`qsp_custom_profile_photo_${session.entityId}`, url);
+        } else {
+          localStorage.removeItem(`qsp_custom_profile_photo_${session.userId}`);
+          if (session.entityId) localStorage.removeItem(`qsp_custom_profile_photo_${session.entityId}`);
+        }
+      }
+    },
+    [session?.userId, session?.entityId]
+  );
+
+  // Fetch or hydrate profile photo whenever session updates
+  useEffect(() => {
+    if (!session?.userId && !session?.entityId) {
+      setProfilePhotoUrl(null);
+      return;
+    }
+
+    const customPhoto =
+      localStorage.getItem(`qsp_custom_profile_photo_${session.userId}`) ||
+      (session.entityId ? localStorage.getItem(`qsp_custom_profile_photo_${session.entityId}`) : null);
+
+    if (customPhoto) {
+      setProfilePhotoUrl(customPhoto);
+      return;
+    }
+
+    const cached =
+      localStorage.getItem(`qsp_profile_photo_${session.userId}`) ||
+      (session.entityId ? localStorage.getItem(`qsp_profile_photo_${session.entityId}`) : null);
+
+    if (cached) {
+      setProfilePhotoUrl(cached);
+    }
+
+    // Fetch authenticated profile photo blob from KYC application if no custom override exists
+    const fetchPhoto = async () => {
+      try {
+        let docs: any[] = [];
+
+        // 1. Try my application endpoint first
+        try {
+          const myAppRes = await kycService.getMyApplication();
+          if (myAppRes.success && myAppRes.data?.documents) {
+            docs = myAppRes.data.documents;
+          }
+        } catch {
+          // Fall through to search applications list
+        }
+
+        // 2. If no docs yet, check all applications list
+        if (!docs.length) {
+          const res = await kycService.getKYCApplications('ALL', 1, 50);
+          if (res.success && res.data?.items) {
+            const targetEntityId = session.entityId || session.userId;
+            const userApp = res.data.items.find(
+              (app: any) =>
+                app.entityId === targetEntityId ||
+                app.entityCode === session.userId ||
+                app.entityCode === session.entityId ||
+                app.entityName === session.name ||
+                (session.userId && app.applicationReference?.includes(session.userId))
+            );
+            if (userApp?.documents) {
+              docs = userApp.documents;
+            }
+          }
+        }
+
+        // Get the latest uploaded PROFILE_PHOTO document
+        const photoDocs = docs.filter(
+          (d: any) => d.type === 'PROFILE_PHOTO' || d.type === 'PROFILE_PHOTO_DOC'
+        );
+        const photoDoc = photoDocs[photoDocs.length - 1];
+
+        if (photoDoc && photoDoc.id) {
+          try {
+            const blob = await kycService.getDocumentBlob(photoDoc.id);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const dataUrl = reader.result as string;
+              if (dataUrl && dataUrl.startsWith('data:image')) {
+                const latestCustom = localStorage.getItem(`qsp_custom_profile_photo_${session.userId}`);
+                if (!latestCustom) {
+                  setProfilePhotoUrl(dataUrl);
+                  localStorage.setItem(`qsp_profile_photo_${session.userId}`, dataUrl);
+                  if (session.entityId) {
+                    localStorage.setItem(`qsp_profile_photo_${session.entityId}`, dataUrl);
+                  }
+                }
+              }
+            };
+            reader.readAsDataURL(blob);
+          } catch {
+            const latestCustom = localStorage.getItem(`qsp_custom_profile_photo_${session.userId}`);
+            if (!latestCustom && photoDoc.fileUrl && photoDoc.fileUrl.startsWith('data:image')) {
+              setProfilePhotoUrl(photoDoc.fileUrl);
+            }
+          }
+        }
+      } catch {
+        // Silently handle if photo not yet uploaded
+      }
+    };
+
+    fetchPhoto();
+  }, [session?.userId, session?.entityId, session?.name]);
 
   // Initial Session Hydration on Application Load
   useEffect(() => {
@@ -96,8 +215,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async (
       identifier: string,
       password?: string,
-      rememberMe: boolean = false
-    ): Promise<{ success: boolean; error?: string; defaultRoute?: string }> => {
+      rememberMe: boolean = false,
+      location?: LoginLocation
+    ): Promise<{ success: boolean; error?: string; defaultRoute?: string; sessionId?: string; accessToken?: string }> => {
       if (APP_CONFIG.useMockData) {
         const res = await mockAuthService.authenticate(identifier);
         if (!res.success || !res.data) return { success: false, error: res.error?.message || 'Invalid credentials.' };
@@ -106,10 +226,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storage = rememberMe ? localStorage : sessionStorage;
         storage.setItem(rememberMe ? STORAGE_KEY_SESSION_LOCAL : STORAGE_KEY_SESSION_SESSION, JSON.stringify(newSession));
         (rememberMe ? sessionStorage : localStorage).removeItem(rememberMe ? STORAGE_KEY_SESSION_SESSION : STORAGE_KEY_SESSION_LOCAL);
-        return { success: true, defaultRoute: getDefaultRouteForRole(newSession.role) };
+        return { success: true, defaultRoute: getDefaultRouteForRole(newSession.role), sessionId: undefined, accessToken: undefined };
       }
 
-      const realRes = await authService.login(identifier, password);
+      const realRes = await authService.login(identifier, password, location);
       if (realRes.success && realRes.session) {
         const newSession = realRes.session;
         setSession(newSession);
@@ -125,7 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.removeItem(STORAGE_KEY_SESSION_LOCAL);
           }
         }
-        return { success: true, defaultRoute: realRes.defaultRoute };
+        return { success: true, defaultRoute: realRes.defaultRoute, sessionId: realRes.sessionId, accessToken: newSession.accessToken };
       }
 
       return { success: false, error: realRes.error || 'Invalid credentials.' };
@@ -234,6 +354,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: previewRole || session.role, // Preview role applies to UI rendering, NOT true auth permissions
         permissions: session.permissions,
         entityId: session.entityId,
+        profilePhotoUrl: profilePhotoUrl,
       }
     : null;
 
@@ -243,12 +364,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         currentUser,
         previewRole,
+        profilePhotoUrl,
         isAuthenticated: !!session,
         isLoading,
         login,
         logout,
         changePassword,
         setPreviewRole,
+        updateProfilePhotoUrl,
         hasRole,
         hasPermission,
       }}

@@ -20,6 +20,7 @@ import { ReportExportMenu } from '@/components/features/reports/ReportExportMenu
 import { TransactionReportDrawer } from '@/components/features/reports/TransactionReportDrawer';
 import { AdminReportNav } from '@/components/features/reports/AdminReportNav';
 import { Search, Filter, RotateCcw, Eye, Activity } from 'lucide-react';
+import { useToast } from '@/components/ui';
 
 export default function TransactionReportPage() {
   const [activeMode, setActiveMode] = useState<'ALL' | 'LIVE' | 'UNSETTLED' | 'ORDERS'>('ALL');
@@ -31,6 +32,8 @@ export default function TransactionReportPage() {
   const [data, setData] = useState<ReportListResult<TransactionReportRecord, TransactionReportSummary> | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const { toastSuccess, toastError } = useToast();
 
   // Detail Drawer
   const detailsDrawer = useModal<TransactionReportRecord>();
@@ -72,31 +75,22 @@ export default function TransactionReportPage() {
     };
   }, [activeMode, dateRange, searchQuery, transactionType, status, pagination.page, pagination.pageSize]);
 
-  const handleExportCsv = () => {
-    if (!data?.items) return;
-    const exportRows = data.items.map((t) => ({
-      'Retailer Name': t.retailerName,
-      'Retailer ID': t.retailerId,
-      'Mobile Number': t.mobileNumber,
-      'Transaction ID': t.transactionId,
-      'API Reference ID': t.apiReferenceId,
-      'Transaction / Service Type': t.serviceType,
-      'Status': t.status,
-      'Failure / Response Message': t.responseMessage,
-      'Request Date & Time': formatDate(t.requestedAt),
-      'Updated Date & Time': formatDate(t.updatedAt),
-      'Transaction Amount (INR)': t.transactionAmount,
-      'Transaction Charges (INR)': t.transactionCharges,
-      'GST / Tax (INR)': t.gstAmount,
-      'Total Amount (INR)': t.totalAmount,
-      'Settlement Status': t.settlementStatus,
-      'Settlement Date': t.settlementDate ? formatDate(t.settlementDate) : 'N/A',
-      'Payment Mode': t.paymentMode,
-      'RRN / UTR Number': t.rrnOrUtr || 'N/A',
-      'Bank Reference Number': t.bankReferenceNumber || 'N/A',
-      'Remarks': t.remarks || 'N/A',
-    }));
-    reportService.exportToCsv(`Transaction_Report_${activeMode}`, exportRows);
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      await reportService.exportTransactionsCsv({
+        dateRange,
+        searchQuery,
+        transactionType,
+        status,
+        ...({ activeMode } as any),
+      });
+      toastSuccess('Transaction report exported successfully');
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Failed to export transaction report');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const summary = data?.summary || {
@@ -276,7 +270,7 @@ export default function TransactionReportPage() {
       title="Transaction Report"
       description="Analytical transaction volumes, success ratios, clearance pipeline, and exportable reports with 20 essential transaction fields."
       actions={
-        <ReportExportMenu onExportCsv={handleExportCsv} reportTitle="Transaction Report" disabled={!data?.items?.length} />
+        <ReportExportMenu onExportCsv={handleExportCsv} reportTitle="Transaction Report" disabled={!data?.items?.length} isLoading={isExporting} />
       }
     >
       <div className="space-y-6">

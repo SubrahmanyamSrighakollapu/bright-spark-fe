@@ -39,7 +39,6 @@ export const ledgerService = {
       );
 
       if (filtered.length === 0) {
-        // Fallback to demo entries if empty
         filtered = inMemoryLedger.filter((l) => l.walletId === 'wlt_md_001');
       }
 
@@ -77,8 +76,8 @@ export const ledgerService = {
       };
     }
 
-    return apiClient.get<ApiResponse<LedgerListResult>>(`/master-distributor/${masterDistributorId}/ledger`, {
-      params: { ...filters, page, pageSize } as unknown as Record<string, string | number | boolean>,
+    return apiClient.get<ApiResponse<LedgerListResult>>(`/wallets/entity/${masterDistributorId}/ledger`, {
+      params: { type: filters?.entryType, fromDate: filters?.dateFrom, toDate: filters?.dateTo, page, pageSize } as any,
     });
   },
 
@@ -133,8 +132,8 @@ export const ledgerService = {
       };
     }
 
-    return apiClient.get<ApiResponse<LedgerListResult>>(`/distributor/${distributorId}/ledger`, {
-      params: { ...filters, page, pageSize } as unknown as Record<string, string | number | boolean>,
+    return apiClient.get<ApiResponse<LedgerListResult>>(`/wallets/entity/${distributorId}/ledger`, {
+      params: { type: filters?.entryType, fromDate: filters?.dateFrom, toDate: filters?.dateTo, page, pageSize } as any,
     });
   },
 
@@ -194,13 +193,12 @@ export const ledgerService = {
       };
     }
 
-    return apiClient.get<ApiResponse<LedgerListResult>>(`/retailer/${retailerId}/ledger`, {
-      params: { ...filters, page, pageSize } as unknown as Record<string, string | number | boolean>,
+    return apiClient.get<ApiResponse<LedgerListResult>>(`/wallets/entity/${retailerId}/ledger`, {
+      params: { type: filters?.entryType, fromDate: filters?.dateFrom, toDate: filters?.dateTo, page, pageSize } as any,
     });
   },
 
   async getLedgerEntries(
-
     filters?: LedgerFilters,
     page = 1,
     pageSize = 10
@@ -248,8 +246,22 @@ export const ledgerService = {
       };
     }
 
-    return apiClient.get<ApiResponse<LedgerListResult>>('/ledger/entries', {
-      params: { ...filters, page, pageSize } as unknown as Record<string, string | number | boolean>,
+    return apiClient.get<ApiResponse<LedgerListResult>>('/wallets/entity/admin/ledger', {
+      params: { type: filters?.entryType, fromDate: filters?.dateFrom, toDate: filters?.dateTo, page, pageSize } as any,
+    });
+  },
+
+  async getPartyLedger(
+    partyId: string,
+    filters?: LedgerFilters,
+    page = 1,
+    pageSize = 10
+  ): Promise<ApiResponse<LedgerListResult>> {
+    if (APP_CONFIG.useMockData) {
+      return this.getLedgerEntries(filters, page, pageSize);
+    }
+    return apiClient.get<ApiResponse<LedgerListResult>>(`/wallets/entity/${partyId}/ledger`, {
+      params: { type: filters?.entryType, fromDate: filters?.dateFrom, toDate: filters?.dateTo, page, pageSize } as any,
     });
   },
 
@@ -263,6 +275,6 @@ export const ledgerService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<LedgerEntry>>(`/ledger/entries/${id}`);
+    return apiClient.get<ApiResponse<LedgerEntry>>(`/wallets/entity/${id}/ledger`);
   },
 };

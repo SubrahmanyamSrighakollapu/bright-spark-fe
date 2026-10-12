@@ -7,11 +7,12 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { PhoneInputWithCountryCode } from '@/components/ui/PhoneInputWithCountryCode';
 import { useToast } from '@/components/ui/Toast';
 import { employeeService, type EmployeeMetaDepartment } from '@/services/employeeService';
 
 const initialForm = () => ({
-  fullName: '', email: '', mobile: '', departmentCode: '',
+  fullName: '', email: '', countryCode: '+91', mobile: '', departmentCode: '',
   joiningDate: new Date().toISOString().split('T')[0], shiftCode: 'MORNING' as 'MORNING' | 'EVENING' | 'NIGHT',
 });
 
@@ -28,7 +29,7 @@ export const CreateEmployeeWizard: React.FC = () => {
   const validate = () => {
     if (form.fullName.trim().length < 2) return 'Enter the employee full name.';
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return 'Enter a valid official email address.';
-    if (!/^[6-9]\d{9}$/.test(form.mobile)) return 'Enter a valid 10-digit Indian mobile number.';
+    if (!form.mobile || form.mobile.replace(/\D/g, '').length < 7) return 'Enter a valid mobile number.';
     if (!form.departmentCode) return 'Department is mandatory.';
     if (!form.joiningDate) return 'Joining date is mandatory.';
     return null;
@@ -38,7 +39,12 @@ export const CreateEmployeeWizard: React.FC = () => {
     const error = validate(); if (error) return toastError(error);
     setSubmitting(true);
     try {
-      const employee = await employeeService.createEmployee({ ...form, fullName: form.fullName.trim(), email: form.email.trim().toLowerCase() });
+      const employee = await employeeService.createEmployee({
+        ...form,
+        fullName: form.fullName.trim(),
+        email: form.email.trim().toLowerCase(),
+        mobile: `${form.countryCode} ${form.mobile}`.trim(),
+      });
       toastSuccess(`Employee ${employee.employeeCode} (${employee.fullName}) created successfully.`);
       router.push('/admin/employees');
     } catch (error) { toastError(error instanceof Error ? error.message : 'Failed to create employee'); }
@@ -55,7 +61,7 @@ export const CreateEmployeeWizard: React.FC = () => {
       <div className="grid grid-cols-1 gap-5 pt-1 md:grid-cols-2 xl:grid-cols-3">
         <Input label="Full Name" placeholder="e.g. Rajesh Kumar" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))} required />
         <Input label="Official Email ID" type="email" placeholder="rajesh@qinstarpay.com" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
-        <Input label="Mobile Number" placeholder="9876543210" maxLength={10} value={form.mobile} onChange={(event) => setForm((current) => ({ ...current, mobile: event.target.value.replace(/\D/g, '') }))} required />
+        <PhoneInputWithCountryCode label="Mobile Number" placeholder="9876543210" value={form.mobile} countryCode={form.countryCode} onPhoneChange={(phone) => setForm((current) => ({ ...current, mobile: phone }))} onCountryCodeChange={(code) => setForm((current) => ({ ...current, countryCode: code }))} required />
         <Select label="Department" placeholder={loadingMeta ? 'Loading departments…' : 'Select department'} value={form.departmentCode} disabled={loadingMeta} onChange={(event) => setForm((current) => ({ ...current, departmentCode: event.target.value }))} options={departments.map((department) => ({ value: department.code, label: department.label }))} required />
         <Input label="Joining Date" type="date" value={form.joiningDate} onChange={(event) => setForm((current) => ({ ...current, joiningDate: event.target.value }))} leftIcon={<CalendarDays className="h-4 w-4 text-slate-400" />} required />
         <Select label="Assigned Shift" value={form.shiftCode} onChange={(event) => setForm((current) => ({ ...current, shiftCode: event.target.value as typeof current.shiftCode }))} options={[{ value: 'MORNING', label: 'Morning (09:00 AM – 06:00 PM)' }, { value: 'EVENING', label: 'Evening (02:00 PM – 11:00 PM)' }, { value: 'NIGHT', label: 'Night (10:00 PM – 07:00 AM)' }]} required />

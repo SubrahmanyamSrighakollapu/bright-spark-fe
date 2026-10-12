@@ -16,6 +16,7 @@ import { formatCurrency, formatDate } from '@/utils/formatters';
 import { ReportExportMenu } from '@/components/features/reports/ReportExportMenu';
 import { AdminReportNav } from '@/components/features/reports/AdminReportNav';
 import { Search, Filter, RotateCcw, Eye, BookOpen, Layers } from 'lucide-react';
+import { useToast } from '@/components/ui';
 
 export default function BalanceReportPage() {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ACCOUNT_SUMMARY'>('OVERVIEW');
@@ -26,6 +27,8 @@ export default function BalanceReportPage() {
   const [accountSummaries, setAccountSummaries] = useState<AccountSummary[]>([]);
   const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const { toastSuccess, toastError } = useToast();
 
   const loadReport = () => {
     setIsLoading(true);
@@ -72,36 +75,36 @@ export default function BalanceReportPage() {
     };
   }, [activeTab, searchQuery, entityType, pagination.page, pagination.pageSize]);
 
-  const handleExportCsv = () => {
-    if (activeTab === 'OVERVIEW') {
-      if (!data?.items) return;
-      const exportRows = data.items.map((w) => ({
-        'Wallet ID': w.walletId,
-        'Entity Name': w.entityName,
-        'Entity Type': w.entityType,
-        'Available Balance (INR)': w.availableBalance,
-        'Ledger Balance (INR)': w.ledgerBalance,
-        'Hold Balance (INR)': w.holdBalance,
-        'Pending Settlement (INR)': w.pendingSettlement,
-        'Status': w.status,
-        'Last Updated': w.updatedAt,
-      }));
-      reportService.exportToCsv('Balance_Report', exportRows);
-    } else {
-      const exportRows = accountSummaries.map((a) => ({
-        'Entity Name': a.entityName,
-        'Entity Type': a.entityType,
-        'Wallet ID': a.walletId,
-        'Opening Balance (INR)': a.openingBalance,
-        'Total Credits (INR)': a.totalCredits,
-        'Total Debits (INR)': a.totalDebits,
-        'Closing Balance (INR)': a.closingBalance,
-        'Hold Balance (INR)': a.holdBalance,
-        'Pending Settlement (INR)': a.pendingSettlement,
-        'Txn Count': a.transactionCount,
-        'Settlement Count': a.settlementCount,
-      }));
-      reportService.exportToCsv('Account_Summary_Report', exportRows);
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      if (activeTab === 'OVERVIEW') {
+        await reportService.exportBalanceCsv({
+          searchQuery,
+          entityType,
+        });
+        toastSuccess('Balance report exported successfully');
+      } else {
+        const exportRows = accountSummaries.map((a) => ({
+          'Entity Name': a.entityName,
+          'Entity Type': a.entityType,
+          'Wallet ID': a.walletId,
+          'Opening Balance (INR)': a.openingBalance,
+          'Total Credits (INR)': a.totalCredits,
+          'Total Debits (INR)': a.totalDebits,
+          'Closing Balance (INR)': a.closingBalance,
+          'Hold Balance (INR)': a.holdBalance,
+          'Pending Settlement (INR)': a.pendingSettlement,
+          'Txn Count': a.transactionCount,
+          'Settlement Count': a.settlementCount,
+        }));
+        reportService.exportToCsv('Account_Summary_Report', exportRows);
+        toastSuccess('Account summary exported successfully');
+      }
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Failed to export balance report');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -247,6 +250,7 @@ export default function BalanceReportPage() {
         <ReportExportMenu
           onExportCsv={handleExportCsv}
           reportTitle={activeTab === 'OVERVIEW' ? 'Balance Report' : 'Account Summary'}
+          isLoading={isExporting}
         />
       }
     >

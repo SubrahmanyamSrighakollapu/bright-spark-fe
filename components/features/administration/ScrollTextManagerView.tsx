@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Table } from '@/components/ui/Table';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
@@ -283,29 +284,29 @@ export const ScrollTextManagerView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Display Speed</label>
-              <select
+              <Select
+                label="Display Speed"
                 value={speed}
                 onChange={(e) => setSpeed(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0F4C81]"
-              >
-                <option value="Slow">Slow</option>
-                <option value="Normal">Normal</option>
-                <option value="Fast">Fast</option>
-              </select>
+                options={[
+                  { label: 'Slow', value: 'Slow' },
+                  { label: 'Normal', value: 'Normal' },
+                  { label: 'Fast', value: 'Fast' },
+                ]}
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Target Audience</label>
-              <select
+              <Select
+                label="Target Audience"
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0F4C81]"
-              >
-                <option value="All Users">All Users</option>
-                <option value="Distributors Only">Distributors Only</option>
-                <option value="Retailers Only">Retailers Only</option>
-              </select>
+                options={[
+                  { label: 'All Users', value: 'All Users' },
+                  { label: 'Distributors Only', value: 'Distributors Only' },
+                  { label: 'Retailers Only', value: 'Retailers Only' },
+                ]}
+              />
             </div>
           </div>
 

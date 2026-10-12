@@ -17,6 +17,7 @@ import { ReportExportMenu } from '@/components/features/reports/ReportExportMenu
 import { LedgerDetailsDrawer } from '@/components/features/wallet/LedgerDetailsDrawer';
 import { AdminReportNav } from '@/components/features/reports/AdminReportNav';
 import { Search, Filter, RotateCcw, Eye, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { useToast } from '@/components/ui';
 
 export default function LedgerReportPage() {
   const [dateRange, setDateRange] = useState<ReportDateRange>({ preset: 'THIS_MONTH' });
@@ -27,6 +28,8 @@ export default function LedgerReportPage() {
   const [data, setData] = useState<ReportListResult<LedgerEntry, LedgerReportSummary> | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const { toastSuccess, toastError } = useToast();
 
   const detailDrawer = useModal<LedgerEntry>();
 
@@ -67,22 +70,21 @@ export default function LedgerReportPage() {
     };
   }, [dateRange, searchQuery, entryType, direction, pagination.page, pagination.pageSize]);
 
-  const handleExportCsv = () => {
-    if (!data?.items) return;
-    const exportRows = data.items.map((l) => ({
-      'Ledger ID': l.id,
-      'Target Wallet ID': l.walletId,
-      'Entity Name': l.entityName,
-      'Entry Type': l.entryType,
-      'Direction': l.direction,
-      'Opening Balance (INR)': l.openingBalance,
-      'Amount (INR)': l.amount,
-      'Closing Balance (INR)': l.closingBalance,
-      'Reference ID': l.referenceId || 'N/A',
-      'Created By': l.createdBy,
-      'Created At': l.createdAt,
-    }));
-    reportService.exportToCsv('Ledger_Audit_Report', exportRows);
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      await reportService.exportLedgerCsv({
+        dateRange,
+        searchQuery,
+        entryType,
+        direction,
+      });
+      toastSuccess('Ledger report exported successfully');
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Failed to export ledger report');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const summary = data?.summary || {
@@ -174,7 +176,7 @@ export default function LedgerReportPage() {
       title="Ledger Report"
       description="Immutable financial audit logs, entry types, direction breakdown, and exportable reports."
       actions={
-        <ReportExportMenu onExportCsv={handleExportCsv} reportTitle="Ledger Report" disabled={!data?.items?.length} />
+        <ReportExportMenu onExportCsv={handleExportCsv} reportTitle="Ledger Report" disabled={!data?.items?.length} isLoading={isExporting} />
       }
     >
       <div className="space-y-6">

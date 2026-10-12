@@ -171,9 +171,9 @@ export default function RetailerLedgerPage() {
         </div>
 
         {/* Ledger Table Workspace */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs">
           {/* Controls Bar */}
-          <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
+          <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 rounded-t-2xl relative z-20">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
               {/* Search */}
               <div className="relative flex-1 max-w-md">
@@ -273,7 +273,7 @@ export default function RetailerLedgerPage() {
           </div>
 
           {/* Table Surface (Scrolls internally) */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-b-2xl">
             {loading ? (
               <div className="py-16 text-center text-xs text-slate-400 space-y-2">
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#0F4C81]" />
@@ -304,7 +304,13 @@ export default function RetailerLedgerPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs font-mono">
                   {entries.map((e) => {
-                    const isCredit = e.direction === 'CREDIT';
+                    const entryType = (e as any).type || e.entryType || (e.direction === 'CREDIT' ? 'CREDIT' : 'DEBIT');
+                    const isCredit = e.direction === 'CREDIT' || entryType === 'CREDIT' || entryType === 'RELEASE' || entryType === 'PAY_IN' || entryType === 'WALLET_CREDIT';
+                    const formattedTxId = e.id && e.id.length > 20 ? `TX-${e.id.split('-').pop()?.toUpperCase()}` : e.id;
+                    const refText = e.referenceId || (e as any).reference_id || e.transactionId || 'SYSTEM';
+                    const desc = e.description || (e as any).narration || (entryType === 'HOLD' ? 'Security Hold on Wallet' : entryType === 'RELEASE' ? 'Release of Security Hold' : 'Wallet Adjustment');
+                    const balanceAfter = (e as any).availableBalanceAfter ?? e.closingBalance ?? 0;
+
                     return (
                       <tr
                         key={e.id}
@@ -316,35 +322,45 @@ export default function RetailerLedgerPage() {
                       >
                         {/* Ledger ID / Date */}
                         <td className="py-3.5 px-4">
-                          <span className="font-bold text-slate-900 group-hover:text-[#0F4C81] transition-colors block">
-                            {e.id}
+                          <span className="font-bold text-slate-900 group-hover:text-[#0F4C81] transition-colors block font-mono" title={e.id}>
+                            {formattedTxId}
                           </span>
-                          <span className="text-[11px] text-slate-400 font-mono">
+                          <span className="text-[11px] text-slate-400 font-sans">
                             {formatDateTime(e.createdAt)}
                           </span>
                         </td>
 
                         {/* Reference */}
                         <td className="py-3.5 px-4 font-semibold text-slate-700">
-                          {e.referenceId || e.transactionId || 'SYSTEM'}
+                          {refText}
                         </td>
 
                         {/* Movement Badge */}
                         <td className="py-3.5 px-4 font-sans whitespace-nowrap">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase ${
-                              isCredit
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                : 'bg-rose-50 text-rose-800 border border-rose-200'
-                            }`}
-                          >
-                            {e.entryType}
-                          </span>
+                          {entryType === 'HOLD' ? (
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-50 text-amber-800 border border-amber-200">
+                              🔒 HOLD
+                            </span>
+                          ) : entryType === 'RELEASE' ? (
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-indigo-50 text-indigo-800 border border-indigo-200">
+                              🔓 RELEASE
+                            </span>
+                          ) : (
+                            <span
+                              className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                                isCredit
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                  : 'bg-rose-50 text-rose-800 border border-rose-200'
+                              }`}
+                            >
+                              {isCredit ? '↓ CREDIT' : '↑ DEBIT'}
+                            </span>
+                          )}
                         </td>
 
                         {/* Description */}
-                        <td className="py-3.5 px-4 font-sans text-slate-600 truncate max-w-[240px]">
-                          {e.description}
+                        <td className="py-3.5 px-4 font-sans text-slate-600 truncate max-w-[240px]" title={desc}>
+                          {desc}
                         </td>
 
                         {/* Credit / Debit Amount */}
@@ -356,7 +372,7 @@ export default function RetailerLedgerPage() {
 
                         {/* Balance After */}
                         <td className="py-3.5 px-4 text-right font-bold text-slate-900 text-sm">
-                          {formatCurrency(e.closingBalance)}
+                          {formatCurrency(balanceAfter)}
                         </td>
 
                         {/* Actions */}

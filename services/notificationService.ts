@@ -11,11 +11,11 @@ import {
 import { ApiResponse } from '@/types/common';
 import { mockNotifications, defaultNotificationPreferences } from '@/mocks/mockNotification';
 import { APP_CONFIG } from '@/config';
+import { apiClient } from './apiClient';
 
 const NOTIFICATIONS_STORAGE_KEY = 'qsp_notifications_v1';
 const PREFERENCES_STORAGE_KEY = 'qsp_notification_prefs_v1';
 
-// Initial state loader with localStorage support
 const loadInitialNotifications = (): Notification[] => {
   if (typeof window === 'undefined') return [...mockNotifications];
   try {
@@ -71,23 +71,54 @@ export interface NotificationListResult {
   summary: NotificationSummary;
 }
 
+export interface PublishAnnouncementInput {
+  target:
+    | { kind: 'USER_IDS'; userIds: string[] }
+    | { kind: 'ROLES'; roles: string[] }
+    | { kind: 'ALL' }
+    | { kind: 'HIERARCHY'; ownerUserId: string; includeOwner?: boolean };
+  title: string;
+  message: string;
+  severity: NotificationSeverity;
+  actionRequired?: boolean;
+  entityType?: Notification['entityType'];
+  entityId?: string;
+  relatedEntity?: string;
+  expiresAt?: string;
+}
+
+const buildFilterParams = (
+  filters?: NotificationFilters
+): Record<string, string | number | boolean | undefined> => {
+  const params: Record<string, string | number | boolean | undefined> = {};
+  if (!filters) return params;
+  if (filters.category && filters.category !== 'ALL') params.category = filters.category;
+  if (filters.severity && filters.severity !== 'ALL') params.severity = filters.severity;
+  if (filters.status && filters.status !== 'ALL') params.status = filters.status;
+  if (filters.actionRequired === 'true') params.actionRequired = true;
+  else if (filters.actionRequired === 'false') params.actionRequired = false;
+  if (filters.excludeDismissed === 'true') params.excludeDismissed = true;
+  else if (filters.excludeDismissed === 'false') params.excludeDismissed = false;
+  const search = filters.search || filters.searchQuery;
+  if (typeof search === 'string' && search.trim() !== '') params.search = search.trim();
+  if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+  if (filters.dateTo) params.dateTo = filters.dateTo;
+  if (!filters.dateFrom && filters.dateRange?.startDate) params.dateFrom = filters.dateRange.startDate;
+  if (!filters.dateTo && filters.dateRange?.endDate) params.dateTo = filters.dateRange.endDate;
+  return params;
+};
+
 export const notificationService = {
-  /**
-   * Calculate notification summary metrics dynamically from state.
-   */
   async getSummary(): Promise<ApiResponse<NotificationSummary>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 100));
-
       const totalNotifications = inMemoryNotifications.length;
       const unreadCount = inMemoryNotifications.filter((n) => n.status === 'UNREAD').length;
       const criticalCount = inMemoryNotifications.filter((n) => n.severity === 'CRITICAL').length;
       const actionRequiredCount = inMemoryNotifications.filter((n) => n.actionRequired && n.status === 'UNREAD').length;
       const readCount = inMemoryNotifications.filter((n) => n.status === 'READ').length;
-
       const todayStr = new Date().toISOString().split('T')[0];
       const todayCount = inMemoryNotifications.filter((n) => n.createdAt.startsWith(todayStr)).length;
-
       return {
         success: true,
         data: {
@@ -101,12 +132,9 @@ export const notificationService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return { success: false, data: null as unknown as NotificationSummary, timestamp: new Date().toISOString() };
+    return apiClient.get<ApiResponse<NotificationSummary>>('/notifications/summary');
   },
 
-  /**
-   * Fetch notifications with filtering & pagination.
-   */
   async getNotifications(
     filters?: NotificationFilters,
     page = 1,
@@ -114,23 +142,19 @@ export const notificationService = {
   ): Promise<ApiResponse<NotificationListResult>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 150));
-
       let filtered = [...inMemoryNotifications];
-
       if (filters?.category && filters.category !== 'ALL') {
         filtered = filtered.filter((n) => n.category === filters.category);
       }
-
       if (filters?.severity && filters.severity !== 'ALL') {
         filtered = filtered.filter((n) => n.severity === filters.severity);
       }
-
       if (filters?.status && filters.status !== 'ALL') {
         filtered = filtered.filter((n) => n.status === filters.status);
       }
-
-      if (filters?.searchQuery && filters.searchQuery.trim() !== '') {
-        const q = filters.searchQuery.trim().toLowerCase();
+      const search = filters?.search || filters?.searchQuery;
+      if (search && search.trim() !== '') {
+        const q = search.trim().toLowerCase();
         filtered = filtered.filter(
           (n) =>
             n.id.toLowerCase().includes(q) ||
@@ -140,54 +164,42 @@ export const notificationService = {
             (n.relatedEntity && n.relatedEntity.toLowerCase().includes(q))
         );
       }
-
+      if (filters?.dateRange?.startDate) {
+        const from = new Date(filters.dateRange.startDate).getTime();
+        filtered = filtered.filter((n) => new Date(n.createdAt).getTime() >= from);
+      }
+      if (filters?.dateRange?.endDate) {
+        const to = new Date(filters.dateRange.endDate).getTime();
+        filtered = filtered.filter((n) => new Date(n.createdAt).getTime() <= to);
+      }
       const summaryRes = await this.getSummary();
       const summary = summaryRes.data || {
-        totalNotifications: 0,
-        unreadCount: 0,
-        criticalCount: 0,
-        actionRequiredCount: 0,
-        todayCount: 0,
-        readCount: 0,
+        totalNotifications: 0, unreadCount: 0, criticalCount: 0,
+        actionRequiredCount: 0, todayCount: 0, readCount: 0,
       };
-
       const totalItems = filtered.length;
       const totalPages = Math.ceil(totalItems / pageSize) || 1;
       const items = filtered.slice((page - 1) * pageSize, page * pageSize);
-
       return {
         success: true,
-        data: {
-          items,
-          pagination: { page, pageSize, totalItems, totalPages },
-          summary,
-        },
+        data: { items, pagination: { page, pageSize, totalItems, totalPages }, summary },
         timestamp: new Date().toISOString(),
       };
     }
 
-    return { success: false, data: null as unknown as NotificationListResult, timestamp: new Date().toISOString() };
+    const params: Record<string, string | number | boolean | undefined> = { page, pageSize, ...buildFilterParams(filters) };
+    return apiClient.get<ApiResponse<NotificationListResult>>('/notifications', { params });
   },
 
-  /**
-   * Fetch single notification by ID.
-   */
   async getNotificationById(id: string): Promise<ApiResponse<Notification | null>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 100));
       const notif = inMemoryNotifications.find((n) => n.id === id) || null;
-      return {
-        success: !!notif,
-        data: notif,
-        timestamp: new Date().toISOString(),
-      };
+      return { success: !!notif, data: notif, timestamp: new Date().toISOString() };
     }
-    return { success: false, data: null, timestamp: new Date().toISOString() };
+    return apiClient.get<ApiResponse<Notification | null>>(`/notifications/${id}`);
   },
 
-  /**
-   * Mark a single notification as read.
-   */
   async markAsRead(id: string): Promise<ApiResponse<Notification>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 150));
@@ -200,12 +212,24 @@ export const notificationService = {
       }
       return { success: false, data: null as unknown as Notification, timestamp: new Date().toISOString() };
     }
-    return { success: false, data: null as unknown as Notification, timestamp: new Date().toISOString() };
+    return apiClient.post<ApiResponse<Notification>>(`/notifications/${id}/read`, {});
   },
 
-  /**
-   * Mark all unread notifications as read.
-   */
+  async markAsUnread(id: string): Promise<ApiResponse<Notification>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 150));
+      const notif = inMemoryNotifications.find((n) => n.id === id);
+      if (notif) {
+        notif.status = 'UNREAD';
+        notif.readAt = null;
+        saveNotifications();
+        return { success: true, data: { ...notif }, timestamp: new Date().toISOString() };
+      }
+      return { success: false, data: null as unknown as Notification, timestamp: new Date().toISOString() };
+    }
+    return apiClient.post<ApiResponse<Notification>>(`/notifications/${id}/unread`, {});
+  },
+
   async markAllAsRead(): Promise<ApiResponse<number>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 200));
@@ -221,12 +245,35 @@ export const notificationService = {
       saveNotifications();
       return { success: true, data: count, timestamp: new Date().toISOString() };
     }
-    return { success: false, data: 0, timestamp: new Date().toISOString() };
+    const envelope = await apiClient.post<ApiResponse<{ markedCount: number }>>('/notifications/read-all', {});
+    return {
+      success: envelope.success,
+      data: envelope.data?.markedCount ?? 0,
+      timestamp: envelope.timestamp,
+    };
   },
 
-  /**
-   * Create a new operational notification (e.g. from cross-module events).
-   */
+  async dismiss(id: string): Promise<ApiResponse<Notification>> {
+    if (APP_CONFIG.useMockData) {
+      await new Promise((res) => setTimeout(res, 100));
+      const notif = inMemoryNotifications.find((n) => n.id === id);
+      if (notif) {
+        (notif as Notification & { dismissedAt?: string | null }).dismissedAt = new Date().toISOString();
+        saveNotifications();
+        return { success: true, data: { ...notif }, timestamp: new Date().toISOString() };
+      }
+      return { success: false, data: null as unknown as Notification, timestamp: new Date().toISOString() };
+    }
+    return apiClient.post<ApiResponse<Notification>>(`/notifications/${id}/dismiss`, {});
+  },
+
+  async clicked(id: string): Promise<ApiResponse<Notification>> {
+    if (APP_CONFIG.useMockData) {
+      return this.getNotificationById(id).then((r) => ({ success: true, data: r.data as Notification, timestamp: new Date().toISOString() }));
+    }
+    return apiClient.post<ApiResponse<Notification>>(`/notifications/${id}/clicked`, {});
+  },
+
   async createNotification(
     category: NotificationCategory,
     type: NotificationType,
@@ -259,7 +306,6 @@ export const notificationService = {
         readAt: null,
         metadata,
       };
-
       inMemoryNotifications.unshift(newNotif);
       saveNotifications();
       return { success: true, data: newNotif, timestamp: new Date().toISOString() };
@@ -267,44 +313,94 @@ export const notificationService = {
     return { success: false, data: null as unknown as Notification, timestamp: new Date().toISOString() };
   },
 
-  /**
-   * Get notification preferences.
-   */
+  async publishAnnouncement(input: PublishAnnouncementInput): Promise<ApiResponse<{ targetCount: number; createdCount: number; skippedDueToPreferences: number }>> {
+    return apiClient.post<ApiResponse<{ targetCount: number; createdCount: number; skippedDueToPreferences: number }>>(
+      '/notifications/announcements',
+      input,
+    );
+  },
+
   async getPreferences(): Promise<ApiResponse<NotificationPreferenceItem[]>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 100));
       return { success: true, data: [...inMemoryPreferences], timestamp: new Date().toISOString() };
     }
-    return { success: false, data: [], timestamp: new Date().toISOString() };
+    return apiClient.get<ApiResponse<NotificationPreferenceItem[]>>('/notifications/preferences');
   },
 
-  /**
-   * Update preference toggle state.
-   */
   async updatePreference(
     type: NotificationType,
-    field: 'inAppEnabled' | 'emailEnabled',
+    field: 'inAppEnabled' | 'emailEnabled' | 'smsEnabled' | 'pushEnabled',
     enabled: boolean
   ): Promise<ApiResponse<NotificationPreferenceItem[]>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 150));
       const item = inMemoryPreferences.find((p) => p.type === type);
       if (item) {
-        if (field === 'inAppEnabled' && item.inAppMandatory) {
-          // Cannot disable mandatory in-app alerts
+        if (field === 'inAppEnabled' && item.inAppMandatory && !enabled) {
           return { success: false, data: inMemoryPreferences, timestamp: new Date().toISOString() };
         }
-        item[field] = enabled;
+        (item as NotificationPreferenceItem & { [k: string]: boolean })[field] = enabled;
         savePreferences();
       }
       return { success: true, data: [...inMemoryPreferences], timestamp: new Date().toISOString() };
     }
-    return { success: false, data: [], timestamp: new Date().toISOString() };
+    return apiClient.patch<ApiResponse<NotificationPreferenceItem[]>>(
+      `/notifications/preferences/${type}`,
+      { [field]: enabled },
+    );
   },
 
-  /**
-   * Resolve operational route for related record action button.
-   */
+  async exportCsv(filters?: NotificationFilters): Promise<void> {
+    if (typeof window === 'undefined') return;
+
+    const params = buildFilterParams(filters);
+    // Build URL manually since we need to fetch as blob + access response headers
+    const urlObj = new URL(
+      `${APP_CONFIG.apiBaseUrl}${APP_CONFIG.apiBaseUrl.endsWith('/') ? '' : '/'}notifications/export`
+    );
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) urlObj.searchParams.append(key, String(value));
+    });
+
+    const getStoredSession = (): { accessToken: string | null } => {
+      try {
+        const s1 = sessionStorage.getItem('qin-star-pay-auth-session-session');
+        if (s1) return { accessToken: (JSON.parse(s1).accessToken as string) || null };
+        const s2 = localStorage.getItem('qin-star-pay-auth-session-local');
+        if (s2) return { accessToken: (JSON.parse(s2).accessToken as string) || null };
+      } catch {
+        /* noop */
+      }
+      return { accessToken: null };
+    };
+
+    const headers: Record<string, string> = {
+      'Accept': 'text/csv, application/json',
+      'X-Client-Platform': 'web-admin',
+    };
+    const session = getStoredSession();
+    if (session.accessToken) headers['Authorization'] = `Bearer ${session.accessToken}`;
+
+    const response = await fetch(urlObj.toString(), { headers });
+    if (!response.ok) throw new Error(`Export failed (HTTP ${response.status})`);
+
+    const blob = await response.blob();
+    const contentDisposition = response.headers.get('content-disposition') || '';
+    const match = /filename="?([^";]+)"?/.exec(contentDisposition);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute(
+      'download',
+      match?.[1] ?? `notifications_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  },
+
   getRelatedRecordRoute(notification: Notification): string {
     if (notification.entityType === 'TRANSACTION' || notification.category === 'TRANSACTION') {
       return `/admin/transactions/${notification.entityId || 'QSP20260903001'}`;

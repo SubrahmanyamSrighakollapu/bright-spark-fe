@@ -1,4 +1,4 @@
-﻿import { UserContext, canAccessRoute, UserRole } from './roles';
+import { UserContext, canAccessRoute, UserRole } from './roles';
 
 export interface NavigationItem {
   id: string;
@@ -39,8 +39,6 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
       { id: 'user-list', label: 'User List', path: '/admin/users' },
       { id: 'add-user', label: 'Add User', path: '/admin/users/add' },
       { id: 'user-settings', label: 'Retailer Settings', path: '/admin/users/settings' },
-      { id: 'add-wallet', label: 'Add Wallet', path: '/admin/users/add-wallet' },
-      { id: 'hold-funds', label: 'Hold Funds', path: '/admin/users/hold-funds' },
     ],
   },
   {
@@ -84,6 +82,16 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
     iconName: 'Landmark',
     path: '/admin/settlements',
     roles: ['SUPER_ADMIN', 'ACCOUNTS', 'OPERATIONS'],
+  },
+  {
+    id: 'logs-audit',
+    label: 'Logs & Audit',
+    iconName: 'ClipboardList',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'ACCOUNTS'],
+    children: [
+      { id: 'activity-logs', label: 'Activity Logs', path: '/admin/logs/activity', roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'ACCOUNTS'] },
+      { id: 'api-performance-logs', label: 'API Performance Logs', path: '/admin/logs/api', roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'ACCOUNTS'] },
+    ],
   },
   {
     id: 'reports',
@@ -139,7 +147,8 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
       { id: 'service-categories', label: 'Service Categories & Products', path: '/admin/administration/service-categories' },
       { id: 'roles-management', label: 'Roles Management', path: '/admin/administration/roles' },
       { id: 'plans-management', label: 'Plans Management', path: '/admin/administration/plans' },
-      { id: 'plan-commissions', label: 'Plan Commission & Config', path: '/admin/administration/commissions' },
+      { id: 'plan-configurations', label: 'Plan Configuration', path: '/admin/administration/plan-configuration' },
+      { id: 'plan-commissions', label: 'Commission Configuration', path: '/admin/administration/commissions' },
       { id: 'scroll-text', label: 'Scroll Text Manager', path: '/admin/administration/ticker' },
       { id: 'notice-board', label: 'Notice Board Manager', path: '/admin/administration/notice-board' },
       { id: 'payout-charges', label: 'Payout Charges Manager', path: '/admin/administration/payout-charges' },
@@ -257,7 +266,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
     { id: 'ret-qr-payin', label: 'QR Pay-In', iconName: 'QrCode', path: '/retailer/qr-pay-in' },
     { id: 'ret-payment-links', label: 'Payment Links', iconName: 'Link2', path: '/retailer/payment-links' },
     { id: 'ret-topup', label: 'Top-Up Request', iconName: 'BadgeIndianRupee', path: '/retailer/top-up' },
-    { id: 'ret-payout', label: 'Pay-Out', iconName: 'ArrowUpRight', path: '/retailer/pay-out' },
+    { id: 'ret-payout', label: 'Settlement / Pay-Out', iconName: 'ArrowUpRight', path: '/retailer/pay-out' },
     { id: 'ret-transactions', label: 'Transactions', iconName: 'ArrowLeftRight', path: '/retailer/transactions' },
     {
       id: 'ret-wallet',
@@ -269,7 +278,6 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
         { id: 'ret-wallet-ledger', label: 'Ledger', path: '/retailer/wallet/ledger' },
       ],
     },
-    { id: 'ret-commissions', label: 'Commissions', iconName: 'Percent', path: '/retailer/commissions' },
     { id: 'ret-reports', label: 'Reports', iconName: 'BarChart3', path: '/retailer/reports', children: [
       { id: 'ret-all-reports', label: 'All Reports', path: '/retailer/reports' },
       { id: 'ret-unsettled', label: 'Unsettled (T+1)', path: '/retailer/reports/unsettled' },
@@ -293,6 +301,15 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
       ],
     },
     { id: 'chargebacks', label: 'Chargebacks & Disputes', iconName: 'RotateCcw', path: '/admin/chargebacks' },
+    {
+      id: 'logs-audit',
+      label: 'Logs & Audit',
+      iconName: 'ClipboardList',
+      children: [
+        { id: 'activity-logs', label: 'Activity Logs', path: '/admin/logs/activity' },
+        { id: 'api-performance-logs', label: 'API Performance Logs', path: '/admin/logs/api' },
+      ],
+    },
     { id: 'notifications', label: 'Notifications', iconName: 'Bell', path: '/admin/notifications' },
   ],
   ACCOUNTS: [
@@ -304,6 +321,15 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
       path: '/admin/wallet-management',
     },
     { id: 'settlements', label: 'Settlements', iconName: 'Landmark', path: '/admin/settlements' },
+    {
+      id: 'logs-audit',
+      label: 'Logs & Audit',
+      iconName: 'ClipboardList',
+      children: [
+        { id: 'activity-logs', label: 'Activity Logs', path: '/admin/logs/activity' },
+        { id: 'api-performance-logs', label: 'API Performance Logs', path: '/admin/logs/api' },
+      ],
+    },
     {
       id: 'invoices',
       label: 'Invoices & Tax',

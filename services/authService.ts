@@ -1,6 +1,7 @@
 import { apiClient } from './apiClient';
 import { UserRole } from '@/config/roles';
 import { AuthSession, getDefaultRouteForRole } from './mockAuthService';
+import type { LoginLocation } from '@/utils/geolocation';
 
 export interface LoginApiResponse {
   success: boolean;
@@ -9,6 +10,7 @@ export interface LoginApiResponse {
     refreshToken: string;
     tokenType: string;
     expiresIn: string;
+    sessionId: string;
     user: {
       userId: string;
       partyId: string | null;
@@ -49,16 +51,22 @@ export class AuthService {
    */
   async login(
     identifier: string,
-    password?: string
-  ): Promise<{ success: boolean; session?: AuthSession; error?: string; defaultRoute?: string; isNetworkError?: boolean }> {
+    password?: string,
+    location?: LoginLocation
+  ): Promise<{ success: boolean; session?: AuthSession; sessionId?: string; error?: string; defaultRoute?: string; isNetworkError?: boolean }> {
     try {
       const response = await apiClient.post<LoginApiResponse>('/auth/login', {
         identifier,
         password: password || '',
+        latitude: location?.latitude ?? undefined,
+        longitude: location?.longitude ?? undefined,
+        locationAccuracy: location?.locationAccuracy ?? undefined,
+        locationStatus: location?.locationStatus ?? undefined,
+        locationCapturedAt: location?.locationCapturedAt ?? undefined,
       });
 
       if (response.success && response.data) {
-        const { accessToken, refreshToken, user } = response.data;
+        const { accessToken, refreshToken, sessionId, user } = response.data;
         const primaryRole = (user.roles[0] as UserRole) || 'RETAILER';
 
         const session: AuthSession = {
@@ -78,7 +86,7 @@ export class AuthService {
         };
 
         const defaultRoute = getDefaultRouteForRole(primaryRole);
-        return { success: true, session, defaultRoute };
+        return { success: true, session, sessionId, defaultRoute };
       }
 
       return { success: false, error: 'Authentication failed', isNetworkError: false };
@@ -86,6 +94,24 @@ export class AuthService {
       const message = (err as Error)?.message || 'Invalid credentials or server unavailable';
       const isNetworkError = message === 'Failed to fetch' || message.includes('Network request failed');
       return { success: false, error: message, isNetworkError };
+    }
+  }
+
+  async updateLoginLocation(sessionId: string, location: LoginLocation, accessToken: string): Promise<void> {
+    try {
+      await apiClient.patch(
+        `/login-history/session/${encodeURIComponent(sessionId)}/location`,
+        {
+          latitude: location.latitude ?? undefined,
+          longitude: location.longitude ?? undefined,
+          locationAccuracy: location.locationAccuracy ?? undefined,
+          locationStatus: location.locationStatus,
+          locationCapturedAt: location.locationCapturedAt ?? undefined,
+        },
+        { authToken: accessToken }
+      );
+    } catch {
+      // best-effort: location update failure must not break the session
     }
   }
 

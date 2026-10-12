@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Menu, RefreshCw, Wallet } from 'lucide-react';
+import { Menu, RefreshCw, Wallet, Lock } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { walletService } from '@/services/walletService';
 import { formatCurrency } from '@/utils/formatters';
@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const pathname = usePathname();
   const { session } = useAuth();
-  const [balance, setBalance] = useState<number | null>(null);
+  const [walletInfo, setWalletInfo] = useState<{ available: number; hold: number; ledger: number } | null>(null);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
 
   const breadcrumbs = getBreadcrumbsForPath(pathname || '/dashboard');
@@ -37,25 +37,42 @@ export const Header: React.FC<HeaderProps> = ({
       if (session?.role === 'RETAILER' && session.entityId) {
         const res = await walletService.getRetailerWallet(session.entityId);
         if (res.success && res.data) {
-          setBalance(res.data.availableBalance);
+          setWalletInfo({
+            available: res.data.availableBalance,
+            hold: res.data.holdBalance,
+            ledger: res.data.ledgerBalance,
+          });
           return;
         }
       } else if (session?.role === 'DISTRIBUTOR' && session.entityId) {
         const res = await walletService.getDistributorWallet(session.entityId);
         if (res.success && res.data) {
-          setBalance(res.data.availableBalance);
+          setWalletInfo({
+            available: res.data.availableBalance,
+            hold: res.data.holdBalance,
+            ledger: res.data.ledgerBalance,
+          });
           return;
         }
       } else if (session?.role === 'MASTER_DISTRIBUTOR' && session.entityId) {
         const res = await walletService.getMasterDistributorWallet(session.entityId);
         if (res.success && res.data) {
-          setBalance(res.data.availableBalance);
+          setWalletInfo({
+            available: res.data.availableBalance,
+            hold: res.data.holdBalance,
+            ledger: res.data.ledgerBalance,
+          });
           return;
         }
       }
       const res = await walletService.getBalance();
       if (res.success && res.data) {
-        setBalance(res.data.availableBalance);
+        const d = res.data as any;
+        setWalletInfo({
+          available: d.availableBalance || 0,
+          hold: d.holdBalance ?? d.lienAmount ?? 0,
+          ledger: d.ledgerBalance ?? ((d.availableBalance || 0) + (d.holdBalance ?? d.lienAmount ?? 0)),
+        });
       }
     } catch {
       // Fallback
@@ -105,15 +122,30 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-3 shrink-0">
         {/* Wallet Balance Indicator for Wallet Roles */}
         {(session?.role === 'RETAILER' || session?.role === 'DISTRIBUTOR' || session?.role === 'MASTER_DISTRIBUTOR') && (
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50/70 border border-blue-200/80 rounded-lg text-xs">
+          <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs">
             <Wallet className="w-4 h-4 text-[#155EEF] shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-bold text-slate-500 leading-none">
-                Wallet Balance
-              </span>
-              <span className="font-mono font-bold text-xs text-[#155EEF] tabular-nums leading-tight">
-                {formatCurrency(balance)}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-bold text-slate-500 leading-none">
+                  Available Balance
+                </span>
+                <span className="font-mono font-bold text-xs text-[#155EEF] tabular-nums leading-tight">
+                  {formatCurrency(walletInfo?.available ?? 0)}
+                </span>
+              </div>
+
+              {Boolean(walletInfo?.hold && walletInfo.hold > 0) && (
+                <Tooltip content={`₹${walletInfo?.hold} is currently on Security Hold / Lien by Admin. Total Ledger Balance: ₹${walletInfo?.ledger}`}>
+                  <div className="flex flex-col border-l border-amber-200 pl-2.5">
+                    <span className="text-[9px] uppercase font-extrabold text-amber-800 leading-none flex items-center gap-0.5">
+                      <Lock className="w-2.5 h-2.5 text-amber-600" /> Hold
+                    </span>
+                    <span className="font-mono font-bold text-xs text-amber-700 tabular-nums leading-tight">
+                      {formatCurrency(walletInfo?.hold)}
+                    </span>
+                  </div>
+                </Tooltip>
+              )}
             </div>
 
             <Tooltip content="Refresh Balance">

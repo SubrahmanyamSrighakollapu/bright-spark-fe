@@ -148,7 +148,13 @@ export function formatDate(
 ): string {
   if (!dateInput) return '-';
   try {
-    const date = typeof dateInput === 'string' || typeof dateInput === 'number' ? new Date(dateInput) : dateInput;
+    let date: Date;
+    if (typeof dateInput === 'string') {
+      const cleaned = dateInput.endsWith('Z') || dateInput.endsWith('z') ? dateInput.slice(0, -1) : dateInput;
+      date = new Date(cleaned);
+    } else {
+      date = new Date(dateInput);
+    }
     if (isNaN(date.getTime())) return '-';
     
     const defaultOptions: Intl.DateTimeFormatOptions = {
@@ -172,7 +178,13 @@ export function formatDateTime(
 ): string {
   if (!dateInput) return '-';
   try {
-    const date = typeof dateInput === 'string' || typeof dateInput === 'number' ? new Date(dateInput) : dateInput;
+    let date: Date;
+    if (typeof dateInput === 'string') {
+      const cleaned = dateInput.endsWith('Z') || dateInput.endsWith('z') ? dateInput.slice(0, -1) : dateInput;
+      date = new Date(cleaned);
+    } else {
+      date = new Date(dateInput);
+    }
     if (isNaN(date.getTime())) return '-';
     
     return new Intl.DateTimeFormat('en-IN', {

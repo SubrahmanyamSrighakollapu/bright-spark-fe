@@ -23,12 +23,12 @@ import { RetailerAttentionPanel } from '@/components/features/retailer/RetailerA
 import { RetailerQuickActions } from '@/components/features/retailer/RetailerQuickActions';
 import { RetailerAnalyticsSection } from '@/components/features/retailer/RetailerAnalyticsSection';
 import { RetailerRecentTransactions } from '@/components/features/retailer/RetailerRecentTransactions';
-import { RetailerCommissionSummary } from '@/components/features/retailer/RetailerCommissionSummary';
 import { RetailerPaymentMethodDrawer } from '@/components/features/retailer/RetailerPaymentMethodDrawer';
 import { RetailerTickerAndNoticeBar } from '@/components/features/retailer/RetailerTickerAndNoticeBar';
 import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
 
-import { RefreshCw, Wallet } from 'lucide-react';
+import Link from 'next/link';
+import { RefreshCw, Wallet, Lock } from 'lucide-react';
 
 const createStaticRetailerSummary = (
   retailerId: string,
@@ -196,7 +196,9 @@ export default function RetailerDashboardPage() {
   const retailerName = summary?.retailer?.name || session?.name || 'Metro Store #01';
   const retailerCode = summary?.retailer?.code || session?.entityId || 'RET001';
   const businessName = summary?.retailer?.businessName || 'Metro Store Retail Solutions';
-  const walletBalance = summary?.wallet?.availableBalance ?? 0;
+  const walletAvailable = summary?.wallet?.availableBalance ?? 0;
+  const walletHold = summary?.wallet?.holdBalance ?? 0;
+  const walletLedger = summary?.wallet?.ledgerBalance ?? (walletAvailable + walletHold);
 
   const periodLabel = selectedPeriod === 'today' ? "Today" : selectedPeriod === '7d' ? "7 Days" : "30 Days";
 
@@ -208,8 +210,10 @@ export default function RetailerDashboardPage() {
     >
       <div className="space-y-5">
         {/* 1. Compact Header / Date Filter / Balance Bar */}
-        <div className="relative isolate overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50/60 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:px-6">
-          <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div className="relative z-30 rounded-3xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50/60 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:px-6">
+          <div className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">
+            <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full bg-emerald-400/10 blur-3xl" />
+          </div>
           <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-xs font-extrabold text-white shadow-lg shadow-emerald-900/20">
@@ -246,17 +250,33 @@ export default function RetailerDashboardPage() {
                 size="sm"
               />
 
-              {/* Live Available Wallet Balance Pill */}
-              <div className="flex items-center gap-2 bg-emerald-50/90 border border-emerald-200/90 px-3 py-1 rounded-lg text-xs">
-                <Wallet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <div>
-                  <span className="text-[9px] font-extrabold uppercase text-emerald-800 tracking-wider block leading-none">
-                    Available Balance
-                  </span>
-                  <span className="font-mono font-extrabold text-emerald-950 text-xs tabular-nums block mt-0.5">
-                    {formatCurrency(walletBalance)}
-                  </span>
+              {/* Live Wallet Balance & Hold Pills */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-emerald-50/90 border border-emerald-200/90 px-3 py-1 rounded-lg text-xs">
+                  <Wallet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <div>
+                    <span className="text-[9px] font-extrabold uppercase text-emerald-800 tracking-wider block leading-none">
+                      Available Balance
+                    </span>
+                    <span className="font-mono font-extrabold text-emerald-950 text-xs tabular-nums block mt-0.5">
+                      {formatCurrency(walletAvailable)}
+                    </span>
+                  </div>
                 </div>
+
+                {walletHold > 0 && (
+                  <div className="flex items-center gap-2 bg-amber-50/90 border border-amber-200/90 px-3 py-1 rounded-lg text-xs">
+                    <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <div>
+                      <span className="text-[9px] font-extrabold uppercase text-amber-800 tracking-wider block leading-none">
+                        On Hold / Lien
+                      </span>
+                      <span className="font-mono font-extrabold text-amber-950 text-xs tabular-nums block mt-0.5">
+                        {formatCurrency(walletHold)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Button
@@ -272,6 +292,34 @@ export default function RetailerDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Active Security Hold Notice Banner */}
+        {walletHold > 0 && (
+          <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 font-bold">
+                <Lock className="w-4 h-4 text-amber-700" />
+              </div>
+              <div>
+                <div className="font-extrabold text-amber-950 flex items-center gap-2 flex-wrap">
+                  <span>Security Hold Active on Account</span>
+                  <span className="font-mono font-bold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded text-[11px]">
+                    {formatCurrency(walletHold)} Reserved
+                  </span>
+                </div>
+                <p className="mt-0.5 text-amber-800">
+                  An administrative hold of <strong>{formatCurrency(walletHold)}</strong> is currently active on your account. Your spendable available balance is <strong>{formatCurrency(walletAvailable)}</strong> out of <strong>{formatCurrency(walletLedger)}</strong> total ledger balance.
+                </p>
+              </div>
+            </div>
+
+            <Link href="/retailer/wallet">
+              <Button size="sm" variant="outline" className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100 font-bold shrink-0">
+                View Wallet Statement
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Real-time Ticker & Notice Board Bar */}
         <RetailerTickerAndNoticeBar />
@@ -319,26 +367,14 @@ export default function RetailerDashboardPage() {
           )}
         </div>
 
-        {/* 6. RECENT TRANSACTIONS TABLE & COMMISSION SUMMARY */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          <div className="lg:col-span-8 h-full">
-            {summary && (
-              <RetailerRecentTransactions
-                transactions={summary.recentTransactions}
-                isLoading={isLoading}
-              />
-            )}
-          </div>
-
-          <div className="lg:col-span-4 h-full">
-            {summary && (
-              <RetailerCommissionSummary
-                commissionSummary={summary.commissionSummary}
-                planName={summary.plan?.name}
-                isLoading={isLoading}
-              />
-            )}
-          </div>
+        {/* 6. RECENT TRANSACTIONS TABLE */}
+        <div>
+          {summary && (
+            <RetailerRecentTransactions
+              transactions={summary.recentTransactions}
+              isLoading={isLoading}
+            />
+          )}
         </div>
       </div>
 

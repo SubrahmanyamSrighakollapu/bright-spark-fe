@@ -654,13 +654,26 @@ export interface Notification {
   createdAt: string;
   readAt?: string | null;
   metadata?: Record<string, string | number | boolean>;
+  isAnnouncement?: boolean;
+  announcementAudience?: unknown;
+  createdByUserId?: string;
+  deliveredAt?: string | null;
+  dismissedAt?: string | null;
+  clickedAt?: string | null;
+  expiresAt?: string | null;
+  recipientUserId?: string;
 }
 
 export interface NotificationFilters {
   searchQuery?: string;
+  search?: string;
   category?: 'ALL' | NotificationCategory;
   severity?: 'ALL' | NotificationSeverity;
   status?: 'ALL' | NotificationStatus;
+  actionRequired?: 'true' | 'false' | 'ALL';
+  excludeDismissed?: 'true' | 'false';
+  dateFrom?: string;
+  dateTo?: string;
   dateRange?: ReportDateRange;
 }
 
@@ -933,11 +946,16 @@ export interface LoginLog extends BaseLog {
   status: 'SUCCESS' | 'FAILED' | 'LOCKED' | 'EXPIRED';
   failureReason?: string;
   securityFlags?: Array<'MULTIPLE_FAILED_ATTEMPTS' | 'NEW_DEVICE' | 'UNUSUAL_IP' | 'ACCOUNT_LOCKED'>;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationAccuracy?: number | null;
+  locationStatus?: 'GRANTED' | 'DENIED' | 'TIMEOUT' | 'UNSUPPORTED' | 'ERROR' | 'PENDING' | 'UNAVAILABLE';
+  locationCapturedAt?: string | null;
 }
 
 export interface ActivityLog extends BaseLog {
-  action: string; // e.g. WALLET_CREDIT, SETTLEMENT_PROCESS, CHARGEBACK_RESOLVE
-  module: string; // e.g. WALLET, SETTLEMENT, CHARGEBACK, INVOICE, INTEGRATIONS
+  action: string;
+  module: string;
   actorId: string;
   actorName: string;
   actorRole: UserRole;
@@ -946,6 +964,16 @@ export interface ActivityLog extends BaseLog {
   newValue?: string | Record<string, unknown>;
   reason?: string;
   ipAddress: string;
+  targetName: string;
+  targetSummary: string;
+  targetBadge: string;
+  whatHappened: string;
+  impact: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationAccuracy?: number | null;
+  locationStatus?: LoginLog['locationStatus'];
+  locationCapturedAt?: string | null;
 }
 
 export interface TraceSearchResult {
@@ -957,6 +985,14 @@ export interface TraceSearchResult {
   callbacks: CallbackLog[];
   webhooks: WebhookLog[];
   activityLogs: ActivityLog[];
+  counts?: {
+    activity: number;
+    api: number;
+    total: number;
+  };
+  matchedOn?: Array<'TRACE_ID' | 'CORRELATION_ID' | 'REQUEST_ID' | 'RESOURCE_ID' | 'ACTIVITY_ID' | 'ACTOR_ID'>;
+  timeframe?: { earliest: string | null; latest: string | null };
+  error?: string | null;
 }
 
 export interface ApiLogSummary {
@@ -1060,6 +1096,8 @@ export interface WalletFilters {
 export interface LedgerFilters {
   searchQuery?: string;
   dateRange?: string;
+  dateFrom?: string;
+  dateTo?: string;
   entityType?: 'ALL' | EntityType;
   direction?: 'ALL' | LedgerDirection;
   entryType?: 'ALL' | LedgerEntryType;

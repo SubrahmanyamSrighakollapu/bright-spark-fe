@@ -64,6 +64,7 @@ export interface UserContext {
   permissions: string[];
   entityId?: string;
   mappedParentRole?: string;
+  profilePhotoUrl?: string | null;
 }
 
 export const ROLE_MAPPED_PARENTS: Record<UserRole, string> = {

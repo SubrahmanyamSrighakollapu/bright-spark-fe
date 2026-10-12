@@ -14,10 +14,13 @@ import { formatCurrency, formatDate } from '@/utils/formatters';
 import { ReportExportMenu } from '@/components/features/reports/ReportExportMenu';
 import { AdminReportNav } from '@/components/features/reports/AdminReportNav';
 import { Eye } from 'lucide-react';
+import { useToast } from '@/components/ui';
 
 export default function ChargebackReportPage() {
   const [data, setData] = useState<ChargebackListResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const { toastSuccess, toastError } = useToast();
 
   useEffect(() => {
     let isCancelled = false;
@@ -32,24 +35,16 @@ export default function ChargebackReportPage() {
     };
   }, []);
 
-  const handleExportCsv = () => {
-    if (!data?.items) return;
-    const exportRows = data.items.map((c) => ({
-      'Chargeback ID': c.chargebackId,
-      'Transaction ID': c.transactionId,
-      'Order ID': c.orderId || 'N/A',
-      'Retailer Name': c.entityName,
-      'Disputed Amount (INR)': c.disputedAmount,
-      'Lien Hold (INR)': c.holdAmount,
-      'Dispute Reason': c.reasonCode,
-      'Status': c.status,
-      'Priority': c.priority,
-      'Provider': c.provider,
-      'Filing Date': c.filingDate,
-      'Resolved Date': c.resolvedAt || 'N/A',
-      'Resolution Outcome': c.status === 'WON' || c.status === 'LOST' ? c.status : 'UNRESOLVED',
-    }));
-    reportService.exportToCsv('Chargeback_Analytics_Report', exportRows);
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      await reportService.exportChargebacksCsv({});
+      toastSuccess('Chargeback report exported successfully');
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Failed to export chargeback report');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const summary: ChargebackSummary = data?.summary || {
@@ -117,7 +112,7 @@ export default function ChargebackReportPage() {
       title="Chargeback Report"
       description="Operational dispute analytics, loss exposure reporting, representment win rates, and exportable logs."
       actions={
-        <ReportExportMenu onExportCsv={handleExportCsv} reportTitle="Chargeback Report" disabled={!data?.items?.length} />
+        <ReportExportMenu onExportCsv={handleExportCsv} reportTitle="Chargeback Report" disabled={!data?.items?.length} isLoading={isExporting} />
       }
     >
       <div className="space-y-6">

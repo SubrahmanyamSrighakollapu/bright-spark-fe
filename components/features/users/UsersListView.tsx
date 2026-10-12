@@ -25,8 +25,6 @@ import {
   Edit2,
   ArrowUpDown,
   UserPlus,
-  PlusCircle,
-  Lock,
   RefreshCw,
 } from 'lucide-react';
 
@@ -48,16 +46,6 @@ export const UsersListView: React.FC = () => {
   // Admin-only network authority transfer drawer
   const [swappingUser, setSwappingUser] = useState<NetworkUserItem | null>(null);
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
-
-  // Quick Wallet Credit Modal State
-  const [creditUser, setCreditUser] = useState<NetworkUserItem | null>(null);
-  const [creditAmount, setCreditAmount] = useState('');
-  const [creditRemarks, setCreditRemarks] = useState('');
-
-  // Quick Hold Funds Modal State
-  const [holdUser, setHoldUser] = useState<NetworkUserItem | null>(null);
-  const [holdAmount, setHoldAmount] = useState('');
-  const [holdReason, setHoldReason] = useState('');
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -87,7 +75,8 @@ export const UsersListView: React.FC = () => {
 
   const handleToggleStatus = async (user: NetworkUserItem) => {
     const nextStatus = user.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-    if (nextStatus === 'ACTIVE' && user.kycStatus !== 'APPROVED') {
+    const firstTimeActivation = user.status === 'PENDING';
+    if (nextStatus === 'ACTIVE' && firstTimeActivation && user.kycStatus !== 'APPROVED') {
       toastError('This user cannot be activated until KYC is approved.');
       return;
     }
@@ -132,58 +121,6 @@ export const UsersListView: React.FC = () => {
       }
     } catch (err: any) {
       toastError(err?.message || 'Failed to update user profile.');
-    }
-  };
-
-  const handleExecuteCredit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!creditUser) return;
-    const amount = parseFloat(creditAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toastError('Please enter a valid credit amount.');
-      return;
-    }
-    if (!(await confirm({ title: 'Confirm wallet credit', message: `Credit ${formatCurrency(amount)} to ${creditUser.fullName || creditUser.userId}? This creates a financial ledger adjustment.`, confirmText: 'Yes, credit wallet', variant: 'warning' }))) return;
-
-    try {
-      const res = await userService.creditWallet(creditUser.id, amount, creditRemarks);
-      if (res && res.success) {
-        toastSuccess(`Successfully credited ${formatCurrency(amount)} to ${creditUser.userId || creditUser.code}`);
-        setCreditUser(null);
-        setCreditAmount('');
-        setCreditRemarks('');
-        fetchUsers();
-      } else {
-        toastError(res?.message || 'Wallet credit failed.');
-      }
-    } catch (err: any) {
-      toastError(err?.message || 'Wallet credit failed.');
-    }
-  };
-
-  const handleExecuteHold = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!holdUser) return;
-    const amount = parseFloat(holdAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toastError('Please enter a valid hold amount.');
-      return;
-    }
-    if (!(await confirm({ title: 'Confirm funds hold', message: `Place a hold of ${formatCurrency(amount)} on ${holdUser.fullName || holdUser.userId}? The amount will become unavailable to the user.`, confirmText: 'Yes, hold funds', variant: 'danger' }))) return;
-
-    try {
-      const res = await userService.holdWalletFunds(holdUser.id, amount, 'HOLD', holdReason);
-      if (res && res.success) {
-        toastSuccess(`Security hold of ${formatCurrency(amount)} placed on user ${holdUser.userId || holdUser.code}`);
-        setHoldUser(null);
-        setHoldAmount('');
-        setHoldReason('');
-        fetchUsers();
-      } else {
-        toastError(res?.message || 'Hold funds action failed.');
-      }
-    } catch (err: any) {
-      toastError(err?.message || 'Hold funds action failed.');
     }
   };
 
@@ -391,32 +328,11 @@ export const UsersListView: React.FC = () => {
                 },
                 {
                   key: 'toggleStatus',
-                  label: row.status === 'ACTIVE' ? 'Suspend Account' : row.kycStatus === 'APPROVED' ? 'Activate Account' : 'KYC Approval Required',
+                  label: row.status === 'ACTIVE' ? 'Suspend Account' : (row.status === 'PENDING' && row.kycStatus !== 'APPROVED') ? 'KYC Approval Required' : 'Activate Account',
                   icon: row.status === 'ACTIVE' ? <UserX className="w-4 h-4 text-amber-600" /> : <UserCheck className="w-4 h-4 text-emerald-600" />,
                   danger: row.status === 'ACTIVE',
-                  disabled: row.status !== 'ACTIVE' && row.kycStatus !== 'APPROVED',
+                  disabled: row.status !== 'ACTIVE' && row.status === 'PENDING' && row.kycStatus !== 'APPROVED',
                   onClick: () => handleToggleStatus(row),
-                },
-                {
-                  key: 'creditWallet',
-                  label: 'Top-up Wallet Credit',
-                  icon: <PlusCircle className="w-4 h-4 text-blue-600" />,
-                  divider: true,
-                  onClick: () => {
-                    setCreditUser(row);
-                    setCreditAmount('');
-                    setCreditRemarks('');
-                  },
-                },
-                {
-                  key: 'holdFunds',
-                  label: 'Hold Security Funds',
-                  icon: <Lock className="w-4 h-4 text-amber-600" />,
-                  onClick: () => {
-                    setHoldUser(row);
-                    setHoldAmount('');
-                    setHoldReason('');
-                  },
                 },
                 {
                   key: 'swapRole',
@@ -486,95 +402,6 @@ export const UsersListView: React.FC = () => {
               </Button>
               <Button type="submit" variant="primary">
                 Save Changes
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {/* Quick Wallet Credit Modal */}
-      {creditUser && (
-        <Modal
-          isOpen={!!creditUser}
-          onClose={() => setCreditUser(null)}
-          title={`Top-up Wallet Credit (${creditUser.userId || creditUser.code})`}
-          size="md"
-        >
-          <form onSubmit={handleExecuteCredit} className="space-y-4 text-xs pt-2">
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
-              <div className="font-semibold text-blue-900">{creditUser.fullName || creditUser.name}</div>
-              <div className="text-[11px] text-blue-700 mt-0.5">
-                Current Available Balance: {formatCurrency(creditUser.availableBalance ?? 0)}
-              </div>
-            </div>
-
-            <Input
-              label="Credit Amount in ₹"
-              type="number"
-              placeholder="e.g. 5000.00"
-              value={creditAmount}
-              onChange={(e) => setCreditAmount(e.target.value)}
-              required
-            />
-
-            <Input
-              label="Reason / Audit Note"
-              placeholder="e.g. Manual Top-up / Administrative Adjustment"
-              value={creditRemarks}
-              onChange={(e) => setCreditRemarks(e.target.value)}
-            />
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5EAF1]">
-              <Button type="button" variant="outline" onClick={() => setCreditUser(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" leftIcon={<PlusCircle className="w-4 h-4" />}>
-                Execute Wallet Credit
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {/* Quick Hold Funds Modal */}
-      {holdUser && (
-        <Modal
-          isOpen={!!holdUser}
-          onClose={() => setHoldUser(null)}
-          title={`Hold Security Funds (${holdUser.userId || holdUser.code})`}
-          size="md"
-        >
-          <form onSubmit={handleExecuteHold} className="space-y-4 text-xs pt-2">
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-              <div className="font-semibold text-amber-900">{holdUser.fullName || holdUser.name}</div>
-              <div className="text-[11px] text-amber-700 mt-0.5">
-                Available: {formatCurrency(holdUser.availableBalance ?? 0)} • Active Hold: {formatCurrency(holdUser.holdBalance ?? 0)}
-              </div>
-            </div>
-
-            <Input
-              label="Hold Amount in ₹"
-              type="number"
-              placeholder="e.g. 2000.00"
-              value={holdAmount}
-              onChange={(e) => setHoldAmount(e.target.value)}
-              required
-            />
-
-            <Input
-              label="Reason for Hold"
-              placeholder="e.g. Pending Document Audit / Dispute Investigation"
-              value={holdReason}
-              onChange={(e) => setHoldReason(e.target.value)}
-              required
-            />
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5EAF1]">
-              <Button type="button" variant="outline" onClick={() => setHoldUser(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" leftIcon={<Lock className="w-4 h-4" />}>
-                Apply Security Hold
               </Button>
             </div>
           </form>

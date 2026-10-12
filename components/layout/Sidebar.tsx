@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronsLeft, ChevronsRight, Shield, LogOut, ArrowRight, HelpCircle } from 'lucide-react';
@@ -51,6 +51,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const router = useRouter();
   const { logout } = useAuth();
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [currentUser?.profilePhotoUrl]);
 
   const baseNav = getNavigationForRole(currentUser.role);
   const roleFilteredItems = filterNavigationByRole(baseNav, currentUser);
@@ -183,9 +188,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-3 border-t border-[#E5EAF1] bg-white shrink-0">
         <div className={cn('flex items-center gap-2.5', isCollapsed ? 'justify-center' : 'justify-between')}>
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-blue-50 text-[#155EEF] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
-              <Shield className="w-4 h-4 text-[#155EEF]" />
-            </div>
+            {currentUser.profilePhotoUrl && !imageError ? (
+              <img
+                src={currentUser.profilePhotoUrl}
+                alt={currentUser.name}
+                onError={() => setImageError(true)}
+                className="w-8 h-8 rounded-full object-cover shrink-0 border border-blue-200 shadow-2xs"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-[#155EEF] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
+                <Shield className="w-4 h-4 text-[#155EEF]" />
+              </div>
+            )}
 
             {!isCollapsed && (
               <div className="flex flex-col min-w-0 truncate">

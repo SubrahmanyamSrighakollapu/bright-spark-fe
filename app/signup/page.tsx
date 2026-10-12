@@ -7,12 +7,14 @@ import { ArrowLeft, Building2, CheckCircle2, FileCheck2, LockKeyhole, Mail, Shie
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { PhoneInputWithCountryCode } from '@/components/ui/PhoneInputWithCountryCode';
 import { externalSignupService, type ExternalApplicantRole } from '@/services/externalSignupService';
 
 const initialFiles = { AADHAAR: null, PAN: null, CANCELLED_CHEQUE: null, GST_CERTIFICATE: null };
 
 export default function SignupPage() {
   const [role, setRole] = useState<ExternalApplicantRole>('RETAILER');
+  const [countryCode, setCountryCode] = useState('+91');
   const [fields, setFields] = useState({ fullName: '', businessName: '', email: '', mobile: '', address: '', city: '', state: '', postalCode: '' });
   const [documents, setDocuments] = useState<Record<keyof typeof initialFiles, File | null>>(initialFiles);
   const [submitting, setSubmitting] = useState(false);
@@ -24,7 +26,7 @@ export default function SignupPage() {
     if (!documents.AADHAAR || !documents.PAN || !documents.CANCELLED_CHEQUE) return;
     setSubmitting(true);
     try {
-      setReference(externalSignupService.submit({ role, ...fields, documents }));
+      setReference(externalSignupService.submit({ role, ...fields, mobile: `${countryCode} ${fields.mobile}`.trim(), documents }));
     } finally {
       setSubmitting(false);
     }
@@ -69,7 +71,7 @@ export default function SignupPage() {
                 <Select label="Applying as" required value={role} onChange={(event) => setRole(event.target.value as ExternalApplicantRole)} options={[{ value: 'RETAILER', label: 'Retailer' }, { value: 'DISTRIBUTOR', label: 'Distributor' }]} />
                 <Input label="Full name" required value={fields.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="Authorized person" />
                 <Input label="Business / firm name" required value={fields.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Registered business name" />
-                <Input label="Mobile number" required value={fields.mobile} onChange={(e) => update('mobile', e.target.value)} placeholder="10-digit mobile number" inputMode="numeric" />
+                <PhoneInputWithCountryCode label="Mobile number" required value={fields.mobile} countryCode={countryCode} onPhoneChange={(val) => update('mobile', val)} onCountryCodeChange={setCountryCode} placeholder="10-digit mobile number" />
                 <Input label="Email address" required type="email" value={fields.email} onChange={(e) => update('email', e.target.value)} placeholder="business@example.com" leftIcon={<Mail className="h-4 w-4" />} />
                 <Input label="Postal code" required value={fields.postalCode} onChange={(e) => update('postalCode', e.target.value)} placeholder="Postal code" />
                 <Input label="City" required value={fields.city} onChange={(e) => update('city', e.target.value)} placeholder="City" />

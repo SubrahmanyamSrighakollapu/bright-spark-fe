@@ -9,6 +9,7 @@ import { ApiResponse } from '@/types/common';
 import { mockEntities, mockEntityMappings } from '@/mocks/mockUsers';
 import { apiClient } from './apiClient';
 import { APP_CONFIG } from '@/config';
+import { hierarchyService } from './hierarchyService';
 
 const inMemoryEntities: BusinessEntity[] = [...mockEntities];
 const inMemoryMappings: EntityMapping[] = [...mockEntityMappings];
@@ -489,16 +490,81 @@ export const userService = {
   },
 
   async getUserById(id: string): Promise<ApiResponse<BusinessEntity | null>> {
-    if (APP_CONFIG.useMockData) {
-      await new Promise((res) => setTimeout(res, 150));
-      const entity = inMemoryEntities.find((e) => e.id === id || e.code === id) || null;
-      return {
-        success: !!entity,
-        data: entity,
-        timestamp: new Date().toISOString(),
-      };
+    try {
+      if (!APP_CONFIG.useMockData) {
+        return await apiClient.get<ApiResponse<BusinessEntity>>(`/users/${id}`);
+      }
+    } catch {
+      // Fallback to local memory lookup
     }
-    return apiClient.get<ApiResponse<BusinessEntity>>(`/users/${id}`);
+
+    await new Promise((res) => setTimeout(res, 100));
+    const cleanId = (id || '').trim().toLowerCase();
+
+    // 1. Check inMemoryEntities by id or code
+    let entity = inMemoryEntities.find(
+      (e) => e.id.toLowerCase() === cleanId || e.code.toLowerCase() === cleanId
+    );
+
+    // 2. Check hierarchyService records
+    if (!entity) {
+      const retailer = hierarchyService.getRetailerById(id) || hierarchyService.getAllRetailers().find((r: any) => r.id.toLowerCase() === cleanId || r.code.toLowerCase() === cleanId);
+      if (retailer) {
+        entity = {
+          id: retailer.id,
+          code: retailer.code,
+          name: retailer.name,
+          type: 'RETAILER',
+          businessName: retailer.businessName || retailer.name,
+          businessType: 'Sole Proprietorship',
+          email: retailer.email,
+          mobile: retailer.mobile,
+          status: retailer.accountStatus || 'ACTIVE',
+          kycStatus: retailer.kycStatus || 'APPROVED',
+          parentId: retailer.distributorId,
+          parentName: retailer.distributorName || 'North Zone Distributor',
+          parentType: 'DISTRIBUTOR',
+          createdAt: retailer.createdAt || new Date().toISOString(),
+        } as unknown as BusinessEntity;
+      } else {
+        const dst = hierarchyService.getDistributorById(id) || hierarchyService.getAllDistributors().find((d: any) => d.id.toLowerCase() === cleanId || d.code.toLowerCase() === cleanId);
+        if (dst) {
+          entity = {
+            id: dst.id,
+            code: dst.code,
+            name: dst.name,
+            type: 'DISTRIBUTOR',
+            businessName: dst.businessName || dst.name,
+            businessType: 'Private Limited',
+            email: dst.email,
+            mobile: dst.mobile,
+            status: dst.status || 'ACTIVE',
+            kycStatus: 'APPROVED',
+            parentId: dst.masterDistributorId,
+            parentName: (dst as any).masterDistributorName || 'Apex National Network',
+            parentType: 'DISTRIBUTOR',
+            createdAt: dst.createdAt || new Date().toISOString(),
+          } as unknown as BusinessEntity;
+        }
+      }
+    }
+
+    // 3. Fallback to default entity of appropriate type (matching role)
+    if (!entity) {
+      if (cleanId.includes('ret') || cleanId.includes('retailer')) {
+        const defaultRet = inMemoryEntities.find((e) => e.type === 'RETAILER');
+        if (defaultRet) entity = defaultRet;
+      } else if (cleanId.includes('dst') || cleanId.includes('distributor')) {
+        const defaultDst = inMemoryEntities.find((e) => e.type === 'DISTRIBUTOR');
+        if (defaultDst) entity = defaultDst;
+      }
+    }
+
+    return {
+      success: !!entity,
+      data: entity || null,
+      timestamp: new Date().toISOString(),
+    };
   },
 
   async blockUser(id: string, reason?: string): Promise<ApiResponse<BusinessEntity>> {

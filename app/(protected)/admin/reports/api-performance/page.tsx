@@ -22,11 +22,14 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { Activity, ShieldCheck, Clock, Zap, RotateCcw } from 'lucide-react';
+import { useToast } from '@/components/ui';
 
 export default function ApiPerformancePage() {
   const [providerFilter, setProviderFilter] = useState('ALL');
   const [data, setData] = useState<ApiPerformanceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const { toastSuccess, toastError } = useToast();
 
   const loadReport = () => {
     setIsLoading(true);
@@ -51,21 +54,18 @@ export default function ApiPerformancePage() {
     };
   }, [providerFilter]);
 
-  const handleExportCsv = () => {
-    if (!data?.providers) return;
-    const exportRows = data.providers.map((p) => ({
-      'Clearing Provider': p.provider,
-      'Service Name': p.service,
-      'API Type': p.apiType,
-      'Total Requests': p.totalRequests,
-      'Success Count': p.successCount,
-      'Failed Count': p.failedCount,
-      'Success Rate (%)': p.successRate,
-      'Avg Response Time (ms)': p.avgResponseTimeMs,
-      'Availability (%)': p.providerAvailability,
-      'Health Status': p.status,
-    }));
-    reportService.exportToCsv('API_Performance_Report', exportRows);
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      await reportService.exportApiPerformanceCsv({
+        provider: providerFilter,
+      });
+      toastSuccess('API performance report exported successfully');
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Failed to export API performance report');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const chartData = (data?.providers || []).map((p) => ({
@@ -148,7 +148,7 @@ export default function ApiPerformancePage() {
       title="API Performance Report"
       description="Third-party provider clearing node metrics, response latency trends, and gateway health monitoring."
       actions={
-        <ReportExportMenu onExportCsv={handleExportCsv} reportTitle="API Performance" disabled={!data?.providers?.length} />
+        <ReportExportMenu onExportCsv={handleExportCsv} reportTitle="API Performance" disabled={!data?.providers?.length} isLoading={isExporting} />
       }
     >
       <div className="space-y-6">

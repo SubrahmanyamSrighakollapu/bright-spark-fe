@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
 import { LoginLog } from '@/types/domain';
 import { formatDate } from '@/utils/formatters';
-import { Eye, ShieldAlert } from 'lucide-react';
+import { Eye, MapPin, ShieldAlert } from 'lucide-react';
 
 export interface LoginLogTableProps {
   data: LoginLog[];
@@ -43,9 +43,39 @@ export const LoginLogTable: React.FC<LoginLogTableProps> = ({
       render: (row: LoginLog) => (
         <div>
           <span className="font-mono text-xs text-slate-900 block">{row.ipAddress}</span>
-          <span className="text-[11px] text-slate-500">{row.device} • {row.browser}</span>
+          <span className="text-[11px] text-slate-500">{row.device} • {row.browser} • {row.os}</span>
         </div>
       ),
+    },
+    {
+      key: 'location',
+      header: 'Location',
+      render: (row: LoginLog) => {
+        if (row.locationStatus === 'GRANTED' && row.latitude != null && row.longitude != null) {
+          return (
+            <div className="flex items-start gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
+              <div>
+                <span className="font-mono text-[11px] text-slate-800 block">{Number(row.latitude).toFixed(4)}, {Number(row.longitude).toFixed(4)}</span>
+                {row.locationAccuracy != null && (
+                  <span className="text-[10px] text-slate-500">±{Math.round(row.locationAccuracy)}m</span>
+                )}
+              </div>
+            </div>
+          );
+        }
+        const tone =
+          row.locationStatus === 'DENIED'
+            ? 'bg-amber-100 text-amber-900 border-amber-300'
+            : row.locationStatus === 'TIMEOUT' || row.locationStatus === 'ERROR'
+            ? 'bg-rose-100 text-rose-900 border-rose-300'
+            : 'bg-slate-100 text-slate-700 border-slate-200';
+        return (
+          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${tone}`}>
+            {row.locationStatus ?? 'UNAVAILABLE'}
+          </span>
+        );
+      },
     },
     {
       key: 'authMethod',

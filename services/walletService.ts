@@ -49,7 +49,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get('/wallet/balance', { cache: 'no-store' });
+    return apiClient.get('/wallets/balance', { cache: 'no-store' });
   },
 
   /**
@@ -89,7 +89,6 @@ export const walletService = {
         );
       }
 
-      // Compute top summary across filtered wallets
       const totalAvailable = filtered.reduce((acc, curr) => acc + curr.availableBalance, 0);
       const totalLedger = filtered.reduce((acc, curr) => acc + curr.ledgerBalance, 0);
       const totalHold = filtered.reduce((acc, curr) => acc + curr.holdBalance, 0);
@@ -111,8 +110,8 @@ export const walletService = {
       };
     }
 
-    return apiClient.get<ApiResponse<WalletListResult>>('/wallet/accounts', {
-      params: { ...filters, page, pageSize } as unknown as Record<string, string | number | boolean>,
+    return apiClient.get<ApiResponse<WalletListResult>>('/wallets', {
+      params: { role: filters?.entityType, status: filters?.status, search: filters?.searchQuery, page, pageSize } as any,
     });
   },
 
@@ -141,7 +140,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${masterDistributorId}`, { cache: 'no-store' });
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallets/entity/${masterDistributorId}`, { cache: 'no-store' });
   },
 
   async getDistributorWallet(distributorId: string): Promise<ApiResponse<WalletAccount>> {
@@ -173,7 +172,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${distributorId}`, { cache: 'no-store' });
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallets/entity/${distributorId}`, { cache: 'no-store' });
   },
 
   async getRetailerWallet(retailerId: string): Promise<ApiResponse<WalletAccount>> {
@@ -204,11 +203,10 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${retailerId}`, { cache: 'no-store' });
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallets/entity/${retailerId}`, { cache: 'no-store' });
   },
 
   async getWalletByEntityId(entityId: string): Promise<ApiResponse<WalletAccount | null>> {
-
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 150));
       const wallet = inMemoryWallets.find((w) => w.entityId === entityId || w.entityCode === entityId) || null;
@@ -218,7 +216,7 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/entity/${entityId}`, { cache: 'no-store' });
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallets/entity/${entityId}`, { cache: 'no-store' });
   },
 
   async getWalletById(walletId: string): Promise<ApiResponse<WalletAccount | null>> {
@@ -231,14 +229,14 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<WalletAccount>>(`/wallet/${walletId}`);
+    return apiClient.get<ApiResponse<WalletAccount>>(`/wallets/entity/${walletId}`);
   },
 
   /**
-   * Controlled Credit Adjustment. Updates wallet AND generates ledger entry.
+   * Controlled Credit Adjustment.
    */
   async creditWallet(
-    walletId: string,
+    partyId: string,
     amount: number,
     reason: string,
     reference?: string,
@@ -246,14 +244,13 @@ export const walletService = {
   ): Promise<ApiResponse<WalletAccount>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 350));
-      const wallet = inMemoryWallets.find((w) => w.walletId === walletId);
+      const wallet = inMemoryWallets.find((w) => w.walletId === partyId || w.entityId === partyId);
       if (wallet) {
         const openingBalance = wallet.availableBalance;
         wallet.availableBalance += amount;
         wallet.ledgerBalance += amount;
         wallet.updatedAt = new Date().toISOString();
 
-        // Create mock ledger entry
         ledgerService.addMockLedgerEntry({
           walletId: wallet.walletId,
           entityId: wallet.entityId,
@@ -273,18 +270,19 @@ export const walletService = {
       }
       return { success: false, data: null as unknown as WalletAccount, timestamp: new Date().toISOString() };
     }
-    return apiClient.post<ApiResponse<WalletAccount>>(`/wallet/${walletId}/credit`, {
+    return apiClient.post<ApiResponse<WalletAccount>>(`/wallets/entity/${partyId}/credit`, {
       amount,
-      reason,
-      reference,
+      referenceType: 'MANUAL_CREDIT',
+      referenceId: reference,
+      narration: reason,
     });
   },
 
   /**
-   * Controlled Debit Adjustment. Validates overdraft, updates wallet AND generates ledger entry.
+   * Controlled Debit Adjustment.
    */
   async debitWallet(
-    walletId: string,
+    partyId: string,
     amount: number,
     reason: string,
     reference?: string,
@@ -292,7 +290,7 @@ export const walletService = {
   ): Promise<ApiResponse<WalletAccount>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 350));
-      const wallet = inMemoryWallets.find((w) => w.walletId === walletId);
+      const wallet = inMemoryWallets.find((w) => w.walletId === partyId || w.entityId === partyId);
       if (wallet) {
         if (amount > wallet.availableBalance) {
           throw new Error('Debit amount cannot exceed available wallet balance.');
@@ -303,7 +301,6 @@ export const walletService = {
         wallet.ledgerBalance -= amount;
         wallet.updatedAt = new Date().toISOString();
 
-        // Create mock ledger entry
         ledgerService.addMockLedgerEntry({
           walletId: wallet.walletId,
           entityId: wallet.entityId,
@@ -323,10 +320,11 @@ export const walletService = {
       }
       return { success: false, data: null as unknown as WalletAccount, timestamp: new Date().toISOString() };
     }
-    return apiClient.post<ApiResponse<WalletAccount>>(`/wallet/${walletId}/debit`, {
+    return apiClient.post<ApiResponse<WalletAccount>>(`/wallets/entity/${partyId}/debit`, {
       amount,
-      reason,
-      reference,
+      referenceType: 'MANUAL_DEBIT',
+      referenceId: reference,
+      narration: reason,
     });
   },
 
@@ -369,35 +367,61 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.post<ApiResponse<{ processedRows: number; failedRows: number }>>('/wallet/bulk-adjust', { rows });
+    return apiClient.post<ApiResponse<{ processedRows: number; failedRows: number }>>('/wallets/bulk-adjust', { rows });
   },
 
-  async freezeWallet(walletId: string): Promise<ApiResponse<WalletAccount>> {
+  /**
+   * Hold or Release Funds
+   */
+  async holdFunds(
+    partyId: string,
+    mode: 'HOLD' | 'RELEASE',
+    amount: number,
+    reason: string
+  ): Promise<ApiResponse<any>> {
     if (APP_CONFIG.useMockData) {
-      await new Promise((res) => setTimeout(res, 200));
-      const wallet = inMemoryWallets.find((w) => w.walletId === walletId);
+      await new Promise((res) => setTimeout(res, 300));
+      const wallet = inMemoryWallets.find((w) => w.walletId === partyId || w.entityId === partyId);
       if (wallet) {
-        wallet.status = 'FROZEN';
-        wallet.updatedAt = new Date().toISOString();
-        return { success: true, data: { ...wallet }, timestamp: new Date().toISOString() };
+        if (mode === 'HOLD') {
+          if (amount > wallet.availableBalance) throw new Error('Cannot hold amount exceeding available balance.');
+          wallet.availableBalance -= amount;
+          wallet.holdBalance += amount;
+        } else {
+          if (amount > wallet.holdBalance) throw new Error('Cannot release amount exceeding hold balance.');
+          wallet.availableBalance += amount;
+          wallet.holdBalance -= amount;
+        }
+        return { success: true, data: wallet, timestamp: new Date().toISOString() };
       }
-      return { success: false, data: null as unknown as WalletAccount, timestamp: new Date().toISOString() };
+      return { success: false, data: null, timestamp: new Date().toISOString() };
     }
-    return apiClient.post<ApiResponse<WalletAccount>>(`/wallet/${walletId}/freeze`);
+    return apiClient.post(`/wallets/entity/${partyId}/hold`, { mode, amount, reason });
   },
 
-  async unfreezeWallet(walletId: string): Promise<ApiResponse<WalletAccount>> {
+  /**
+   * Freeze or Unfreeze Wallet Status
+   */
+  async toggleWalletStatus(partyId: string, status: 'ACTIVE' | 'FROZEN', reason: string): Promise<ApiResponse<any>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 200));
-      const wallet = inMemoryWallets.find((w) => w.walletId === walletId);
+      const wallet = inMemoryWallets.find((w) => w.walletId === partyId || w.entityId === partyId);
       if (wallet) {
-        wallet.status = 'ACTIVE';
+        wallet.status = status;
         wallet.updatedAt = new Date().toISOString();
-        return { success: true, data: { ...wallet }, timestamp: new Date().toISOString() };
+        return { success: true, data: wallet, timestamp: new Date().toISOString() };
       }
-      return { success: false, data: null as unknown as WalletAccount, timestamp: new Date().toISOString() };
+      return { success: false, data: null, timestamp: new Date().toISOString() };
     }
-    return apiClient.post<ApiResponse<WalletAccount>>(`/wallet/${walletId}/unfreeze`);
+    return apiClient.patch(`/wallets/entity/${partyId}/status`, { status, reason });
+  },
+
+  async freezeWallet(partyId: string, reason = 'Suspicious activity lock'): Promise<ApiResponse<any>> {
+    return this.toggleWalletStatus(partyId, 'FROZEN', reason);
+  },
+
+  async unfreezeWallet(partyId: string, reason = 'Administrative restore'): Promise<ApiResponse<any>> {
+    return this.toggleWalletStatus(partyId, 'ACTIVE', reason);
   },
 
   // DEBIT REQUESTS MODULE
@@ -425,14 +449,14 @@ export const walletService = {
         timestamp: new Date().toISOString(),
       };
     }
-    return apiClient.get<ApiResponse<DebitRequestListResult>>('/wallet/debit-requests', {
+    return apiClient.get<ApiResponse<DebitRequestListResult>>('/wallets/debit-requests', {
       params: { status, page, pageSize } as unknown as Record<string, string | number | boolean>,
     });
   },
 
   async createDebitRequest(input: {
     entityId: string;
-    walletId: string;
+    walletId?: string;
     amount: number;
     reason: string;
     remarks?: string;
@@ -446,7 +470,7 @@ export const walletService = {
         entityId: wallet ? wallet.entityId : input.entityId,
         entityType: wallet ? wallet.entityType : 'MERCHANT',
         entityName: wallet ? wallet.entityName : 'Commercial Entity',
-        walletId: wallet ? wallet.walletId : input.walletId,
+        walletId: wallet ? wallet.walletId : (input.walletId || `wlt_${input.entityId}`),
         amount: input.amount,
         reason: input.reason,
         status: 'PENDING',
@@ -458,7 +482,11 @@ export const walletService = {
       inMemoryDebitRequests.unshift(newReq);
       return { success: true, data: newReq, timestamp: new Date().toISOString() };
     }
-    return apiClient.post<ApiResponse<DebitRequest>>('/wallet/debit-requests', input);
+    return apiClient.post<ApiResponse<DebitRequest>>('/wallets/debit-requests', {
+      partyId: input.entityId,
+      amount: input.amount,
+      reason: input.reason,
+    });
   },
 
   async reviewDebitRequest(
@@ -488,7 +516,6 @@ export const walletService = {
           req.reviewedAt = req.reviewedAt || new Date().toISOString();
           req.remarks = remarks || 'Debit request processed and debited from wallet.';
 
-          // Apply mock debit operation ONLY when PROCESSED!
           await this.debitWallet(
             req.walletId,
             req.amount,
@@ -502,9 +529,9 @@ export const walletService = {
       }
       return { success: false, data: null as unknown as DebitRequest, timestamp: new Date().toISOString() };
     }
-    return apiClient.post<ApiResponse<DebitRequest>>(`/wallet/debit-requests/${requestId}/review`, {
-      action,
-      remarks,
+    return apiClient.post<ApiResponse<DebitRequest>>(`/wallets/debit-requests/${requestId}/review`, {
+      action: action === 'PROCESS' ? 'APPROVE' : action,
+      rejectionReason: remarks,
     });
   },
 };

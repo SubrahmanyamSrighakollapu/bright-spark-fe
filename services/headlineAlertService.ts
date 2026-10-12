@@ -150,6 +150,10 @@ function saveStored<T>(key: string, value: T, eventName?: string): void {
   }
 }
 
+function notifyTickerUpdated(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('qin_tickers_updated'));
+}
+
 export const headlineAlertService = {
   // --- Headlines ---
   async getHeadlines(): Promise<ApiResponse<HeadlineAlertItem[]>> {
@@ -336,6 +340,7 @@ export const headlineAlertService = {
             isActive: data.isActive,
             createdAt: new Date().toISOString(),
           };
+          notifyTickerUpdated();
           return { success: true, data: newItem, timestamp: new Date().toISOString() };
         }
       } catch (err) {
@@ -365,6 +370,7 @@ export const headlineAlertService = {
             items[idx] = { ...items[idx], ...updates };
             saveStored(TICKERS_KEY, items, 'qin_tickers_updated');
           }
+          notifyTickerUpdated();
           return { success: true, data: items[idx] || updates as any, timestamp: new Date().toISOString() };
         }
       } catch (err) {
@@ -393,6 +399,12 @@ export const headlineAlertService = {
             saveStored(TICKERS_KEY, items, 'qin_tickers_updated');
             return { success: true, data: item, timestamp: new Date().toISOString() };
           }
+          notifyTickerUpdated();
+          return {
+            success: true,
+            data: { id, scrollText: '', speed: 'Normal', targetAudience: 'All Users', isActive: Boolean(res.data?.isActive), createdAt: new Date().toISOString() },
+            timestamp: new Date().toISOString(),
+          };
         }
       } catch (err) {
         console.warn('API error:', err);

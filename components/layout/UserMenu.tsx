@@ -34,8 +34,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const { logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { toastInfo, toastSuccess } = useToast();
+
+  useEffect(() => {
+    setImageError(false);
+  }, [currentUser?.profilePhotoUrl]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -55,7 +60,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     router.push('/login');
   };
 
-
   return (
     <div ref={containerRef} className="relative inline-block text-left">
       <button
@@ -64,9 +68,18 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer"
         aria-label="User menu"
       >
-        <div className="w-8 h-8 rounded-full bg-[var(--primary)] text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
-          {currentUser.name.slice(0, 2).toUpperCase()}
-        </div>
+        {currentUser.profilePhotoUrl && !imageError ? (
+          <img
+            src={currentUser.profilePhotoUrl}
+            alt={currentUser.name}
+            onError={() => setImageError(true)}
+            className="w-8 h-8 rounded-full object-cover shadow-xs shrink-0 ring-2 ring-indigo-500/20 border border-indigo-100"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-[var(--primary)] text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
+            {currentUser.name.slice(0, 2).toUpperCase()}
+          </div>
+        )}
 
         <div className="hidden md:flex flex-col text-left">
           <span className="text-xs font-semibold text-[var(--text-primary)] leading-tight">
@@ -83,11 +96,25 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-white border border-[var(--border)] rounded-[var(--radius-xl)] shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           {/* User Header Info */}
-          <div className="p-4 bg-[var(--bg-secondary)] border-b border-[var(--border-subtle)] space-y-1">
-            <div className="font-semibold text-xs text-[var(--text-primary)]">{currentUser.name}</div>
-            <div className="text-[11px] text-[var(--text-muted)] truncate">{currentUser.email}</div>
-            <div className="pt-1">
-              <StatusBadge status="ACTIVE" label={`ROLE: ${USER_ROLE_LABELS[currentUser.role] || currentUser.role}`} size="sm" />
+          <div className="p-4 bg-[var(--bg-secondary)] border-b border-[var(--border-subtle)] flex items-center gap-3">
+            {currentUser.profilePhotoUrl && !imageError ? (
+              <img
+                src={currentUser.profilePhotoUrl}
+                alt={currentUser.name}
+                onError={() => setImageError(true)}
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-500/20 shrink-0 border border-indigo-100"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[var(--primary)] text-white font-bold text-sm flex items-center justify-center shrink-0">
+                {currentUser.name.slice(0, 2).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0 space-y-0.5">
+              <div className="font-semibold text-xs text-[var(--text-primary)] truncate">{currentUser.name}</div>
+              <div className="text-[11px] text-[var(--text-muted)] truncate">{currentUser.email}</div>
+              <div className="pt-0.5">
+                <StatusBadge status="ACTIVE" label={USER_ROLE_LABELS[currentUser.role] || currentUser.role} size="sm" />
+              </div>
             </div>
           </div>
 
@@ -96,7 +123,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             <button
               type="button"
               onClick={() => {
-                toastInfo('My Profile: User account settings view');
+                const targetPath = currentUser.role === 'DISTRIBUTOR'
+                  ? '/distributor/profile'
+                  : currentUser.role === 'MASTER_DISTRIBUTOR'
+                  ? '/master-distributor/profile'
+                  : '/retailer/profile';
+                router.push(targetPath);
                 setIsOpen(false);
               }}
               className="w-full px-4 py-2 flex items-center gap-2.5 hover:bg-slate-50 transition-colors text-left cursor-pointer"

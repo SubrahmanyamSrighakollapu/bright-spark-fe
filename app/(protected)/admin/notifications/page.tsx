@@ -6,7 +6,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { useModal } from '@/hooks/useModal';
-import { notificationService, NotificationListResult } from '@/services/notificationService';
+import { notificationService, NotificationListResult, PublishAnnouncementInput } from '@/services/notificationService';
 import { Notification, NotificationFilters, PaginationState } from '@/types/domain';
 import { NotificationSummaryCards } from '@/components/features/notifications/NotificationSummaryCards';
 import { NotificationFilterBar } from '@/components/features/notifications/NotificationFilterBar';
@@ -14,21 +14,47 @@ import { NotificationTable } from '@/components/features/notifications/Notificat
 import { NotificationDetailsDrawer } from '@/components/features/notifications/NotificationDetailsDrawer';
 import { MarkAllReadModal } from '@/components/features/notifications/MarkAllReadModal';
 import { NotificationPreferencesTab } from '@/components/features/notifications/NotificationPreferencesTab';
-import { CheckCircle2, Sliders, BellOff } from 'lucide-react';
+import { PublishAnnouncementForm } from '@/components/features/notifications/PublishAnnouncementForm';
+import { useAuth } from '@/context/AuthContext';
+import { CheckCircle2, Sliders, BellOff, Megaphone } from 'lucide-react';
 
 function NotificationCenterContent() {
   const searchParams = useSearchParams();
   const targetNotificationId = searchParams.get('notification');
+  const { session, hasRole, hasPermission } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'CRITICAL' | 'ACTION_REQUIRED' | 'READ' | 'PREFERENCES'>('ALL');
   const [filters, setFilters] = useState<NotificationFilters>({});
   const [data, setData] = useState<NotificationListResult | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState(true);
+  const [publishToast, setPublishToast] = useState<string | null>(null);
 
   // Modals & Drawers
   const detailsDrawer = useModal<Notification>();
   const markAllModal = useModal();
+  const publishAnnouncementModal = useModal();
+
+  const canPublishAnnouncement =
+    Boolean(session) &&
+    (hasRole(['SUPER_ADMIN', 'ADMIN', 'OPERATIONS']) || hasPermission('ANNOUNCEMENT_PUBLISH'));
+
+  const handlePublishAnnouncement = async (input: PublishAnnouncementInput) => {
+    const res = await notificationService.publishAnnouncement(input);
+    if (!res.success || !res.data) {
+      throw new Error('Server returned failure while publishing announcement.');
+    }
+    const d = res.data;
+    setPublishToast(
+      `Announcement published: targeted ${d.targetCount} user(s), created ${d.createdCount} notification(s)${
+        d.skippedDueToPreferences > 0
+          ? ` (${d.skippedDueToPreferences} skipped due to user preferences)`
+          : ''
+      }.`
+    );
+    setTimeout(() => setPublishToast(null), 6000);
+    loadNotifications();
+  };
 
   const loadNotifications = () => {
     setIsLoading(true);
@@ -132,14 +158,38 @@ function NotificationCenterContent() {
       title="Notification Center"
       description="Monitor operational alerts, payment events, compliance actions, financial exceptions and system notifications."
       actions={
-        summary.unreadCount > 0 && activeTab !== 'PREFERENCES' ? (
-          <Button variant="primary" size="sm" onClick={markAllModal.open} leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}>
-            Mark All as Read
-          </Button>
-        ) : undefined
+        <div className="flex items-center gap-2">
+          {canPublishAnnouncement && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={publishAnnouncementModal.open}
+              leftIcon={<Megaphone className="w-3.5 h-3.5" />}
+            >
+              Publish Announcement
+            </Button>
+          )}
+          {summary.unreadCount > 0 && activeTab !== 'PREFERENCES' && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={markAllModal.open}
+              leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+            >
+              Mark All as Read
+            </Button>
+          )}
+        </div>
       }
     >
       <div className="space-y-6">
+        {publishToast && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-[11px] font-semibold flex items-start gap-2">
+            <Megaphone className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-700" />
+            <span>{publishToast}</span>
+          </div>
+        )}
+
         {/* Summary Cards */}
         <NotificationSummaryCards summary={summary} />
 
@@ -291,6 +341,12 @@ function NotificationCenterContent() {
           onClose={markAllModal.close}
           onConfirm={handleMarkAllRead}
           unreadCount={summary.unreadCount}
+        />
+
+        <PublishAnnouncementForm
+          isOpen={publishAnnouncementModal.isOpen}
+          onClose={publishAnnouncementModal.close}
+          onSubmit={handlePublishAnnouncement}
         />
       </div>
     </PageContainer>

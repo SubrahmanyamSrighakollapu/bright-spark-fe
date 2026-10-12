@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { PhoneInputWithCountryCode } from '@/components/ui/PhoneInputWithCountryCode';
 import { useToast } from '@/components/ui/Toast';
 import { userService } from '@/services/userService';
 import { kycService, type KYCDocumentRequirement } from '@/services/kycService';
@@ -45,6 +46,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({ fixedRole, paren
     panNoVerify: false,
     fullName: '',
     email: '',
+    countryCode: '+91',
     contactNo: '',
     roleName: fixedRole || 'RETAILER',
     isAutoPassword: true,
@@ -166,6 +168,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({ fixedRole, paren
       panNoVerify: false,
       fullName: '',
       email: '',
+      countryCode: '+91',
       contactNo: '',
       roleName: fixedRole || 'RETAILER',
       isAutoPassword: true,
@@ -306,13 +309,13 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({ fixedRole, paren
             leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
           />
 
-          <Input
+          <PhoneInputWithCountryCode
             label="Mobile Number (contactNo)"
             placeholder="10-digit mobile number"
-            maxLength={10}
             value={formData.contactNo}
-            onChange={(e) => setFormData((p) => ({ ...p, contactNo: e.target.value.replace(/\D/g, '') }))}
-            leftIcon={<Phone className="w-4 h-4 text-slate-400" />}
+            countryCode={formData.countryCode}
+            onPhoneChange={(phone) => setFormData((p) => ({ ...p, contactNo: phone }))}
+            onCountryCodeChange={(code) => setFormData((p) => ({ ...p, countryCode: code }))}
             required
           />
 

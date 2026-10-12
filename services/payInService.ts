@@ -77,6 +77,11 @@ export interface PayInExecutionInput {
   customerReference?: string;
   serviceType: string;
   paymentMode: string;
+  paymentGatewayId?: string;
+  paymentGatewayName?: string;
+  paymentMethodId?: string;
+  paymentOptionId?: string;
+  paymentOptionName?: string;
   amount: number;
   remarks?: string;
   mockScenario?: 'AUTO' | 'SUCCESS' | 'PENDING' | 'FAILED';
@@ -388,7 +393,7 @@ class PayInService {
         netAmount: preview.actualCreditAmount,
         status,
         paymentMode: (input.paymentMode as any) || 'UPI',
-        provider: 'Qin Star Pay Mock Gateway',
+        provider: input.paymentGatewayName || 'Qin Star Pay Mock Gateway',
         service: input.serviceType || 'UPI Pay-In Collection',
         channel: 'Web',
         customerName: input.customerName || 'Walk-in Customer',

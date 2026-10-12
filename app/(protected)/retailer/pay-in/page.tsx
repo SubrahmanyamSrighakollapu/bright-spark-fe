@@ -5,12 +5,11 @@ import Link from 'next/link';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { useAuth } from '@/context/AuthContext';
-import { MobileInput, useToast } from '@/components/ui';
+import { MobileInput, Select, useToast } from '@/components/ui';
 import { payInService, PayInPreviewResult, PayInExecutionResult } from '@/services/payInService';
 import { adminService } from '@/services/adminService';
-import { PAY_IN_SERVICES, PAY_IN_PAYMENT_MODES } from '@/constants/serviceMasters';
+import { configurationService } from '@/services/configurationService';
 import {
   serviceCategoryService,
   ServiceCategoryItem,
@@ -29,29 +28,29 @@ import { TransactionProcessingState } from '@/components/features/transactions/T
 import { TransactionSecurityNotice } from '@/components/features/transactions/TransactionSecurityNotice';
 
 import {
-  ArrowDownLeft,
   CheckCircle2,
   Clock,
   AlertTriangle,
   ArrowRight,
   ArrowLeft,
   RefreshCw,
-  ShieldCheck,
   Percent,
-  Wallet,
   User,
-  CreditCard,
-  Phone,
   FileText,
-  Building2,
-  Sparkles,
-  Check,
   Package,
-  ShoppingBag,
-  Tag,
 } from 'lucide-react';
 
 type PayInStep = 1 | 2 | 3 | 4;
+interface PaymentGatewayConfig { id: string; gatewayName: string }
+interface PaymentMethodConfig { id: string; methodName: string; methodCode: string }
+interface PaymentOptionConfig { id: string; methodId: string; optionName: string; optionCode: string }
+interface GatewayMethodMapping { id: string; gatewayId: string; methodId: string }
+interface PaymentRoutingOptions {
+  gateways: PaymentGatewayConfig[];
+  methods: PaymentMethodConfig[];
+  options: PaymentOptionConfig[];
+  mappings: GatewayMethodMapping[];
+}
 
 const PAY_IN_STEPS: StepItem[] = [
   { step: 1, label: 'Details', description: 'Customer & Payment' },
@@ -84,8 +83,15 @@ export default function RetailerPayInPage() {
   const [customerName, setCustomerName] = useState('');
   const [customerMobile, setCustomerMobile] = useState('');
   const [customerReference, setCustomerReference] = useState('');
-  const [serviceType, setServiceType] = useState('UPI Pay-In Collection');
-  const [paymentMode, setPaymentMode] = useState('UPI');
+  const [serviceType, setServiceType] = useState('');
+  const [paymentMode, setPaymentMode] = useState('');
+  const [paymentGateways, setPaymentGateways] = useState<PaymentGatewayConfig[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodConfig[]>([]);
+  const [paymentOptions, setPaymentOptions] = useState<PaymentOptionConfig[]>([]);
+  const [gatewayMappings, setGatewayMappings] = useState<GatewayMethodMapping[]>([]);
+  const [selectedGatewayId, setSelectedGatewayId] = useState('');
+  const [selectedMethodId, setSelectedMethodId] = useState('');
+  const [selectedOptionId, setSelectedOptionId] = useState('');
   const [amountStr, setAmountStr] = useState('1000');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [remarks, setRemarks] = useState('');
@@ -124,11 +130,74 @@ export default function RetailerPayInPage() {
   };
 
   useEffect(() => {
-    loadServiceCategories();
-    const handleStorageUpdate = () => loadServiceCategories();
-    window.addEventListener('qin_service_categories_updated', handleStorageUpdate);
-    return () => window.removeEventListener('qin_service_categories_updated', handleStorageUpdate);
+    void loadServiceCategories();
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    configurationService.paymentRoutingOptions<PaymentRoutingOptions>().then((response) => {
+      if (!active) return;
+      const { gateways, methods, options, mappings } = response.data;
+      setPaymentGateways(gateways);
+      setPaymentMethods(methods);
+      setPaymentOptions(options);
+      setGatewayMappings(mappings);
+
+      const gateway = gateways.find((item) => mappings.some((mapping) =>
+        mapping.gatewayId === item.id &&
+        methods.some((method) => method.id === mapping.methodId) &&
+        options.some((option) => option.methodId === mapping.methodId)
+      ));
+      const mapping = gateway
+        ? mappings.find((item) => item.gatewayId === gateway.id && methods.some((method) => method.id === item.methodId) && options.some((option) => option.methodId === item.methodId))
+        : undefined;
+      const method = mapping ? methods.find((item) => item.id === mapping.methodId) : undefined;
+      const option = method ? options.find((item) => item.methodId === method.id) : undefined;
+      setSelectedGatewayId(gateway?.id ?? '');
+      setSelectedMethodId(method?.id ?? '');
+      setSelectedOptionId(option?.id ?? '');
+      setPaymentMode(method?.methodCode ?? '');
+    }).catch((error: unknown) => {
+      if (active) toastError(error instanceof Error ? error.message : 'Unable to load payment configuration.');
+    });
+    return () => { active = false; };
+  }, [toastError]);
+
+  const availablePaymentMethods = paymentMethods.filter((method) =>
+    gatewayMappings.some((mapping) => mapping.gatewayId === selectedGatewayId && mapping.methodId === method.id) &&
+    paymentOptions.some((option) => option.methodId === method.id)
+  );
+  const availablePaymentGateways = paymentGateways.filter((gateway) =>
+    gatewayMappings.some((mapping) =>
+      mapping.gatewayId === gateway.id &&
+      paymentMethods.some((method) => method.id === mapping.methodId) &&
+      paymentOptions.some((option) => option.methodId === mapping.methodId)
+    )
+  );
+  const availablePaymentOptions = paymentOptions.filter((option) => option.methodId === selectedMethodId);
+  const selectedGateway = paymentGateways.find((item) => item.id === selectedGatewayId);
+  const selectedMethod = paymentMethods.find((item) => item.id === selectedMethodId);
+  const selectedPaymentOption = paymentOptions.find((item) => item.id === selectedOptionId);
+
+  const handleGatewayChange = (gatewayId: string) => {
+    const mappedMethod = paymentMethods.find((method) =>
+      gatewayMappings.some((mapping) => mapping.gatewayId === gatewayId && mapping.methodId === method.id) &&
+      paymentOptions.some((option) => option.methodId === method.id)
+    );
+    const option = mappedMethod ? paymentOptions.find((item) => item.methodId === mappedMethod.id) : undefined;
+    setSelectedGatewayId(gatewayId);
+    setSelectedMethodId(mappedMethod?.id ?? '');
+    setSelectedOptionId(option?.id ?? '');
+    setPaymentMode(mappedMethod?.methodCode ?? '');
+  };
+
+  const handleMethodChange = (methodId: string) => {
+    const method = paymentMethods.find((item) => item.id === methodId);
+    const option = paymentOptions.find((item) => item.methodId === methodId);
+    setSelectedMethodId(methodId);
+    setSelectedOptionId(option?.id ?? '');
+    setPaymentMode(method?.methodCode ?? '');
+  };
 
   // Update selected category object when serviceType changes
   useEffect(() => {
@@ -200,7 +269,7 @@ export default function RetailerPayInPage() {
     let isMounted = true;
     async function updatePreview() {
       const numAmount = parseFloat(amountStr) || 0;
-      if (numAmount > 0) {
+      if (numAmount > 0 && serviceType && paymentMode) {
         const res = await payInService.calculatePayInPreview(retailerId, {
           amount: numAmount,
           serviceType,
@@ -262,6 +331,17 @@ export default function RetailerPayInPage() {
   // Proceed to Step 2 (Review)
   const handleProceedToReview = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!serviceType || !selectedCategoryObj) {
+      toastError('Select an active service category before continuing.');
+      return;
+    }
+    const gatewayIsValid = availablePaymentGateways.some((item) => item.id === selectedGatewayId);
+    const methodIsValid = availablePaymentMethods.some((item) => item.id === selectedMethodId);
+    const optionIsValid = availablePaymentOptions.some((item) => item.id === selectedOptionId);
+    if (!gatewayIsValid || !methodIsValid || !optionIsValid) {
+      toastError('Select a payment gateway, payment method, and payment option before continuing.');
+      return;
+    }
     const mode = selectedCategoryObj?.pricingMode || 'BOTH';
     if (mode === 'PRESET_ONLY' && !selectedProductId) {
       toastError('Admin Configuration Policy: You must select one of the preset product packages for this category.');
@@ -291,6 +371,11 @@ export default function RetailerPayInPage() {
         customerReference: customerReference.trim() || undefined,
         serviceType,
         paymentMode,
+        paymentGatewayId: selectedGatewayId,
+        paymentGatewayName: selectedGateway?.gatewayName,
+        paymentMethodId: selectedMethodId,
+        paymentOptionId: selectedOptionId,
+        paymentOptionName: selectedPaymentOption?.optionName,
         amount: parseFloat(amountStr),
         remarks: remarks.trim() || undefined,
         mockScenario,
@@ -372,7 +457,7 @@ export default function RetailerPayInPage() {
                       <MobileInput
                         label="Customer Mobile Number *"
                         value={customerMobile}
-                        onChange={(e: any) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement> | string) => {
                           const val = (typeof e === 'string' ? e : e?.target?.value || '').replace(/\D/g, '');
                           setCustomerMobile(val);
                           if (val.length === 10) setMobileError('');
@@ -412,51 +497,55 @@ export default function RetailerPayInPage() {
                       </h2>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                       {/* Service Category */}
                       <div className="space-y-1.5 sm:col-span-1">
                         <label className="block text-xs font-semibold text-slate-700">
                           Service Category <span className="text-rose-500">*</span>
                         </label>
-                        <select
+                        <Select
                           value={serviceType}
-                          onChange={(e) => setServiceType(e.target.value)}
-                          className="w-full px-3.5 py-2.5 text-xs h-11 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white transition-all font-medium"
-                        >
-                          {categories.length > 0
-                            ? categories.map((c) => (
-                                <option key={c.id} value={c.name}>
-                                  {c.name}
-                                </option>
-                              ))
-                            : PAY_IN_SERVICES.map((s) => (
-                                <option key={s.id} value={s.name}>
-                                  {s.name}
-                                </option>
-                              ))}
-                        </select>
+                          onChange={(event) => setServiceType(event.target.value)}
+                          placeholder="Select service category"
+                          options={categories.map((category) => ({ value: category.name, label: category.name }))}
+                        />
                       </div>
 
-                      {/* Payment Mode */}
-                      <div className="space-y-1.5 sm:col-span-1">
-                        <label className="block text-xs font-semibold text-slate-700">
-                          Payment Mode <span className="text-rose-500">*</span>
-                        </label>
-                        <select
-                          value={paymentMode}
-                          onChange={(e) => setPaymentMode(e.target.value)}
-                          className="w-full px-3.5 py-2.5 text-xs font-mono h-11 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white transition-all"
-                        >
-                          {PAY_IN_PAYMENT_MODES.map((m) => (
-                            <option key={m.id} value={m.code}>
-                              {m.name} ({m.code})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <Select
+                        label="Payment Gateway"
+                        required
+                        searchable
+                        value={selectedGatewayId}
+                        onChange={(event) => handleGatewayChange(event.target.value)}
+                        placeholder="Select gateway"
+                        helperText={availablePaymentGateways.length === 0 ? 'No complete active gateway configuration is available.' : undefined}
+                        options={availablePaymentGateways.map((item) => ({ value: item.id, label: item.gatewayName }))}
+                      />
+
+                      <Select
+                        label="Payment Method"
+                        required
+                        value={selectedMethodId}
+                        disabled={!selectedGatewayId || availablePaymentMethods.length === 0}
+                        onChange={(event) => handleMethodChange(event.target.value)}
+                        placeholder={selectedGatewayId ? 'Select method' : 'Select gateway first'}
+                        helperText={selectedGatewayId && availablePaymentMethods.length === 0 ? 'No active method with options is mapped to this gateway.' : undefined}
+                        options={availablePaymentMethods.map((item) => ({ value: item.id, label: item.methodName }))}
+                      />
+
+                      <Select
+                        label="Payment Option"
+                        required
+                        value={selectedOptionId}
+                        disabled={!selectedMethodId || availablePaymentOptions.length === 0}
+                        onChange={(event) => setSelectedOptionId(event.target.value)}
+                        placeholder={selectedMethodId ? 'Select option' : 'Select method first'}
+                        helperText={selectedMethodId && availablePaymentOptions.length === 0 ? 'No active option is configured for this method.' : undefined}
+                        options={availablePaymentOptions.map((item) => ({ value: item.id, label: item.optionName }))}
+                      />
 
                       {/* Consumer / Order Reference */}
-                      <div className="space-y-1.5 sm:col-span-1">
+                      <div className="space-y-1.5 sm:col-span-2 xl:col-span-4">
                         <label className="block text-xs font-semibold text-slate-700">
                           Order / Bill Ref <span className="text-slate-400 font-normal">(Optional)</span>
                         </label>
@@ -555,11 +644,6 @@ export default function RetailerPayInPage() {
                                           <span className="text-sm font-extrabold font-mono text-[#0F4C81]">
                                             {formatCurrency(product.price)}
                                           </span>
-                                          {product.badge && (
-                                            <span className="text-[9px] font-mono font-bold block px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200 mt-0.5">
-                                              {product.badge}
-                                            </span>
-                                          )}
                                         </div>
                                       </div>
                                     </div>
@@ -790,6 +874,18 @@ export default function RetailerPayInPage() {
                     <div className="flex justify-between py-1 border-b border-slate-200/60">
                       <span className="text-slate-500 font-sans">Service Category:</span>
                       <span className="font-semibold font-sans">{serviceType}</span>
+                    </div>
+                    <div className="flex justify-between gap-4 py-1 border-b border-slate-200/60">
+                      <span className="text-slate-500 font-sans">Gateway:</span>
+                      <span className="font-semibold font-sans text-right">{selectedGateway?.gatewayName}</span>
+                    </div>
+                    <div className="flex justify-between gap-4 py-1 border-b border-slate-200/60">
+                      <span className="text-slate-500 font-sans">Payment Method:</span>
+                      <span className="font-semibold font-sans text-right">{selectedMethod?.methodName}</span>
+                    </div>
+                    <div className="flex justify-between gap-4 py-1 border-b border-slate-200/60">
+                      <span className="text-slate-500 font-sans">Payment Option:</span>
+                      <span className="font-semibold font-sans text-right">{selectedPaymentOption?.optionName}</span>
                     </div>
                     {customerReference && (
                       <div className="flex justify-between py-1 border-b border-slate-200/60">

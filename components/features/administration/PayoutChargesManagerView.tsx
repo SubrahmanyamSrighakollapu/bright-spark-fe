@@ -1,310 +1,93 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Table } from '@/components/ui/Table';
-import { Modal } from '@/components/ui/Modal';
-import { useToast } from '@/components/ui/Toast';
-import { ColumnDefinition } from '@/types/common';
+import React, { useEffect, useState } from 'react';
+import { ArrowUpRight, Edit, Plus, Trash2, Zap } from 'lucide-react';
+import { Button, Card, Input, Modal, Select, Table, useToast } from '@/components/ui';
+import type { ColumnDefinition } from '@/types/common';
 import { formatCurrency } from '@/utils/formatters';
-import { ArrowUpRight, Plus, Edit, Trash2, Zap } from 'lucide-react';
-
-export interface PayoutChargeRule {
-  id: string;
-  payoutMode: 'IMPS' | 'NEFT' | 'RTGS' | 'UPI';
-  minAmount: number;
-  maxAmount: number;
-  deductionType: 'Flat Amount (₹)' | 'Percentage (%)';
-  chargeRate: number;
-  createdAt: string;
-}
-
-const INITIAL_PAYOUT_CHARGES: PayoutChargeRule[] = [
-  {
-    id: 'pc_1',
-    payoutMode: 'IMPS',
-    minAmount: 1,
-    maxAmount: 25000,
-    deductionType: 'Flat Amount (₹)',
-    chargeRate: 5.0,
-    createdAt: '2026-08-01T10:00:00Z',
-  },
-  {
-    id: 'pc_2',
-    payoutMode: 'IMPS',
-    minAmount: 25001,
-    maxAmount: 200000,
-    deductionType: 'Flat Amount (₹)',
-    chargeRate: 10.0,
-    createdAt: '2026-08-01T10:30:00Z',
-  },
-  {
-    id: 'pc_3',
-    payoutMode: 'NEFT',
-    minAmount: 1,
-    maxAmount: 500000,
-    deductionType: 'Flat Amount (₹)',
-    chargeRate: 3.5,
-    createdAt: '2026-08-05T12:00:00Z',
-  },
-  {
-    id: 'pc_4',
-    payoutMode: 'RTGS',
-    minAmount: 200000,
-    maxAmount: 2000000,
-    deductionType: 'Percentage (%)',
-    chargeRate: 0.15,
-    createdAt: '2026-08-10T15:00:00Z',
-  },
-  {
-    id: 'pc_5',
-    payoutMode: 'UPI',
-    minAmount: 1,
-    maxAmount: 100000,
-    deductionType: 'Flat Amount (₹)',
-    chargeRate: 2.0,
-    createdAt: '2026-09-01T09:00:00Z',
-  },
-];
+import { payoutChargeService, type PayoutChargeRule, type PayoutMode } from '@/services/payoutChargeService';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 export const PayoutChargesManagerView: React.FC = () => {
-  const { toastSuccess, toastInfo } = useToast();
-  const [charges, setCharges] = useState<PayoutChargeRule[]>(INITIAL_PAYOUT_CHARGES);
-
-  // Form / Modal
+  const { toastSuccess, toastInfo, toastError } = useToast();
+  const confirmAction = useConfirmation();
+  const [charges, setCharges] = useState<PayoutChargeRule[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<PayoutChargeRule | null>(null);
-  const [payoutMode, setPayoutMode] = useState<'IMPS' | 'NEFT' | 'RTGS' | 'UPI'>('IMPS');
-  const [minAmount, setMinAmount] = useState<number>(1);
-  const [maxAmount, setMaxAmount] = useState<number>(200000);
-  const [deductionType, setDeductionType] = useState<'Flat Amount (₹)' | 'Percentage (%)'>('Flat Amount (₹)');
-  const [chargeRate, setChargeRate] = useState<number>(5.0);
+  const [payoutMode, setPayoutMode] = useState<PayoutMode | ''>('');
+  const [minAmount, setMinAmount] = useState('');
+  const [maxAmount, setMaxAmount] = useState('');
+  const [flatCharge, setFlatCharge] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleOpenAdd = () => {
-    setEditingRule(null);
-    setPayoutMode('IMPS');
-    setMinAmount(1);
-    setMaxAmount(200000);
-    setDeductionType('Flat Amount (₹)');
-    setChargeRate(5.0);
-    setIsModalOpen(true);
+  useEffect(() => {
+    let active = true;
+    payoutChargeService.getRules()
+      .then((response) => { if (active) setCharges(response.data ?? []); })
+      .catch((error: unknown) => { if (active) toastError(error instanceof Error ? error.message : 'Unable to load payout charge rules.'); })
+      .finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
+  }, [toastError]);
+
+  const openAdd = () => {
+    setEditingRule(null); setPayoutMode(''); setMinAmount(''); setMaxAmount(''); setFlatCharge(''); setIsModalOpen(true);
   };
-
-  const handleOpenEdit = (rule: PayoutChargeRule) => {
-    setEditingRule(rule);
-    setPayoutMode(rule.payoutMode);
-    setMinAmount(rule.minAmount);
-    setMaxAmount(rule.maxAmount);
-    setDeductionType(rule.deductionType);
-    setChargeRate(rule.chargeRate);
-    setIsModalOpen(true);
+  const openEdit = (rule: PayoutChargeRule) => {
+    setEditingRule(rule); setPayoutMode(rule.payoutMode); setMinAmount(String(rule.minAmount)); setMaxAmount(String(rule.maxAmount)); setFlatCharge(String(rule.flatCharge)); setIsModalOpen(true);
   };
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingRule) {
-      setCharges((prev) =>
-        prev.map((c) =>
-          c.id === editingRule.id
-            ? {
-                ...c,
-                payoutMode,
-                minAmount: Number(minAmount),
-                maxAmount: Number(maxAmount),
-                deductionType,
-                chargeRate: Number(chargeRate),
-              }
-            : c
-        )
-      );
-      toastSuccess(`Payout charge rule for ${payoutMode} updated!`);
-    } else {
-      const newRule: PayoutChargeRule = {
-        id: `pc_${Date.now()}`,
-        payoutMode,
-        minAmount: Number(minAmount),
-        maxAmount: Number(maxAmount),
-        deductionType,
-        chargeRate: Number(chargeRate),
-        createdAt: new Date().toISOString(),
-      };
-      setCharges([...charges, newRule]);
-      toastSuccess(`Payout charge rule for ${payoutMode} created!`);
+  const saveRule = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (isSaving) return;
+    if (!payoutMode || minAmount === '' || maxAmount === '' || flatCharge === '') { toastError('Complete all payout charge fields.'); return; }
+    const input = { payoutMode, minAmount: Number(minAmount), maxAmount: Number(maxAmount), flatCharge: Number(flatCharge) };
+    if (!Number.isFinite(input.minAmount) || !Number.isFinite(input.maxAmount) || !Number.isFinite(input.flatCharge) || input.minAmount < 0 || input.maxAmount <= input.minAmount || input.flatCharge < 0) { toastError('Enter a valid amount range and a non-negative flat charge.'); return; }
+    setIsSaving(true);
+    try {
+      const response = editingRule
+        ? await payoutChargeService.updateRule(editingRule.id, { ...input, version: editingRule.version })
+        : await payoutChargeService.createRule(input);
+      if (!response.data) throw new Error('The payout charge API returned no rule.');
+      const savedRule = response.data;
+      setCharges((current) => (editingRule
+        ? current.map((rule) => rule.id === savedRule.id ? savedRule : rule)
+        : [...current, savedRule]).sort((a, b) => a.payoutMode.localeCompare(b.payoutMode) || a.minAmount - b.minAmount));
+      toastSuccess(`${payoutMode} flat-charge rule ${editingRule ? 'updated' : 'created'} successfully.`);
+      setIsModalOpen(false);
+    } catch (error) {
+      toastError(error instanceof Error ? error.message : 'Unable to save the payout charge rule.');
+    } finally {
+      setIsSaving(false);
     }
-
-    setIsModalOpen(false);
   };
-
-  const handleDelete = (id: string, mode: string) => {
-    setCharges((prev) => prev.filter((c) => c.id !== id));
-    toastInfo(`Removed ${mode} payout charge rule.`);
+  const removeRule = async (rule: PayoutChargeRule) => {
+    const confirmed = await confirmAction({
+      title: 'Delete payout charge range?',
+      message: `Delete the ${rule.payoutMode} charge range from ${formatCurrency(rule.minAmount)} to ${formatCurrency(rule.maxAmount)} with a flat charge of ${formatCurrency(rule.flatCharge)}? New settlements will no longer use this range.`,
+      confirmText: 'Yes, delete range',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+    try {
+      await payoutChargeService.deleteRule(rule.id);
+      setCharges((current) => current.filter((item) => item.id !== rule.id));
+      toastInfo(`${rule.payoutMode} payout charge range removed.`);
+    } catch (error) {
+      toastError(error instanceof Error ? error.message : 'Unable to delete the payout charge rule.');
+    }
   };
 
   const columns: ColumnDefinition<PayoutChargeRule>[] = [
-    {
-      key: 'payoutMode',
-      header: 'Payout Mode',
-      render: (row) => (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#F1F5F9] text-[#0F172A] border border-[#CBD5E1]">
-          <Zap className="w-3 h-3 text-[#155EEF]" />
-          {row.payoutMode}
-        </span>
-      ),
-    },
-    {
-      key: 'minAmount',
-      header: 'Min Amount (₹)',
-      render: (row) => <span className="font-medium text-[#0F172A]">{formatCurrency(row.minAmount)}</span>,
-    },
-    {
-      key: 'maxAmount',
-      header: 'Max Amount (₹)',
-      render: (row) => <span className="font-medium text-[#0F172A]">{formatCurrency(row.maxAmount)}</span>,
-    },
-    {
-      key: 'deductionType',
-      header: 'Deduction Type',
-      render: (row) => <span className="text-xs text-[#475569]">{row.deductionType}</span>,
-    },
-    {
-      key: 'chargeRate',
-      header: 'Charge Rate',
-      render: (row) => (
-        <span className="font-bold text-[#155EEF]">
-          {row.deductionType === 'Percentage (%)' ? `${row.chargeRate}%` : `₹${row.chargeRate.toFixed(2)}`}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (row) => (
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleOpenEdit(row)}
-            className="h-8 px-2 text-[#155EEF] hover:bg-[#F1F5F9]"
-          >
-            <Edit className="w-3.5 h-3.5 mr-1" />
-            Edit
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDelete(row.id, row.payoutMode)}
-            className="h-8 px-2 text-rose-600 hover:bg-rose-50"
-          >
-            <Trash2 className="w-3.5 h-3.5 mr-1" />
-            Delete
-          </Button>
-        </div>
-      ),
-    },
+    { key: 'payoutMode', header: 'Payout Mode', render: (row) => <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-[#0F4C81]"><Zap className="h-3 w-3" />{row.payoutMode}</span> },
+    { key: 'minAmount', header: 'Minimum Amount', render: (row) => <span className="font-semibold text-slate-800">{formatCurrency(row.minAmount)}</span> },
+    { key: 'maxAmount', header: 'Maximum Amount', render: (row) => <span className="font-semibold text-slate-800">{formatCurrency(row.maxAmount)}</span> },
+    { key: 'flatCharge', header: 'Flat Charge', render: (row) => <span className="font-extrabold text-[#0F4C81]">{formatCurrency(row.flatCharge)}</span> },
+    { key: 'actions', header: 'Actions', render: (row) => <div className="flex items-center gap-1"><Button variant="ghost" size="sm" leftIcon={<Edit className="h-3.5 w-3.5" />} onClick={() => openEdit(row)}>Edit</Button><Button variant="ghost" size="sm" leftIcon={<Trash2 className="h-3.5 w-3.5" />} className="text-rose-600 hover:bg-rose-50" onClick={() => removeRule(row)}>Delete</Button></div> },
   ];
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
-        <div>
-          <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <ArrowUpRight className="w-6 h-6 text-[#155EEF]" />
-            Payout Service Charges Manager
-          </h1>
-          <p className="text-sm text-[#64748B] mt-0.5">
-            Define platform service charges deducted when users execute bank payouts or wallet withdrawals.
-          </p>
-        </div>
-        <Button variant="primary" onClick={handleOpenAdd}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Charge Rule
-        </Button>
-      </div>
-
-      <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-4">
-        <Table columns={columns} data={charges} keyExtractor={(c) => c.id} />
-      </Card>
-
-      {isModalOpen && (
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={editingRule ? `Edit Payout Rule (${editingRule.payoutMode})` : 'Create Payout Charge Rule'}
-        >
-          <form onSubmit={handleSave} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Payout Mode</label>
-              <select
-                value={payoutMode}
-                onChange={(e) => setPayoutMode(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A]"
-              >
-                <option value="IMPS">IMPS</option>
-                <option value="NEFT">NEFT</option>
-                <option value="RTGS">RTGS</option>
-                <option value="UPI">UPI</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#334155] mb-1">Min Amount (₹)</label>
-                <Input
-                  type="number"
-                  value={minAmount}
-                  onChange={(e) => setMinAmount(parseFloat(e.target.value) || 0)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#334155] mb-1">Max Amount (₹)</label>
-                <Input
-                  type="number"
-                  value={maxAmount}
-                  onChange={(e) => setMaxAmount(parseFloat(e.target.value) || 0)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">Deduction Type</label>
-              <select
-                value={deductionType}
-                onChange={(e) => setDeductionType(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A]"
-              >
-                <option value="Flat Amount (₹)">Flat Amount (₹)</option>
-                <option value="Percentage (%)">Percentage (%)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#334155] mb-1">
-                Charge Rate {deductionType === 'Percentage (%)' ? '(%)' : '(₹)'}
-              </label>
-              <Input
-                type="number"
-                step="0.01"
-                value={chargeRate}
-                onChange={(e) => setChargeRate(parseFloat(e.target.value) || 0)}
-                required
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary">
-                Save Rule
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
-    </div>
-  );
+  return <div className="space-y-6">
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between"><div><h1 className="flex items-center gap-2 text-xl font-extrabold text-slate-950"><ArrowUpRight className="h-6 w-6 text-[#0F4C81]" />Payout Charges Manager</h1><p className="mt-1 text-sm text-slate-500">Configure flat settlement charges by payout mode and non-overlapping amount range.</p></div><Button leftIcon={<Plus className="h-4 w-4" />} onClick={openAdd}>Add charge range</Button></div>
+    <Card className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-sm"><div className="border-b border-slate-100 px-6 py-5"><h2 className="font-bold text-slate-900">Configured charge ranges</h2><p className="mt-1 text-xs text-slate-500">The retailer settlement summary automatically uses the matching active range.</p></div>{isLoading ? <div className="px-6 py-12 text-center text-sm text-slate-500">Loading payout charge ranges...</div> : <Table columns={columns} data={charges} keyExtractor={(rule) => rule.id} />}</Card>
+    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingRule ? 'Edit payout charge range' : 'Add payout charge range'} description="Ranges are inclusive and cannot overlap for the same payout mode."><form onSubmit={saveRule} className="space-y-5"><Select label="Payout mode" required value={payoutMode} onChange={(e) => setPayoutMode(e.target.value as PayoutMode)} options={['IMPS', 'NEFT', 'RTGS', 'UPI'].map((value) => ({ label: value, value }))} placeholder="Select payout mode" /><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Input label="Minimum amount" required type="number" min="0" step="0.01" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} placeholder="Enter minimum amount" /><Input label="Maximum amount" required type="number" min="0" step="0.01" value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} placeholder="Enter maximum amount" /></div><Input label="Flat charge" required type="number" min="0" step="0.01" value={flatCharge} onChange={(e) => setFlatCharge(e.target.value)} placeholder="Enter flat charge" helperText="This exact amount will appear as the bank fee in the retailer settlement summary." /><div className="flex justify-end gap-3 border-t border-slate-100 pt-5"><Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button><Button type="submit" isLoading={isSaving}>Save charge range</Button></div></form></Modal>
+  </div>;
 };

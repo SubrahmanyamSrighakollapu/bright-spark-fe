@@ -27,6 +27,7 @@ import { SettlementDetailsDrawer } from '@/components/features/settlements/Settl
 import { ReconciliationDetailsModal } from '@/components/features/settlements/ReconciliationDetailsModal';
 import { AdminReportNav } from '@/components/features/reports/AdminReportNav';
 import { Search, Filter, RotateCcw, Eye, ShieldCheck } from 'lucide-react';
+import { useToast } from '@/components/ui';
 
 export default function SettlementReportPage() {
   const [activeTab, setActiveTab] = useState<'SETTLEMENTS' | 'RECONCILIATION'>('SETTLEMENTS');
@@ -37,6 +38,8 @@ export default function SettlementReportPage() {
   const [data, setData] = useState<ReportListResult<Settlement, SettlementReportSummary> | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const { toastSuccess, toastError } = useToast();
 
   // Reconciliation Mode State
   const [reconciliationItems, setReconciliationItems] = useState<SettlementReconciliation[]>([]);
@@ -101,37 +104,35 @@ export default function SettlementReportPage() {
     };
   }, [activeTab, dateRange, searchQuery, status, pagination.page, pagination.pageSize, reconciliationPagination.page, reconciliationPagination.pageSize]);
 
-  const handleExportCsv = () => {
-    if (activeTab === 'SETTLEMENTS') {
-      if (!data?.items) return;
-      const exportRows = data.items.map((s) => ({
-        'Settlement ID': s.settlementId,
-        'Target Entity': s.entityName,
-        'Wallet ID': s.walletId,
-        'Gross Amount (INR)': s.grossAmount,
-        'Charges (INR)': s.charges,
-        'Tax (INR)': s.tax,
-        'TDS (INR)': s.tds,
-        'Net Amount (INR)': s.netSettlementAmount,
-        'Status': s.status,
-        'Provider': s.provider,
-        'UTR': s.utr || 'N/A',
-        'Scheduled Date': s.scheduledAt,
-      }));
-      reportService.exportToCsv('Settlement_Report', exportRows);
-    } else {
-      const exportRows = reconciliationItems.map((r) => ({
-        'Reconciliation ID': r.reconciliationId,
-        'Settlement ID': r.settlementId,
-        'Entity Name': r.entityName,
-        'Internal Amount (INR)': r.internalAmount,
-        'Provider Amount (INR)': r.providerAmount,
-        'Difference (INR)': r.difference,
-        'Reconciliation Status': r.reconciliationStatus,
-        'UTR': r.utr || 'N/A',
-        'Remarks': r.remarks || 'N/A',
-      }));
-      reportService.exportToCsv('Settlement_Reconciliation_Report', exportRows);
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      if (activeTab === 'SETTLEMENTS') {
+        await reportService.exportSettlementsCsv({
+          dateRange,
+          searchQuery,
+          status,
+        });
+        toastSuccess('Settlement report exported successfully');
+      } else {
+        const exportRows = reconciliationItems.map((r) => ({
+          'Reconciliation ID': r.reconciliationId,
+          'Settlement ID': r.settlementId,
+          'Entity Name': r.entityName,
+          'Internal Amount (INR)': r.internalAmount,
+          'Provider Amount (INR)': r.providerAmount,
+          'Difference (INR)': r.difference,
+          'Reconciliation Status': r.reconciliationStatus,
+          'UTR': r.utr || 'N/A',
+          'Remarks': r.remarks || 'N/A',
+        }));
+        reportService.exportToCsv('Settlement_Reconciliation_Report', exportRows);
+        toastSuccess('Reconciliation report exported successfully');
+      }
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Failed to export settlement report');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -260,6 +261,7 @@ export default function SettlementReportPage() {
         <ReportExportMenu
           onExportCsv={handleExportCsv}
           reportTitle={activeTab === 'SETTLEMENTS' ? 'Settlement Report' : 'Reconciliation Report'}
+          isLoading={isExporting}
         />
       }
     >
