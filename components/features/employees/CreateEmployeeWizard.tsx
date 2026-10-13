@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/Select';
 import { PhoneInputWithCountryCode } from '@/components/ui/PhoneInputWithCountryCode';
 import { useToast } from '@/components/ui/Toast';
 import { employeeService, type EmployeeMetaDepartment } from '@/services/employeeService';
+import { ApiError } from '@/services/apiClient';
 
 const initialForm = () => ({
   fullName: '', email: '', countryCode: '+91', mobile: '', departmentCode: '',
@@ -21,6 +22,7 @@ export const CreateEmployeeWizard: React.FC = () => {
   const [departments, setDepartments] = useState<EmployeeMetaDepartment[]>([]);
   const [form, setForm] = useState(initialForm);
   const [loadingMeta, setLoadingMeta] = useState(true); const [submitting, setSubmitting] = useState(false);
+  const [mobileError, setMobileError] = useState('');
 
   useEffect(() => {
     employeeService.getEmployeeMeta().then((meta) => setDepartments(meta.departments)).catch((error) => toastError(error instanceof Error ? error.message : 'Unable to load departments')).finally(() => setLoadingMeta(false));
@@ -29,25 +31,37 @@ export const CreateEmployeeWizard: React.FC = () => {
   const validate = () => {
     if (form.fullName.trim().length < 2) return 'Enter the employee full name.';
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return 'Enter a valid official email address.';
-    if (!form.mobile || form.mobile.replace(/\D/g, '').length < 7) return 'Enter a valid mobile number.';
+    if (form.countryCode !== '+91') return 'Employee onboarding currently supports Indian (+91) mobile numbers only.';
+    if (!/^[6-9]\d{9}$/.test(form.mobile.replace(/\D/g, ''))) return 'Enter a valid 10-digit Indian mobile number.';
     if (!form.departmentCode) return 'Department is mandatory.';
     if (!form.joiningDate) return 'Joining date is mandatory.';
     return null;
   };
 
   const save = async () => {
-    const error = validate(); if (error) return toastError(error);
+    const error = validate();
+    if (error) {
+      if (error.toLowerCase().includes('mobile')) setMobileError(error);
+      return toastError(error);
+    }
     setSubmitting(true);
     try {
       const employee = await employeeService.createEmployee({
         ...form,
         fullName: form.fullName.trim(),
         email: form.email.trim().toLowerCase(),
-        mobile: `${form.countryCode} ${form.mobile}`.trim(),
+        mobile: form.mobile.replace(/\D/g, ''),
       });
       toastSuccess(`Employee ${employee.employeeCode} (${employee.fullName}) created successfully.`);
       router.push('/admin/employees');
-    } catch (error) { toastError(error instanceof Error ? error.message : 'Failed to create employee'); }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create employee';
+      if (error instanceof ApiError && error.details && typeof error.details === 'object' && 'fieldErrors' in error.details) {
+        const fields = (error.details as { fieldErrors?: Record<string, string[] | undefined> }).fieldErrors;
+        setMobileError(fields?.mobile?.[0] ?? '');
+      }
+      toastError(message);
+    }
     finally { setSubmitting(false); }
   };
 
@@ -61,7 +75,7 @@ export const CreateEmployeeWizard: React.FC = () => {
       <div className="grid grid-cols-1 gap-5 pt-1 md:grid-cols-2 xl:grid-cols-3">
         <Input label="Full Name" placeholder="e.g. Rajesh Kumar" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))} required />
         <Input label="Official Email ID" type="email" placeholder="rajesh@qinstarpay.com" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
-        <PhoneInputWithCountryCode label="Mobile Number" placeholder="9876543210" value={form.mobile} countryCode={form.countryCode} onPhoneChange={(phone) => setForm((current) => ({ ...current, mobile: phone }))} onCountryCodeChange={(code) => setForm((current) => ({ ...current, countryCode: code }))} required />
+        <PhoneInputWithCountryCode label="Mobile Number" placeholder="9876543210" value={form.mobile} countryCode={form.countryCode} error={mobileError} maxLength={10} onPhoneChange={(phone) => { setMobileError(''); setForm((current) => ({ ...current, mobile: phone })); }} onCountryCodeChange={(code) => { setMobileError(''); setForm((current) => ({ ...current, countryCode: code })); }} required />
         <Select label="Department" placeholder={loadingMeta ? 'Loading departments…' : 'Select department'} value={form.departmentCode} disabled={loadingMeta} onChange={(event) => setForm((current) => ({ ...current, departmentCode: event.target.value }))} options={departments.map((department) => ({ value: department.code, label: department.label }))} required />
         <Input label="Joining Date" type="date" value={form.joiningDate} onChange={(event) => setForm((current) => ({ ...current, joiningDate: event.target.value }))} leftIcon={<CalendarDays className="h-4 w-4 text-slate-400" />} required />
         <Select label="Assigned Shift" value={form.shiftCode} onChange={(event) => setForm((current) => ({ ...current, shiftCode: event.target.value as typeof current.shiftCode }))} options={[{ value: 'MORNING', label: 'Morning (09:00 AM – 06:00 PM)' }, { value: 'EVENING', label: 'Evening (02:00 PM – 11:00 PM)' }, { value: 'NIGHT', label: 'Night (10:00 PM – 07:00 AM)' }]} required />

@@ -11,7 +11,7 @@ interface ToastItem { id: number; message: string; variant: ToastVariant; }
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 const styles: Record<ToastVariant, { icon: ReactNode; border: string; iconBox: string; title: string }> = {
   success: { icon: <CheckCircle2 className="h-5 w-5" />, border: 'border-emerald-200', iconBox: 'bg-emerald-50 text-emerald-600', title: 'Success' },
-  error: { icon: <AlertCircle className="h-5 w-5" />, border: 'border-rose-200', iconBox: 'bg-rose-50 text-rose-600', title: 'Action failed' },
+  error: { icon: <AlertCircle className="h-5 w-5" />, border: 'border-rose-200', iconBox: 'bg-rose-50 text-rose-600', title: 'Error' },
   warning: { icon: <AlertTriangle className="h-5 w-5" />, border: 'border-amber-200', iconBox: 'bg-amber-50 text-amber-600', title: 'Attention required' },
   info: { icon: <Info className="h-5 w-5" />, border: 'border-blue-200', iconBox: 'bg-blue-50 text-blue-600', title: 'Information' },
 };

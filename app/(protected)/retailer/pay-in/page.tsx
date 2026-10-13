@@ -23,7 +23,6 @@ import { walletService } from '@/services/walletService';
 // Shared Transaction Components
 import { TransactionHeader } from '@/components/features/transactions/TransactionHeader';
 import { TransactionStepIndicator, StepItem } from '@/components/features/transactions/TransactionStepIndicator';
-import { DeveloperTestControls } from '@/components/features/transactions/DeveloperTestControls';
 import { TransactionProcessingState } from '@/components/features/transactions/TransactionProcessingState';
 import { TransactionSecurityNotice } from '@/components/features/transactions/TransactionSecurityNotice';
 
@@ -36,7 +35,6 @@ import {
   RefreshCw,
   Percent,
   User,
-  FileText,
   Package,
 } from 'lucide-react';
 
@@ -82,7 +80,6 @@ export default function RetailerPayInPage() {
   // Form State
   const [customerName, setCustomerName] = useState('');
   const [customerMobile, setCustomerMobile] = useState('');
-  const [customerReference, setCustomerReference] = useState('');
   const [serviceType, setServiceType] = useState('');
   const [paymentMode, setPaymentMode] = useState('');
   const [paymentGateways, setPaymentGateways] = useState<PaymentGatewayConfig[]>([]);
@@ -95,7 +92,6 @@ export default function RetailerPayInPage() {
   const [amountStr, setAmountStr] = useState('1000');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [remarks, setRemarks] = useState('');
-  const [mockScenario, setMockScenario] = useState<'AUTO' | 'SUCCESS' | 'PENDING' | 'FAILED'>('SUCCESS');
 
   // Resolved Limit State
   const [activeLimit, setActiveLimit] = useState<{ minPerTransaction: number; maxPerTransaction: number } | null>(null);
@@ -331,6 +327,10 @@ export default function RetailerPayInPage() {
   // Proceed to Step 2 (Review)
   const handleProceedToReview = (e: React.FormEvent) => {
     e.preventDefault();
+    if (customerName.trim().length < 2) {
+      toastError('Enter the customer name before continuing.');
+      return;
+    }
     if (!serviceType || !selectedCategoryObj) {
       toastError('Select an active service category before continuing.');
       return;
@@ -365,10 +365,11 @@ export default function RetailerPayInPage() {
     setStep(3); // Move to Processing screen
 
     try {
-      const res = await payInService.executeMockPayInTransaction(retailerId, {
-        customerName: customerName.trim() || undefined,
+      const res = await payInService.executePayInTransaction(retailerId, {
+        customerName: customerName.trim(),
         customerMobile: customerMobile.trim(),
-        customerReference: customerReference.trim() || undefined,
+        serviceCategoryId: selectedCategoryObj!.id,
+        serviceProductId: selectedProductId || undefined,
         serviceType,
         paymentMode,
         paymentGatewayId: selectedGatewayId,
@@ -378,7 +379,6 @@ export default function RetailerPayInPage() {
         paymentOptionName: selectedPaymentOption?.optionName,
         amount: parseFloat(amountStr),
         remarks: remarks.trim() || undefined,
-        mockScenario,
       });
 
       if (res.success && res.data) {
@@ -408,7 +408,6 @@ export default function RetailerPayInPage() {
   const handleResetForm = () => {
     setCustomerName('');
     setCustomerMobile('');
-    setCustomerReference('');
     setAmountStr('1000');
     setRemarks('');
     setSelectedProductId(null);
@@ -470,7 +469,7 @@ export default function RetailerPayInPage() {
                       {/* Customer Name */}
                       <div className="space-y-1.5">
                         <label className="block text-xs font-semibold text-slate-700">
-                          Customer Name <span className="text-slate-400 font-normal">(Optional)</span>
+                          Customer Name <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
                           <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -479,6 +478,7 @@ export default function RetailerPayInPage() {
                             value={customerName}
                             onChange={(e) => setCustomerName(e.target.value)}
                             placeholder="e.g. Rajesh Kumar"
+                            required
                             className="w-full pl-10 pr-3.5 py-2.5 text-xs h-11 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white transition-all"
                           />
                         </div>
@@ -497,19 +497,16 @@ export default function RetailerPayInPage() {
                       </h2>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
                       {/* Service Category */}
-                      <div className="space-y-1.5 sm:col-span-1">
-                        <label className="block text-xs font-semibold text-slate-700">
-                          Service Category <span className="text-rose-500">*</span>
-                        </label>
-                        <Select
-                          value={serviceType}
-                          onChange={(event) => setServiceType(event.target.value)}
-                          placeholder="Select service category"
-                          options={categories.map((category) => ({ value: category.name, label: category.name }))}
-                        />
-                      </div>
+                      <Select
+                        label="Service Category"
+                        required
+                        value={serviceType}
+                        onChange={(event) => setServiceType(event.target.value)}
+                        placeholder="Select service category"
+                        options={categories.map((category) => ({ value: category.name, label: category.name }))}
+                      />
 
                       <Select
                         label="Payment Gateway"
@@ -544,22 +541,6 @@ export default function RetailerPayInPage() {
                         options={availablePaymentOptions.map((item) => ({ value: item.id, label: item.optionName }))}
                       />
 
-                      {/* Consumer / Order Reference */}
-                      <div className="space-y-1.5 sm:col-span-2 xl:col-span-4">
-                        <label className="block text-xs font-semibold text-slate-700">
-                          Order / Bill Ref <span className="text-slate-400 font-normal">(Optional)</span>
-                        </label>
-                        <div className="relative">
-                          <FileText className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                          <input
-                            type="text"
-                            value={customerReference}
-                            onChange={(e) => setCustomerReference(e.target.value)}
-                            placeholder="e.g. BILL_8891"
-                            className="w-full pl-10 pr-3.5 py-2.5 text-xs font-mono h-11 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white transition-all"
-                          />
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -762,8 +743,6 @@ export default function RetailerPayInPage() {
                   </div>
                 </form>
 
-                {/* Gated Dev QA Outcome Panel */}
-                <DeveloperTestControls mockScenario={mockScenario} onScenarioChange={setMockScenario} />
               </div>
             </div>
 
@@ -869,7 +848,7 @@ export default function RetailerPayInPage() {
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-200/60">
                       <span className="text-slate-500 font-sans">Customer Name:</span>
-                      <span className="font-semibold font-sans">{customerName || 'Walk-in Customer'}</span>
+                      <span className="font-semibold font-sans">{customerName}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-200/60">
                       <span className="text-slate-500 font-sans">Service Category:</span>
@@ -887,12 +866,6 @@ export default function RetailerPayInPage() {
                       <span className="text-slate-500 font-sans">Payment Option:</span>
                       <span className="font-semibold font-sans text-right">{selectedPaymentOption?.optionName}</span>
                     </div>
-                    {customerReference && (
-                      <div className="flex justify-between py-1 border-b border-slate-200/60">
-                        <span className="text-slate-500 font-sans">Order Ref:</span>
-                        <span className="font-bold text-[#0F4C81]">{customerReference}</span>
-                      </div>
-                    )}
                     {remarks && (
                       <div className="flex justify-between py-1">
                         <span className="text-slate-500 font-sans">Remarks:</span>
@@ -974,7 +947,7 @@ export default function RetailerPayInPage() {
             amount={parseFloat(amountStr) || 1000}
             paymentMode={paymentMode}
             serviceType={serviceType}
-            reference={customerReference}
+            reference="Generated on submission"
             customerMobile={customerMobile}
           />
         )}

@@ -25,25 +25,11 @@ import { Button, Checkbox, Input, Select, TextArea, useToast } from '@/component
 import { cn } from '@/utils/cn';
 import { payoutChargeService, type PayoutChargeResolution, type PayoutMode } from '@/services/payoutChargeService';
 import { walletService } from '@/services/walletService';
+import { settlementService, type SettlementBeneficiary } from '@/services/settlementService';
+import { useConfirmation } from '@/context/ConfirmationContext';
 
 type WorkspaceTab = 'REGISTER' | 'SETTLEMENT' | 'DELETE' | 'LIMIT' | 'KYC';
 type VerificationState = 'IDLE' | 'VERIFIED';
-
-interface RegisteredBank {
-  id: string;
-  accountType: string;
-  contact: string;
-  holderName: string;
-  accountNumber: string;
-  bankName: string;
-  ifsc: string;
-  status: 'VERIFIED';
-}
-
-const initialBanks: RegisteredBank[] = [
-  { id: 'bank-1', accountType: 'CURRENT', contact: '9876543210', holderName: 'Qin Star Retail Point', accountNumber: '621000004128', bankName: 'HDFC Bank', ifsc: 'HDFC0001287', status: 'VERIFIED' },
-  { id: 'bank-2', accountType: 'SAVINGS', contact: '9876543210', holderName: 'Demo Retailer', accountNumber: '410001884561', bankName: 'State Bank of India', ifsc: 'SBIN0004752', status: 'VERIFIED' },
-];
 
 const tabs: Array<{ id: WorkspaceTab; label: string; hint: string; icon: React.ElementType }> = [
   { id: 'REGISTER', label: 'Register Bank', hint: 'Add and verify', icon: Building2 },
@@ -75,9 +61,10 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
 }
 
 export function RetailerSettlementWorkspace() {
-  const { toastSuccess, toastError, toastInfo } = useToast();
+  const { toastSuccess, toastError } = useToast();
+  const confirmAction = useConfirmation();
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('REGISTER');
-  const [banks, setBanks] = useState<RegisteredBank[]>(initialBanks);
+  const [banks, setBanks] = useState<SettlementBeneficiary[]>([]);
   const [verification, setVerification] = useState<VerificationState>('IDLE');
   const [register, setRegister] = useState({ accountType: '', contact: '', holderName: '', accountNumber: '', confirmAccount: '', bankName: '', ifsc: '' });
   const [mobileSearch, setMobileSearch] = useState('');
@@ -93,6 +80,8 @@ export function RetailerSettlementWorkspace() {
   const [resolvedChargeResult, setResolvedChargeResult] = useState<PayoutChargeResolution | null>(null);
   const [chargeError, setChargeError] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState({ total: 0, hold: 0, available: 0 });
+  const [kycStatus, setKycStatus] = useState('NOT_SUBMITTED');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -109,6 +98,24 @@ export function RetailerSettlementWorkspace() {
         if (active) setWalletBalance({ total: 0, hold: 0, available: 0 });
       });
     return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([settlementService.beneficiaries(), settlementService.overview()])
+      .then(([bankResponse, overviewResponse]) => {
+        if (!active) return;
+        setBanks(bankResponse.data ?? []);
+        if (overviewResponse.data) {
+          const wallet = overviewResponse.data.wallet;
+          setWalletBalance({ total: wallet.ledgerBalance, hold: wallet.holdBalance, available: wallet.availableBalance });
+          setKycStatus(overviewResponse.data.kycStatus);
+        }
+      })
+      .catch(() => { if (active) toastError('Unable to load settlement data.'); });
+    return () => { active = false; };
+    // Initial authenticated settlement snapshot only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const selectedBank = banks.find((bank) => bank.id === selectedBankId);
@@ -154,43 +161,73 @@ export function RetailerSettlementWorkspace() {
     setVerification('IDLE');
   };
 
-  const verifyBeneficiary = () => {
+  const verifyBeneficiary = async () => {
     const validAccount = /^\d{9,18}$/.test(register.accountNumber);
     const validIfsc = /^[A-Z]{4}0[A-Z0-9]{6}$/.test(register.ifsc.toUpperCase());
     if (!register.accountType || !/^\d{10}$/.test(register.contact) || !register.holderName.trim() || !validAccount || register.accountNumber !== register.confirmAccount || !register.bankName || !validIfsc) {
       toastError('Complete all bank details and ensure the account numbers match before verification.');
       return;
     }
-    setVerification('VERIFIED');
-    toastSuccess('Beneficiary details passed validation. Provider verification will be connected through the API.');
+    try {
+      setSubmitting(true);
+      const response = await settlementService.validateBeneficiary({ ...register, accountType: register.accountType as 'CURRENT' | 'SAVINGS' });
+      setVerification('VERIFIED');
+      toastSuccess(response.data?.message ?? 'Beneficiary details passed validation.');
+    } catch (error) { toastError(error instanceof Error ? error.message : 'Beneficiary validation failed.'); }
+    finally { setSubmitting(false); }
   };
 
-  const registerBank = () => {
+  const registerBank = async () => {
     if (verification !== 'VERIFIED') { toastError('Verify the beneficiary before registering this bank account.'); return; }
-    const bank: RegisteredBank = { id: `bank-${Date.now()}`, accountType: register.accountType, contact: register.contact, holderName: register.holderName.trim(), accountNumber: register.accountNumber, bankName: register.bankName, ifsc: register.ifsc.toUpperCase(), status: 'VERIFIED' };
-    setBanks((current) => [...current, bank]);
+    try {
+      setSubmitting(true);
+      const response = await settlementService.registerBeneficiary({ ...register, accountType: register.accountType as 'CURRENT' | 'SAVINGS' });
+      const bank = response.data;
+      if (!bank) throw new Error('Bank registration returned no record.');
+      setBanks((current) => [bank, ...current]);
     setRegister({ accountType: '', contact: '', holderName: '', accountNumber: '', confirmAccount: '', bankName: '', ifsc: '' });
     setVerification('IDLE');
-    toastSuccess('Bank added successfully. Database registration will be connected in the next API phase.');
+    toastSuccess('Bank registered. Provider ownership verification will run when the payout provider is connected.');
     setActiveTab('SETTLEMENT');
     setMobileSearch(bank.contact);
     setSelectedBankId(bank.id);
+    } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to register the bank.'); }
+    finally { setSubmitting(false); }
   };
 
-  const submitSettlement = () => {
+  const submitSettlement = async () => {
     if (!/^\d{10}$/.test(mobileSearch) || !selectedBank) { toastError('Enter the registered mobile number and select a verified bank account.'); return; }
     if (amountValue <= 0) { toastError('Enter a valid settlement amount.'); return; }
-    if (amountValue + bankFee > settlementBalance) { toastError(`Insufficient available balance. ${formatMoney(walletBalance.hold)} is currently on hold.`); return; }
     if (!resolvedCharge) { toastError(chargeError ?? `No payout charge is configured for ${mode} at this amount. Contact the administrator.`); return; }
-    if (!/^\d{4,6}$/.test(pin) || !termsAccepted) { toastError('Enter the transaction PIN and accept the settlement terms.'); return; }
-    toastInfo('Settlement form is ready. Transaction submission will be enabled after the payout provider API is integrated.');
+    const gst = Number((bankFee * 0.18).toFixed(2));
+    const required = amountValue + bankFee + gst;
+    if (required > settlementBalance) { toastError(`Insufficient available balance. ${formatMoney(required)} is required including charges and GST; ${formatMoney(walletBalance.hold)} is already on hold.`); return; }
+    if (!termsAccepted) { toastError('Accept the settlement terms before submitting.'); return; }
+    try {
+      setSubmitting(true);
+      const response = await settlementService.createPayout({ beneficiaryId: selectedBank.id, amount: amountValue, mode, idempotencyKey: crypto.randomUUID() });
+      if (!response.data) throw new Error('Settlement was not created.');
+      setWalletBalance((current) => ({ ...current, available: response.data!.availableBalance, hold: current.hold + response.data!.totalHeld }));
+      setAmount(''); setTermsAccepted(false);
+      toastSuccess(`Settlement ${response.data.transactionRef} created. Funds are on hold pending provider processing.`);
+    } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to create settlement.'); }
+    finally { setSubmitting(false); }
   };
 
-  const removeBank = () => {
+  const removeBank = async () => {
     if (!deleteBank) { toastError('Search by mobile number and select the bank account to remove.'); return; }
-    setBanks((current) => current.filter((bank) => bank.id !== deleteBank.id));
-    setDeleteBankId('');
-    toastSuccess('Bank removed successfully. API persistence will be added in the integration phase.');
+    if (!(await confirmAction({ title: 'Delete settlement bank?', message: `Remove ${deleteBank.bankName} account ending ${deleteBank.accountNumberLast4}?`, confirmText: 'Yes, delete bank', variant: 'danger' }))) return;
+    try { setSubmitting(true); await settlementService.deleteBeneficiary(deleteBank.id); setBanks((current) => current.filter((bank) => bank.id !== deleteBank.id)); setDeleteBankId(''); toastSuccess('Bank removed successfully.'); }
+    catch (error) { toastError(error instanceof Error ? error.message : 'Unable to remove the bank.'); }
+    finally { setSubmitting(false); }
+  };
+
+  const submitLimitRequest = async () => {
+    const value = Number(requestedLimit);
+    if (!Number.isFinite(value) || value <= 0 || limitReason.trim().length < 5) { toastError('Enter a valid requested limit and business justification.'); return; }
+    try { setSubmitting(true); await settlementService.requestLimit({ requestedLimit: value, reason: limitReason.trim() }); setRequestedLimit(''); setLimitReason(''); toastSuccess('Settlement limit upgrade request submitted for review.'); }
+    catch (error) { toastError(error instanceof Error ? error.message : 'Unable to submit the limit request.'); }
+    finally { setSubmitting(false); }
   };
 
   const switchTab = (tab: WorkspaceTab) => {
@@ -220,9 +257,9 @@ export function RetailerSettlementWorkspace() {
 
           {activeTab === 'DELETE' && <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><SectionTitle icon={Trash2} title="Remove a registered bank" description="Search the registered mobile number and carefully select the account to remove." /><div className="mt-6 grid gap-5 md:grid-cols-2"><Input label="Registered mobile number" required value={deleteMobile} onChange={(e) => { setDeleteMobile(e.target.value.replace(/\D/g, '').slice(0, 10)); setDeleteBankId(''); }} leftIcon={<Search className="h-4 w-4" />} placeholder="Search by mobile number" /><Select label="Registered bank" required disabled={matchedDeleteBanks.length === 0} value={deleteBankId} onChange={(e) => setDeleteBankId(e.target.value)} options={matchedDeleteBanks.map((bank) => ({ value: bank.id, label: `${bank.bankName} — ${maskAccount(bank.accountNumber)}` }))} placeholder="Select bank to remove" />{deleteBank && <div className="md:col-span-2 grid gap-4 rounded-xl border border-rose-100 bg-rose-50/50 p-4 sm:grid-cols-3"><div><p className="text-[10px] font-bold uppercase text-slate-400">Account holder</p><p className="mt-1 text-sm font-bold text-slate-900">{deleteBank.holderName}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-400">Account</p><p className="mt-1 text-sm font-bold text-slate-900">{maskAccount(deleteBank.accountNumber)}</p></div><div><p className="text-[10px] font-bold uppercase text-slate-400">IFSC</p><p className="mt-1 text-sm font-bold text-slate-900">{deleteBank.ifsc}</p></div></div>}</div><div className="mt-6 flex justify-end"><Button variant="danger" leftIcon={<Trash2 className="h-4 w-4" />} disabled={!deleteBank} onClick={removeBank}>Delete selected bank</Button></div></div>}
 
-          {activeTab === 'LIMIT' && <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><SectionTitle icon={CircleGauge} title="Request settlement limit upgrade" description="Submit the desired daily limit and business justification for review." /><div className="mt-6 grid gap-5 md:grid-cols-2"><ReadOnlyField label="Current daily settlement limit" value={formatMoney(200000)} /><Input label="Requested daily limit" required type="number" min="200001" value={requestedLimit} onChange={(e) => setRequestedLimit(e.target.value)} leftIcon={<BadgeIndianRupee className="h-4 w-4" />} placeholder="Enter requested limit" /><TextArea label="Business justification" required value={limitReason} onChange={(e) => setLimitReason(e.target.value)} placeholder="Explain the expected settlement volume and reason for the increase" containerClassName="md:col-span-2" /></div><div className="mt-6 flex justify-end"><Button onClick={() => requestedLimit && limitReason.trim() ? toastInfo('Limit request UI is ready. Approval workflow will be connected during API development.') : toastError('Enter the requested limit and business justification.')}>Submit upgrade request</Button></div></div>}
+          {activeTab === 'LIMIT' && <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><SectionTitle icon={CircleGauge} title="Request settlement limit upgrade" description="Submit the desired daily limit and business justification for review." /><div className="mt-6 grid gap-5 md:grid-cols-2"><ReadOnlyField label="Current daily settlement limit" value={formatMoney(200000)} /><Input label="Requested daily limit" required type="number" min="1" value={requestedLimit} onChange={(e) => setRequestedLimit(e.target.value)} leftIcon={<BadgeIndianRupee className="h-4 w-4" />} placeholder="Enter requested limit" /><TextArea label="Business justification" required value={limitReason} onChange={(e) => setLimitReason(e.target.value)} placeholder="Explain the expected settlement volume and reason for the increase" containerClassName="md:col-span-2" /></div><div className="mt-6 flex justify-end"><Button disabled={submitting} onClick={submitLimitRequest}>Submit upgrade request</Button></div></div>}
 
-          {activeTab === 'KYC' && <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><SectionTitle icon={FileCheck2} title="Settlement KYC status" description="Settlement access depends on approved identity, business, PAN, and bank-account verification." /><div className="mt-6 grid gap-4 sm:grid-cols-2"><div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><div className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-emerald-600" /><div><p className="text-sm font-bold text-emerald-900">Retailer KYC approved</p><p className="mt-0.5 text-xs text-emerald-700">Identity and business verification completed</p></div></div></div><div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><div className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-emerald-600" /><div><p className="text-sm font-bold text-emerald-900">Settlement eligibility active</p><p className="mt-0.5 text-xs text-emerald-700">Verified banks may be used for payout</p></div></div></div></div><div className="mt-5 overflow-hidden rounded-xl border border-slate-200"><div className="grid grid-cols-[1fr_auto] gap-4 border-b border-slate-100 bg-slate-50 px-4 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500"><span>Requirement</span><span>Status</span></div>{['PAN verification', 'Aadhaar / identity proof', 'Business proof', 'Bank beneficiary verification'].map((item) => <div key={item} className="grid grid-cols-[1fr_auto] items-center gap-4 border-b border-slate-100 px-4 py-3 last:border-b-0"><span className="text-sm font-medium text-slate-700">{item}</span><span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700"><Check className="h-3 w-3" />Approved</span></div>)}</div></div>}
+          {activeTab === 'KYC' && <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><SectionTitle icon={FileCheck2} title="Settlement KYC status" description="Settlement access depends on the latest KYC application returned by the platform." /><div className={cn('mt-6 rounded-xl border p-5',kycStatus==='APPROVED'?'border-emerald-200 bg-emerald-50':'border-amber-200 bg-amber-50')}><div className="flex items-center gap-3"><CheckCircle2 className={cn('h-5 w-5',kycStatus==='APPROVED'?'text-emerald-600':'text-amber-600')} /><div><p className="text-sm font-bold text-slate-900">Retailer KYC: {kycStatus.replaceAll('_',' ')}</p><p className="mt-1 text-xs text-slate-600">This live status is loaded from the latest KYC application. Bank ownership remains provider-pending until payout integration is enabled.</p></div></div></div></div>}
         </div>
       </section>
     </PageContainer>

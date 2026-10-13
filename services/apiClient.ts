@@ -18,6 +18,25 @@ export interface RequestOptions extends RequestInit {
   isRetry?: boolean;
 }
 
+type BackendErrorPayload = {
+  message?: string;
+  error?: {
+    message?: string;
+    details?: { fieldErrors?: Record<string, string[] | undefined>; formErrors?: string[] };
+  };
+};
+
+function backendErrorMessage(payload: unknown): string | undefined {
+  if (!payload || typeof payload !== 'object') return undefined;
+  const data = payload as BackendErrorPayload;
+  const details = data.error?.details;
+  const fieldMessage = details?.fieldErrors
+    ? Object.values(details.fieldErrors).flatMap((messages) => messages ?? []).find(Boolean)
+    : undefined;
+  const formMessage = details?.formErrors?.find(Boolean);
+  return fieldMessage || formMessage || data.error?.message || data.message;
+}
+
 class ApiClient {
   private baseUrl: string;
   private refreshPromise: Promise<string | null> | null = null;
@@ -178,12 +197,9 @@ class ApiClient {
         } catch {
           errorData = await response.text();
         }
-        const message =
-          (errorData as { error?: { message?: string }; message?: string })?.error?.message ||
-          (errorData as { message?: string })?.message ||
-          response.statusText ||
-          'API Request Failed';
-        throw new ApiError(message, response.status, errorData);
+        const message = backendErrorMessage(errorData) || response.statusText || 'API Request Failed';
+        const details = (errorData as BackendErrorPayload | null)?.error?.details ?? errorData;
+        throw new ApiError(message, response.status, details);
       }
 
       return (await response.json()) as T;

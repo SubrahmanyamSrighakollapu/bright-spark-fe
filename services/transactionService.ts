@@ -369,7 +369,8 @@ export const transactionService = {
       };
     }
 
-    return apiClient.get<ApiResponse<TransactionListResult>>(`/retailer/${retailerId}/transactions`, {
+    void retailerId; // Backend derives and enforces the Retailer scope from the authenticated token.
+    return apiClient.get<ApiResponse<TransactionListResult>>('/transactions', {
       params: { ...filters, page, pageSize } as unknown as Record<string, string | number | boolean>,
     });
   },

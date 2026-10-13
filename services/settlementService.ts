@@ -47,7 +47,25 @@ export interface ReconciliationListResult {
   pagination: PaginationState;
 }
 
+export interface SettlementBeneficiary {
+  id: string; accountType: 'CURRENT'|'SAVINGS'; contact: string; holderName: string;
+  accountNumber: string; accountNumberLast4: string; bankName: string; ifsc: string;
+  status: 'VALIDATED'|'PROVIDER_PENDING'|'VERIFIED'|'FAILED'; createdAt: string;
+}
+export interface RetailerSettlementOverview {
+  wallet: { availableBalance:number; holdBalance:number; ledgerBalance:number; currency:string; status:string };
+  registeredBanks:number; latestLimitRequest:null|{id:string;requestedLimit:number;status:string;reason:string;createdAt:string}; kycStatus:string;
+}
+export interface BeneficiaryInput { accountType:'CURRENT'|'SAVINGS';contact:string;holderName:string;accountNumber:string;confirmAccount:string;bankName:string;ifsc:string }
+
 export const settlementService = {
+  overview: () => apiClient.get<ApiResponse<RetailerSettlementOverview>>('/settlements/overview', { cache:'no-store' }),
+  beneficiaries: (mobile?:string) => apiClient.get<ApiResponse<SettlementBeneficiary[]>>('/settlements/beneficiaries', { params: mobile ? {mobile}:undefined, cache:'no-store' }),
+  validateBeneficiary: (input:BeneficiaryInput) => apiClient.post<ApiResponse<{valid:boolean;verificationStatus:string;providerVerificationPending:boolean;message:string}>>('/settlements/beneficiaries/validate',input),
+  registerBeneficiary: (input:BeneficiaryInput) => apiClient.post<ApiResponse<SettlementBeneficiary>>('/settlements/beneficiaries',input),
+  deleteBeneficiary: (id:string) => apiClient.delete<ApiResponse<{deleted:boolean}>>(`/settlements/beneficiaries/${id}`),
+  createPayout: (input:{beneficiaryId:string;amount:number;mode:string;idempotencyKey:string}) => apiClient.post<ApiResponse<{id:string;transactionRef:string;status:string;amount:number;charge:number;gst:number;totalHeld:number;availableBalance:number}>>('/settlements/payouts',input),
+  requestLimit: (input:{requestedLimit:number;reason:string}) => apiClient.post<ApiResponse<{id:string;status:string;requestedLimit:number;reason:string}>>('/settlements/limit-requests',input),
   /**
    * Fetch overview summary metrics.
    */
