@@ -3,31 +3,36 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Building2, CheckCircle2, FileCheck2, LockKeyhole, Mail, ShieldCheck, UserPlus } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle2, Clock3, Eye, EyeOff, FileCheck2, LockKeyhole, Mail, ShieldCheck, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { PhoneInputWithCountryCode } from '@/components/ui/PhoneInputWithCountryCode';
 import { externalSignupService, type ExternalApplicantRole } from '@/services/externalSignupService';
 
-const initialFiles = { AADHAAR: null, PAN: null, CANCELLED_CHEQUE: null, GST_CERTIFICATE: null };
+const initialFiles = { ID_PROOF: null, PAN: null, ADDRESS_PROOF: null, BANK_PROOF: null, PROFILE_PHOTO: null, GST_CERTIFICATE: null };
 
 export default function SignupPage() {
   const [role, setRole] = useState<ExternalApplicantRole>('RETAILER');
   const [countryCode, setCountryCode] = useState('+91');
-  const [fields, setFields] = useState({ fullName: '', businessName: '', email: '', mobile: '', address: '', city: '', state: '', postalCode: '' });
+  const [fields, setFields] = useState({ fullName: '', businessName: '', email: '', mobile: '', password: '', confirmPassword: '', address: '', city: '', state: '', postalCode: '' });
   const [documents, setDocuments] = useState<Record<keyof typeof initialFiles, File | null>>(initialFiles);
   const [submitting, setSubmitting] = useState(false);
-  const [reference, setReference] = useState<{ reference: string } | null>(null);
+  const [reference, setReference] = useState<{ reference: string; message: string } | null>(null);
+  const [showPassword,setShowPassword]=useState(false);
+  const [error,setError]=useState('');
   const update = (key: keyof typeof fields, value: string) => setFields((current) => ({ ...current, [key]: value }));
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!documents.AADHAAR || !documents.PAN || !documents.CANCELLED_CHEQUE) return;
+    setError('');
+    if(fields.password!==fields.confirmPassword){setError('Passwords do not match.');return;}
+    if (!documents.ID_PROOF || !documents.PAN || !documents.ADDRESS_PROOF || !documents.BANK_PROOF || !documents.PROFILE_PHOTO) {setError('Upload every required KYC document.');return;}
     setSubmitting(true);
     try {
-      setReference(externalSignupService.submit({ role, ...fields, mobile: `${countryCode} ${fields.mobile}`.trim(), documents }));
-    } finally {
+      const response=await externalSignupService.submit({ role, fullName:fields.fullName,businessName:fields.businessName,email:fields.email,mobile:fields.mobile,password:fields.password,address:fields.address,city:fields.city,state:fields.state,postalCode:fields.postalCode,documents });
+      if(response.data)setReference({reference:response.data.reference,message:response.data.message});
+    } catch(error) {setError(error instanceof Error?error.message:'Unable to submit the application.');} finally {
       setSubmitting(false);
     }
   };
@@ -35,11 +40,12 @@ export default function SignupPage() {
   if (reference) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white p-5">
-        <section className="w-full max-w-lg p-8 text-center sm:p-10">
+        <section className="w-full max-w-2xl p-8 text-center sm:p-10">
           <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><CheckCircle2 className="h-8 w-8" /></span>
           <h1 className="mt-5 text-2xl font-extrabold text-slate-950">Application submitted</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">Your account is not active yet. Qin Star Pay administrators will verify your KYC documents before enabling login access.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{reference.message}</p>
           <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-sm"><span className="text-slate-500">Application reference</span><strong className="ml-2 font-mono text-[#0F4C81]">{reference.reference}</strong></div>
+          <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">{['KYC review','Admin assignment','Network approval'].map((step,index)=><div key={step} className="rounded-xl border border-slate-200 bg-white p-4"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">{index===0?<Clock3 className="h-4 w-4"/>:index+1}</span><p className="mt-3 text-xs font-extrabold text-slate-900">{step}</p><p className="mt-1 text-[11px] text-slate-500">{index===0?'Pending review':'Starts after the previous step'}</p></div>)}</div>
           <Link href="/login" className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-[#0F4C81] hover:underline"><ArrowLeft className="h-4 w-4" />Return to sign in</Link>
         </section>
       </main>
@@ -68,11 +74,13 @@ export default function SignupPage() {
             <div className="mb-7"><p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#0F4C81]">New application</p><h2 className="mt-2 text-2xl font-extrabold text-slate-950">Business and KYC details</h2><p className="mt-1 text-sm text-slate-500">Fields marked with * are required for review.</p></div>
             <form onSubmit={submit} className="space-y-6">
               <div className="grid gap-5 sm:grid-cols-2">
-                <Select label="Applying as" required value={role} onChange={(event) => setRole(event.target.value as ExternalApplicantRole)} options={[{ value: 'RETAILER', label: 'Retailer' }, { value: 'DISTRIBUTOR', label: 'Distributor' }]} />
+                <Select label="Applying as" required value={role} onChange={(event) => setRole(event.target.value as ExternalApplicantRole)} options={[{ value: 'RETAILER', label: 'Retailer' }, { value: 'DISTRIBUTOR', label: 'Distributor' }, {value:'MASTER_DISTRIBUTOR',label:'Master Distributor'}]} />
                 <Input label="Full name" required value={fields.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="Authorized person" />
                 <Input label="Business / firm name" required value={fields.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Registered business name" />
                 <PhoneInputWithCountryCode label="Mobile number" required value={fields.mobile} countryCode={countryCode} onPhoneChange={(val) => update('mobile', val)} onCountryCodeChange={setCountryCode} placeholder="10-digit mobile number" />
                 <Input label="Email address" required type="email" value={fields.email} onChange={(e) => update('email', e.target.value)} placeholder="business@example.com" leftIcon={<Mail className="h-4 w-4" />} />
+                <Input label="Create password" required type={showPassword?'text':'password'} value={fields.password} onChange={(e)=>update('password',e.target.value)} placeholder="Minimum 10 characters" leftIcon={<LockKeyhole className="h-4 w-4" />} rightIcon={<button type="button" onClick={()=>setShowPassword(v=>!v)}>{showPassword?<EyeOff className="h-4 w-4"/>:<Eye className="h-4 w-4"/>}</button>} />
+                <Input label="Confirm password" required type="password" value={fields.confirmPassword} onChange={(e)=>update('confirmPassword',e.target.value)} placeholder="Re-enter password" leftIcon={<LockKeyhole className="h-4 w-4" />} />
                 <Input label="Postal code" required value={fields.postalCode} onChange={(e) => update('postalCode', e.target.value)} placeholder="Postal code" />
                 <Input label="City" required value={fields.city} onChange={(e) => update('city', e.target.value)} placeholder="City" />
                 <Input label="State" required value={fields.state} onChange={(e) => update('state', e.target.value)} placeholder="State" />
@@ -81,9 +89,10 @@ export default function SignupPage() {
               <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
                 <div className="mb-4 flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#0F4C81]"><Building2 className="h-4 w-4" /></span><div><h3 className="text-sm font-bold text-slate-900">KYC documents</h3><p className="text-xs text-slate-500">PNG, JPG or PDF files</p></div></div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {([['AADHAAR', 'Aadhaar Card *'], ['PAN', 'PAN Card *'], ['CANCELLED_CHEQUE', 'Cancelled Cheque / Passbook *'], ['GST_CERTIFICATE', 'GST Certificate']] as const).map(([key, label]) => <label key={key} className="flex cursor-pointer flex-col gap-2 text-xs font-bold text-slate-700"><span>{label}</span><input type="file" accept="image/png,image/jpeg,application/pdf" required={key !== 'GST_CERTIFICATE'} onChange={(e) => setDocuments((current) => ({ ...current, [key]: e.target.files?.[0] || null }))} className="min-h-11 cursor-pointer rounded-lg border border-slate-200 bg-white p-2 text-xs file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:font-bold file:text-[#0F4C81]" /></label>)}
+                  {([['ID_PROOF', 'Aadhaar / Identity Proof *'], ['PAN', 'PAN Card *'], ['ADDRESS_PROOF','Address Proof *'],['BANK_PROOF', 'Cancelled Cheque / Bank Proof *'],['PROFILE_PHOTO','Profile Photo *'], ['GST_CERTIFICATE', 'GST Certificate']] as const).map(([key, label]) => <label key={key} className="flex cursor-pointer flex-col gap-2 text-xs font-bold text-slate-700"><span>{label}</span><input type="file" accept={key==='PROFILE_PHOTO'?'image/png,image/jpeg':'image/png,image/jpeg,application/pdf'} required={key !== 'GST_CERTIFICATE'} onChange={(e) => setDocuments((current) => ({ ...current, [key]: e.target.files?.[0] || null }))} className="min-h-11 cursor-pointer rounded-lg border border-slate-200 bg-white p-2 text-xs file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:font-bold file:text-[#0F4C81]" /></label>)}
                 </div>
               </div>
+              {error&&<div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>}
               <Button type="submit" size="lg" fullWidth isLoading={submitting} leftIcon={<ShieldCheck className="h-4 w-4" />}>Submit for admin approval</Button>
             </form>
           </section>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FilterBar } from '@/components/ui/FilterBar';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Filter, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { TransactionFilters } from '@/types/domain';
 import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
+import { transactionService, type TransactionFilterOptions } from '@/services/transactionService';
 
 export interface TransactionFilterBarProps {
   onApplyFilters: (filters: TransactionFilters) => void;
@@ -27,6 +28,8 @@ export const TransactionFilterBar: React.FC<TransactionFilterBarProps> = ({
     status: 'ALL',
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [options,setOptions]=useState<TransactionFilterOptions>({retailers:[],providers:[]});
+  useEffect(()=>{let active=true;transactionService.getFilterOptions().then(response=>{if(active&&response.data)setOptions(response.data);}).catch(()=>{});return()=>{active=false;};},[]);
 
   const activeCount = Object.values(filters).filter(
     (val) => val && val !== 'ALL' && val !== ''
@@ -86,7 +89,7 @@ export const TransactionFilterBar: React.FC<TransactionFilterBarProps> = ({
         <div className="space-y-1">
           <label className="block text-xs font-semibold text-slate-700">Date Range Filter</label>
           <DateRangeDropdown
-            value={filters.dateRange ? 'custom' : 'today'}
+            value={(filters.dateRange?.includes('_to_') ? 'custom' : filters.dateRange || 'today') as 'today'|'yesterday'|'7d'|'30d'|'custom'}
             onChange={(val) =>
               setFilters((prev) => ({
                 ...prev,
@@ -140,12 +143,7 @@ export const TransactionFilterBar: React.FC<TransactionFilterBarProps> = ({
             value={filters.merchantId || ''}
             onChange={(e) => setFilters((prev) => ({ ...prev, merchantId: e.target.value }))}
             placeholder="All Retailers"
-            options={[
-              { value: 'Apex Pay Solutions', label: 'Apex Pay Solutions' },
-              { value: 'Zenith Retail', label: 'Zenith Retail' },
-              { value: 'Global Fintech Ltd', label: 'Global Fintech Ltd' },
-              { value: 'Swift Commerce', label: 'Swift Commerce' },
-            ]}
+            options={options.retailers}
           />
 
           <Select
@@ -153,11 +151,7 @@ export const TransactionFilterBar: React.FC<TransactionFilterBarProps> = ({
             value={filters.providerId || ''}
             onChange={(e) => setFilters((prev) => ({ ...prev, providerId: e.target.value }))}
             placeholder="All Providers"
-            options={[
-              { value: 'Provider A', label: 'Provider A (Primary)' },
-              { value: 'Provider B', label: 'Provider B (Payout Switch)' },
-              { value: 'Provider C', label: 'Provider C (Bank Direct)' },
-            ]}
+            options={options.providers}
           />
 
           <Input

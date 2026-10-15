@@ -50,7 +50,7 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
   const handleCheckStatus = async () => {
     setIsCheckingStatus(true);
     try {
-      const res = await transactionService.checkStatus(tx.id);
+      const res = await transactionService.getTransactionById(tx.id);
       if (res.success && res.data) {
         setTx(res.data);
         if (onRefresh) onRefresh();
@@ -115,23 +115,6 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
         </div>
       </div>
 
-      {/* Linked Chargeback Alert Notice */}
-      {(tx.id === 'QSP20260903001' || tx.id === 'QSP20260903004') && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-xs text-amber-900">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>
-              <strong>Active Dispute Case:</strong> This transaction has an active chargeback dispute (Case <strong>{tx.id === 'QSP20260903001' ? 'CB_20260903_001' : 'CB_20260903_002'}</strong>).
-            </span>
-          </div>
-          <Link href="/chargebacks">
-            <Button variant="outline" size="sm" className="whitespace-nowrap bg-white text-amber-900 border-amber-300">
-              View Dispute
-            </Button>
-          </Link>
-        </div>
-      )}
-
       {/* 2. Main 2-Column Responsive Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* LEFT MAIN COLUMN (7/12 = ~60% width) */}
@@ -162,16 +145,16 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
               </div>
               <div>
                 <span className="text-[var(--text-muted)] font-medium block mb-0.5">Channel</span>
-                <span className="text-slate-800">{tx.channel || 'Web'}</span>
+                <span className="text-slate-800">{tx.channel || '—'}</span>
               </div>
 
               <div>
                 <span className="text-[var(--text-muted)] font-medium block mb-0.5">Provider Switch</span>
-                <span className="font-semibold text-slate-800">{tx.provider || 'Provider A'}</span>
+                <span className="font-semibold text-slate-800">{tx.provider || '—'}</span>
               </div>
               <div>
                 <span className="text-[var(--text-muted)] font-medium block mb-0.5">Service API</span>
-                <span className="text-slate-800">{tx.service || 'Default Switch'}</span>
+                <span className="text-slate-800">{tx.service || '—'}</span>
               </div>
               <div>
                 <span className="text-[var(--text-muted)] font-medium block mb-0.5">Last Updated</span>
@@ -202,11 +185,11 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Distributor:</span>
-                    <span className="text-slate-800">{tx.distributorName || 'Direct Network'}</span>
+                    <span className="text-slate-800">{tx.distributorName || '—'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Retailer:</span>
-                    <span className="text-slate-800">{tx.retailerName || tx.merchantName || 'Direct'}</span>
+                    <span className="text-slate-800">{tx.retailerName || tx.merchantName || '—'}</span>
                   </div>
                 </div>
               </div>
@@ -219,13 +202,13 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
                   <div className="flex justify-between">
                     <span className="text-slate-500">Name:</span>
                     <span className="font-bold text-slate-900">
-                      {isPayIn ? tx.customerName || 'Payer' : tx.beneficiaryName || 'Beneficiary'}
+                      {isPayIn ? tx.customerName || '—' : tx.beneficiaryName || '—'}
                     </span>
                   </div>
                   {!isPayIn && (
                     <div className="flex justify-between">
                       <span className="text-slate-500">Bank:</span>
-                      <span className="font-semibold">{tx.beneficiaryBank || 'HDFC Bank'}</span>
+                      <span className="font-semibold">{tx.beneficiaryBank || '—'}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
@@ -234,7 +217,7 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
                       <span>{tx.customerMobile || '—'}</span>
                     ) : (
                       <MaskedValue
-                        value={tx.accountNumberMasked || tx.beneficiaryAccount || 'XXXXXX8912'}
+                        value={tx.accountNumberMasked || tx.beneficiaryAccount || '—'}
                         type="bankAccount"
                       />
                     )}
@@ -260,11 +243,11 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
               <div>
                 <span className="text-slate-500 font-medium block">Provider Switch</span>
-                <span className="font-semibold text-slate-800">{tx.provider || 'Provider A'}</span>
+                <span className="font-semibold text-slate-800">{tx.provider || '—'}</span>
               </div>
               <div>
                 <span className="text-slate-500 font-medium block">Service API</span>
-                <span>{tx.service || 'Default Switch'}</span>
+                <span>{tx.service || '—'}</span>
               </div>
               <div>
                 <span className="text-slate-500 font-medium block">Provider Status</span>
@@ -302,30 +285,30 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
               <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
                 <span className="text-slate-600">GST (18%)</span>
                 <span className="font-mono tabular-nums">
-                  {formatCurrency(tx.gst !== undefined ? tx.gst : +(tx.fee * 0.18).toFixed(2))}
+                  {tx.gst !== undefined ? formatCurrency(tx.gst) : '—'}
                 </span>
               </div>
 
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+              {tx.tds !== undefined && <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
                 <span className="text-slate-600">TDS Deduction</span>
-                <span className="font-mono tabular-nums">{formatCurrency(tx.tds || 0)}</span>
-              </div>
+                <span className="font-mono tabular-nums">{formatCurrency(tx.tds)}</span>
+              </div>}
 
-              <div className="pt-2 border-t border-slate-200">
+              {tx.commissionSnapshot && <div className="pt-2 border-t border-slate-200">
                 <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Commission Distribution
                 </div>
                 <div className="space-y-1.5 pl-2 border-l-2 border-slate-200">
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">Distributor Commission</span>
-                    <span className="font-mono text-emerald-700">{formatCurrency(+(tx.amount * 0.0010).toFixed(2))}</span>
+                    <span className="font-mono text-emerald-700">{formatCurrency(tx.commissionSnapshot.distributorCommissionAmount || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">Master Distributor Commission</span>
-                    <span className="font-mono text-emerald-700">{formatCurrency(+(tx.amount * 0.0005).toFixed(2))}</span>
+                    <span className="font-mono text-emerald-700">{formatCurrency(tx.commissionSnapshot.masterDistributorCommissionAmount || 0)}</span>
                   </div>
                 </div>
-              </div>
+              </div>}
 
               <div className="flex justify-between items-center py-2.5 border-t-2 border-slate-200 font-bold text-sm text-[var(--primary)]">
                 <span>{isPayIn ? 'Net Settlement Credit' : 'Total Wallet Debit'}</span>
@@ -335,7 +318,7 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
           </Card>
 
           {/* Callback / Webhook Summary */}
-          <Card title="Callback / Webhook Summary" subtitle="Third-party callback log summary">
+          {tx.callbackSummary && <Card title="Callback / Webhook Summary" subtitle="Third-party callback log summary">
             <div className="space-y-3 text-xs">
               <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
                 <span className="text-slate-600 font-medium">Callback Received</span>
@@ -366,13 +349,13 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
               <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
                 <span className="text-slate-600 font-medium">Processing Status</span>
                 <span className="font-semibold text-slate-900">
-                  {tx.callbackSummary?.processingStatus || 'AWAITING_CALLBACK'}
+                  {tx.callbackSummary.processingStatus || '—'}
                 </span>
               </div>
 
               <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
                 <span className="text-slate-600 font-medium">Retry Count</span>
-                <span className="font-mono">{tx.callbackSummary?.retryCount || 0}</span>
+                <span className="font-mono">{tx.callbackSummary.retryCount ?? '—'}</span>
               </div>
 
               <div className="pt-2">
@@ -383,17 +366,17 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
                 </Link>
               </div>
             </div>
-          </Card>
+          </Card>}
 
           {/* Failure Information (ONLY rendered when status === 'FAILED') */}
           {isFailed && (
             <Card title="Failure Details" subtitle="Provider error response">
               <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg space-y-1.5 text-xs text-rose-950">
                 <div className="font-bold text-rose-700">
-                  Failure Code: {tx.failureCode || 'BANK_TIMEOUT'}
+                  Failure Code: {tx.failureCode || '—'}
                 </div>
                 <p className="text-[11px] leading-relaxed text-rose-900">
-                  {tx.failureReason || 'Provider failed to return response within configured timeout.'}
+                  {tx.failureReason || 'No failure reason was recorded.'}
                 </p>
                 <div className="text-[10px] text-rose-600 pt-1">
                   Failed At: {tx.updatedAt ? formatDateTime(tx.updatedAt) : formatDateTime(tx.createdAt)}
@@ -403,7 +386,7 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
           )}
 
           {/* Technical Details Expandable */}
-          <Card title="Technical Audit Payload">
+          {tx.providerResponse && <Card title="Technical Audit Payload">
             <div className="space-y-2 text-xs">
               <button
                 type="button"
@@ -420,19 +403,14 @@ export const TransactionDetailsView: React.FC<TransactionDetailsViewProps> = ({
               {showTechnicalDetails && (
                 <pre className="p-3.5 bg-slate-900 text-slate-100 rounded-lg text-[10px] font-mono overflow-x-auto border border-slate-800">
                   {JSON.stringify(
-                    tx.providerResponse || {
-                      provider: tx.provider || 'Provider A',
-                      ref: tx.transactionRef,
-                      status: tx.status,
-                      mode: tx.paymentMode,
-                    },
+                    tx.providerResponse,
                     null,
                     2
                   )}
                 </pre>
               )}
             </div>
-          </Card>
+          </Card>}
         </div>
       </div>
     </div>

@@ -283,7 +283,6 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
       { id: 'ret-unsettled', label: 'Unsettled (T+1)', path: '/retailer/reports/unsettled' },
       { id: 'ret-chargebacks', label: 'Chargebacks', path: '/retailer/reports/chargebacks' },
     ] },
-    { id: 'ret-kyc-documents', label: 'KYC & Documents', iconName: 'ShieldCheck', path: '/kyc/documents' },
     { id: 'ret-notifications', label: 'Notifications', iconName: 'Bell', path: '/retailer/notifications' },
     { id: 'ret-profile', label: 'Profile', iconName: 'User', path: '/retailer/profile' },
   ],

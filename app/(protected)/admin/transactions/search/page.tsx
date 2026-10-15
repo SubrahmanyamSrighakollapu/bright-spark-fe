@@ -27,20 +27,20 @@ export default function TransactionSearchPage() {
 
   const detailDrawer = useModal<Transaction>();
 
-  const handleSearch = async (e?: React.FormEvent) => {
+  const handleSearch = async (e?: React.FormEvent, page=1, pageSize=pagination.pageSize) => {
     if (e) e.preventDefault();
     if (!searchQuery.trim()) return;
 
     setIsLoading(true);
     setHasSearched(true);
     try {
-      const res = await transactionService.searchTransactions(searchQuery.trim());
+      const res = await transactionService.searchTransactions(searchQuery.trim(), undefined, page, pageSize);
       if (res.success && res.data) {
         setResults(res.data.items);
         setPagination(res.data.pagination);
 
         // If exactly 1 strong match, open drawer automatically
-        if (res.data.items.length === 1) {
+        if (res.data.pagination.totalItems === 1) {
           detailDrawer.open(res.data.items[0]);
         }
       }
@@ -55,6 +55,7 @@ export default function TransactionSearchPage() {
     setSearchQuery('');
     setHasSearched(false);
     setResults([]);
+    setPagination({page:1,pageSize:10,totalItems:0,totalPages:1});
   };
 
   return (
@@ -104,9 +105,7 @@ export default function TransactionSearchPage() {
             </div>
           </div>
 
-          <div className="text-[11px] text-[var(--text-muted)]">
-            Try searching for: <code className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-700 font-mono">QSP20260903001</code>, <code className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-700 font-mono">ORD_9918231</code>, or <code className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-700 font-mono">UTR991823101</code>.
-          </div>
+          <div className="text-[11px] text-[var(--text-muted)]">Searches persisted Pay-In and Pay-Out records by transaction ID, order ID, provider reference, UTR/RRN, Retailer, customer, beneficiary, or mobile number.</div>
         </form>
       </Card>
 
@@ -115,7 +114,7 @@ export default function TransactionSearchPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
             <span>
-              Search Results ({results.length} record{results.length === 1 ? '' : 's'} found)
+              Search Results ({pagination.totalItems} record{pagination.totalItems === 1 ? '' : 's'} found)
             </span>
             {isLoading && (
               <span className="flex items-center gap-1 text-[var(--primary)]">
@@ -138,7 +137,8 @@ export default function TransactionSearchPage() {
             <TransactionTable
               transactions={results}
               pagination={pagination}
-              onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+              onPageChange={(page) => void handleSearch(undefined,page,pagination.pageSize)}
+              onPageSizeChange={(pageSize) => void handleSearch(undefined,1,pageSize)}
               onViewDetails={(tx) => detailDrawer.open(tx)}
               isLoading={isLoading}
             />

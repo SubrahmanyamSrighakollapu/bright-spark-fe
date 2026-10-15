@@ -26,6 +26,8 @@ export interface PendingApprovalItem {
   planId?: string;
   rawEntity: Distributor | Retailer;
   version?: number;
+  signupSource?: string;
+  assignedAt?: string;
 }
 
 export interface ApprovalSummary {
@@ -61,6 +63,8 @@ class ApprovalService {
         createdByName: party.createdByName,
         createdAt: party.createdAt,
         version: party.version,
+        signupSource: party.signupSource,
+        assignedAt: party.assignedAt,
         rawEntity: party as Distributor | Retailer,
       }))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -72,6 +76,9 @@ class ApprovalService {
       remarks,
       version: item.version,
     });
+  }
+  assignNetworkParty(item: PendingApprovalItem, parentPartyId: string | null) {
+    return apiClient.patch<ApiResponse<Record<string, any>>>(`/parties/${item.id}/assignment`, { parentPartyId, version: item.version });
   }
   requiresAdminApproval(
     entityType: 'DISTRIBUTOR' | 'RETAILER' | 'MASTER_DISTRIBUTOR',

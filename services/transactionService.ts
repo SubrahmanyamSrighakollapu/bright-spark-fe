@@ -51,9 +51,12 @@ function filterTransactionsByDateRange(items: Transaction[], dateRange?: string)
 export interface TransactionListResult {
   items: Transaction[];
   pagination: PaginationState;
+  summary?: { totalAmount:number;successfulCount:number;failedCount:number;pendingCount:number;successRate:number;totalCount:number };
 }
+export interface TransactionFilterOptions { retailers:Array<{value:string;label:string}>;providers:Array<{value:string;label:string}> }
 
 export const transactionService = {
+  getFilterOptions: () => apiClient.get<ApiResponse<TransactionFilterOptions>>('/transactions/filter-options', { cache:'no-store' }),
   /**
    * Fetches network-scoped transactions for a Master Distributor.
    */
@@ -405,63 +408,6 @@ export const transactionService = {
     page = 1,
     pageSize = 10
   ): Promise<ApiResponse<TransactionListResult>> {
-    if (APP_CONFIG.useMockData) {
-      await new Promise((res) => setTimeout(res, 200));
-
-      let filtered = [...inMemoryTransactions];
-
-      if (filters?.type && filters.type !== 'ALL') {
-        filtered = filtered.filter((t) => t.type === filters.type);
-      }
-
-      if (filters?.status && filters.status !== 'ALL') {
-        filtered = filtered.filter((t) => t.status === filters.status);
-      }
-
-      if (filters?.merchantId && filters.merchantId !== '') {
-        filtered = filtered.filter((t) => t.merchantName.toLowerCase().includes(filters.merchantId!.toLowerCase()));
-      }
-
-      if (filters?.providerId && filters.providerId !== '') {
-        filtered = filtered.filter((t) => t.provider?.toLowerCase().includes(filters.providerId!.toLowerCase()));
-      }
-
-      filtered = filterTransactionsByDateRange(filtered, filters?.dateRange);
-
-      if (filters?.searchQuery && filters.searchQuery.trim() !== '') {
-        const q = filters.searchQuery.trim().toLowerCase();
-        filtered = filtered.filter(
-          (t) =>
-            t.transactionRef.toLowerCase().includes(q) ||
-            (t.orderId && t.orderId.toLowerCase().includes(q)) ||
-            (t.utr && t.utr.toLowerCase().includes(q)) ||
-            t.merchantName.toLowerCase().includes(q) ||
-            (t.customerMobile && t.customerMobile.includes(q)) ||
-            (t.customerName && t.customerName.toLowerCase().includes(q)) ||
-            (t.beneficiaryName && t.beneficiaryName.toLowerCase().includes(q))
-        );
-      }
-
-      const totalItems = filtered.length;
-      const totalPages = Math.ceil(totalItems / pageSize) || 1;
-      const startIndex = (page - 1) * pageSize;
-      const paginatedItems = filtered.slice(startIndex, startIndex + pageSize);
-
-      return {
-        success: true,
-        data: {
-          items: paginatedItems,
-          pagination: {
-            page,
-            pageSize,
-            totalItems,
-            totalPages,
-          },
-        },
-        timestamp: new Date().toISOString(),
-      };
-    }
-
     return apiClient.get<ApiResponse<TransactionListResult>>('/transactions', {
       params: { ...filters, page, pageSize } as unknown as Record<string, string | number | boolean>,
     });
@@ -492,24 +438,14 @@ export const transactionService = {
   /**
    * Search transactions by keyword/ID.
    */
-  async searchTransactions(query: string, filters?: TransactionFilters): Promise<ApiResponse<TransactionListResult>> {
-    return this.getTransactions({ ...filters, searchQuery: query }, 1, 50);
+  async searchTransactions(query: string, filters?: TransactionFilters, page=1, pageSize=10): Promise<ApiResponse<TransactionListResult>> {
+    return this.getTransactions({ ...filters, searchQuery: query }, page, pageSize);
   },
 
   /**
    * Get single transaction details by ID or transactionRef.
    */
   async getTransactionById(idOrRef: string): Promise<ApiResponse<Transaction | null>> {
-    if (APP_CONFIG.useMockData) {
-      await new Promise((res) => setTimeout(res, 150));
-      const tx =
-        inMemoryTransactions.find((t) => t.id === idOrRef || t.transactionRef === idOrRef) || null;
-      return {
-        success: !!tx,
-        data: tx,
-        timestamp: new Date().toISOString(),
-      };
-    }
     return apiClient.get<ApiResponse<Transaction>>(`/transactions/${idOrRef}`);
   },
 

@@ -51,9 +51,8 @@ export default function PayOutTransactionsPage() {
       if (!isCancelled && res.success && res.data) {
         setData(res.data);
         setPagination(res.data.pagination);
-        setIsLoading(false);
       }
-    });
+    }).catch(() => { if (!isCancelled) setData(null); }).finally(() => { if (!isCancelled) setIsLoading(false); });
     return () => {
       isCancelled = true;
     };
@@ -73,11 +72,7 @@ export default function PayOutTransactionsPage() {
 
   // Compute summary metrics for Pay-Out
   const items = data?.items || [];
-  const totalAmount = items.reduce((acc, t) => acc + t.amount, 0);
-  const successfulCount = items.filter((t) => t.status === 'SUCCESS').length;
-  const failedCount = items.filter((t) => t.status === 'FAILED').length;
-  const pendingCount = items.filter((t) => t.status === 'PENDING' || t.status === 'PROCESSING').length;
-  const successRate = items.length > 0 ? (successfulCount / items.length) * 100 : 0;
+  const summary = data?.summary ?? { totalAmount:0,successfulCount:0,failedCount:0,pendingCount:0,successRate:0,totalCount:0 };
 
   const handleExportCSV = async () => {
     const result = await transactionService.getPayoutTransactions(filters, 1, Math.max(pagination.totalItems, 1));
@@ -122,12 +117,7 @@ export default function PayOutTransactionsPage() {
       {/* 1. Pay-Out Metrics */}
       <TransactionSummaryCards
         metrics={{
-          totalAmount,
-          successfulCount,
-          failedCount,
-          pendingCount,
-          successRate,
-          totalCount: pagination.totalItems,
+          ...summary,
         }}
         isLoading={isLoading}
       />

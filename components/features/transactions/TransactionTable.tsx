@@ -75,7 +75,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       render: (row) => (
         <div>
           <div className="font-semibold text-xs text-[var(--text-primary)]">
-            {row.retailerName || row.merchantName || 'Direct Account'}
+            {row.retailerName || row.merchantName || '—'}
           </div>
           {row.customerMobile && (
             <div className="text-[11px] text-[var(--text-muted)] font-mono">{row.customerMobile}</div>
@@ -91,7 +91,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
         return (
           <div className="text-xs space-y-0.5">
             <div className="text-slate-800 font-medium truncate max-w-[140px]">
-              {row.distributorName ? `Dist: ${row.distributorName}` : 'Direct Network'}
+              {row.distributorName ? `Dist: ${row.distributorName}` : '—'}
             </div>
             {mdName && (
               <div className="text-[10px] text-slate-400 truncate max-w-[140px]">
@@ -125,8 +125,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       header: 'Service / Mode',
       render: (row) => (
         <div className="text-xs">
-          <span className="font-semibold text-slate-800 block">{row.paymentMode || 'UPI'}</span>
-          <span className="text-[10px] text-slate-400 block">{row.provider || row.service || 'Default Switch'}</span>
+          <span className="font-semibold text-slate-800 block">{row.paymentMode || '—'}</span>
+          <span className="text-[10px] text-slate-400 block">{row.provider || row.service || '—'}</span>
         </div>
       ),
     },
@@ -173,7 +173,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       header: 'Settlement',
       align: 'center',
       render: (row) => {
-        const sStatus = (row as unknown as Record<string, unknown>).settlementStatus || (row.status === 'SUCCESS' ? 'SETTLED' : 'PENDING');
+        const sStatus = (row as unknown as Record<string, unknown>).settlementStatus;
+        if (!sStatus) return <span className="text-slate-300">—</span>;
         return (
           <span
             className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${

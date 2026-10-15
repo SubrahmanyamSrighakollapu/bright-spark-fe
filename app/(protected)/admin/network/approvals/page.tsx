@@ -49,6 +49,7 @@ export default function AdminApprovalsPage() {
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'MASTER_DISTRIBUTOR' | 'DISTRIBUTOR' | 'RETAILER'>('ALL');
 
   const [approvalItems, setApprovalItems] = useState<PendingApprovalItem[]>([]);
+  const [allNetworkItems, setAllNetworkItems] = useState<PendingApprovalItem[]>([]);
   const [summary, setSummary] = useState<ApprovalSummary>({
     totalPending: 0,
     pendingMasterDistributors: 0,
@@ -79,6 +80,7 @@ export default function AdminApprovalsPage() {
     setIsLoading(true);
     try {
       const allItems = await approvalService.getNetworkApprovalItems();
+      setAllNetworkItems(allItems);
       const status = activeTab === 'PENDING' ? 'PENDING_APPROVAL' : activeTab;
       setApprovalItems(allItems.filter((item) => item.approvalStatus === status && (activeTab !== 'PENDING' || item.kycStatus === 'APPROVED') && (typeFilter === 'ALL' || item.entityType === typeFilter)));
       const awaitingNetworkApproval = allItems.filter((item) => item.approvalStatus === 'PENDING_APPROVAL' && item.kycStatus === 'APPROVED');
@@ -142,8 +144,14 @@ export default function AdminApprovalsPage() {
   };
 
   const handlePromptApprove = (item: PendingApprovalItem) => {
+    if(item.signupSource==='PUBLIC_SELF_SERVICE'&&!item.assignedAt){toastError('Assign this manual signup to the platform or a network parent before approval.');return;}
     setApprovingItem(item);
     setApproveDialogOpen(true);
+  };
+
+  const handleAssignment = async (item:PendingApprovalItem,value:string) => {
+    try { const response=await approvalService.assignNetworkParty(item,value==='PLATFORM'?null:value);if(!response.success)throw new Error(response.error?.message||'Assignment failed.');toastSuccess(`${item.code} assigned successfully.`);await loadData(); }
+    catch(error){toastError(error instanceof Error?error.message:'Unable to assign application.');}
   };
 
   const handleConfirmApprove = async () => {
@@ -226,6 +234,7 @@ export default function AdminApprovalsPage() {
       header: 'Parent Network',
       render: (row) => (
         <div className="text-xs space-y-0.5">
+          {row.signupSource==='PUBLIC_SELF_SERVICE'&&!row.assignedAt ? <Select value="" placeholder="Assign application" onChange={(event)=>void handleAssignment(row,event.target.value)} options={[{label:'Platform / Admin',value:'PLATFORM'},...allNetworkItems.filter(item=>item.approvalStatus==='APPROVED'&&(row.entityType==='DISTRIBUTOR'?item.entityType==='MASTER_DISTRIBUTOR':row.entityType==='RETAILER'?item.entityType==='DISTRIBUTOR':false)).map(item=>({label:`${item.code} — ${item.businessName}`,value:item.id}))]} /> : <>
           <p className="font-semibold text-slate-800 flex items-center gap-1">
             <Network className="w-3 h-3 text-indigo-600 shrink-0" />
             {row.entityType === 'RETAILER' && row.parentDistributorName
@@ -235,6 +244,7 @@ export default function AdminApprovalsPage() {
           <p className="text-slate-500 text-[11px]">
             MD: {row.parentMasterDistributorName} ({row.parentMasterDistributorCode})
           </p>
+          </>}
         </div>
       ),
     },
@@ -242,7 +252,7 @@ export default function AdminApprovalsPage() {
       key: 'createdByRole',
       header: 'Submitted By',
       render: (row) => {
-        const role = row.createdByRole === 'SUPER_ADMIN' || row.createdByRole === 'ADMIN' ? 'Admin' : (row.createdByRole || 'Unknown');
+        const role = row.signupSource==='PUBLIC_SELF_SERVICE'?'Manual signup':row.createdByRole === 'SUPER_ADMIN' || row.createdByRole === 'ADMIN' ? 'Admin' : (row.createdByRole || 'Unknown');
         return (
           <div className="text-xs">
             <span className="font-semibold text-indigo-900">{role.replaceAll('_', ' ')}</span>
