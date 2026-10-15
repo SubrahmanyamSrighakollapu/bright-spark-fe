@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { Megaphone, Pause, Play, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { headlineAlertService, ScrollTickerItem } from '@/services/headlineAlertService';
@@ -13,18 +12,13 @@ const SPEED_SECONDS: Record<ScrollTickerItem['speed'], number> = {
 };
 
 export const RetailerHeadlineTicker: React.FC = () => {
-  const pathname = usePathname();
   const { session } = useAuth();
   const [tickers, setTickers] = useState<ScrollTickerItem[]>([]);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isManuallyPaused, setIsManuallyPaused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const isDownlineSection =
-    pathname?.startsWith('/retailer') ||
-    pathname?.startsWith('/distributor') ||
-    pathname?.startsWith('/master-distributor') ||
-    ['RETAILER', 'DISTRIBUTOR', 'MASTER_DISTRIBUTOR'].includes(session?.role || '');
+  const isRetailerSession = session?.role === 'RETAILER';
 
   const fetchActiveTickers = async () => {
     const result = await headlineAlertService.getTickers();
@@ -42,7 +36,7 @@ export const RetailerHeadlineTicker: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!isDownlineSection) return;
+    if (!isRetailerSession) return;
     void fetchActiveTickers();
 
     const refresh = () => void fetchActiveTickers();
@@ -55,9 +49,9 @@ export const RetailerHeadlineTicker: React.FC = () => {
       window.removeEventListener('qin_tickers_updated', refresh);
       window.removeEventListener('focus', refresh);
     };
-  }, [isDownlineSection, session?.role]);
+  }, [isRetailerSession, session?.role]);
 
-  if (!isDownlineSection || isDismissed || tickers.length === 0) return null;
+  if (!isRetailerSession || isDismissed || tickers.length === 0) return null;
 
   const tickerItems = [...tickers, ...tickers];
   const isAnimationPaused = isManuallyPaused || isHovered;

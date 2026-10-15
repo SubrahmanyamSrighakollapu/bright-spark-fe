@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { FinancialMetricCard } from '@/components/features/financial/FinancialMetricCard';
@@ -24,11 +24,13 @@ import {
 } from 'lucide-react';
 import { DateRangeDropdown } from '@/components/ui/DateRangeDropdown';
 import { RoleDashboardHero } from '@/components/features/dashboard/RoleDashboardHero';
+import { helpDeskService } from '@/services/helpDeskService';
 
 type TicketStatus = 'Open' | 'Processing' | 'Closed';
 type ViewRoleMode = 'MANAGER' | 'EXECUTIVE';
 
 interface SupportTicket {
+  id: string;
   ticketId: string;
   issue: string;
   merchant: string;
@@ -49,6 +51,7 @@ export default function OperationsDashboardPage() {
 
   const [tickets, setTickets] = useState<SupportTicket[]>([
     {
+      id: 'demo-1',
       ticketId: 'TKT_99201',
       issue: 'Customer Double Debit Query',
       merchant: 'Star Mart #03',
@@ -59,6 +62,7 @@ export default function OperationsDashboardPage() {
       assignmentType: 'AUTOMATED_ROUND_ROBIN',
     },
     {
+      id: 'demo-2',
       ticketId: 'TKT_99184',
       issue: 'Bank Nodal Callback Delay',
       merchant: 'North Zone Distributor',
@@ -69,6 +73,7 @@ export default function OperationsDashboardPage() {
       assignmentType: 'AUTOMATED_ROUND_ROBIN',
     },
     {
+      id: 'demo-3',
       ticketId: 'TKT_99150',
       issue: 'Chargeback Dispute Verification',
       merchant: 'Apex National Network',
@@ -79,6 +84,7 @@ export default function OperationsDashboardPage() {
       assignmentType: 'MANAGER_REASSIGNED',
     },
     {
+      id: 'demo-4',
       ticketId: 'TKT_99112',
       issue: 'POS Terminal Sync Timeout',
       merchant: 'Metro Store Group',
@@ -91,6 +97,24 @@ export default function OperationsDashboardPage() {
   ]);
 
   const supportAgents = ['Agent Vijay (Ops-01)', 'Agent Neha (Ops-02)', 'Agent Rahul (Ops-03)', 'Agent Priya (Ops-04)'];
+
+  useEffect(() => {
+    const loadHelpDeskTickets = async () => {
+      const response=await helpDeskService.getTickets({pageSize:100});
+      setTickets((response.data?.items??[]).map((ticket) => ({
+        id: ticket.id,
+        ticketId: ticket.ticketId,
+        issue: `${ticket.category} — ${ticket.subcategory}`,
+        merchant: `${ticket.raisedByName} (${ticket.raisedByRole.replaceAll('_', ' ')})`,
+        status: ticket.status==='IN_PROGRESS'?'Processing':ticket.status==='RESOLVED'||ticket.status==='CLOSED'?'Closed':'Open',
+        priority: 'LOW',
+        date: new Date(ticket.createdAt).toLocaleString('en-IN'),
+        assignedAgent: ticket.assignedEmployeeName??'Unassigned',
+        assignmentType: 'AUTOMATED_ROUND_ROBIN',
+      })));
+    };
+    void loadHelpDeskTickets();
+  }, []);
 
   const providersHealth = [
     { name: 'ICICI PayIn Gateway', successRate: '99.4%', latency: '180ms', status: 'HEALTHY', activeTxns: '1,420 / min' },
@@ -108,9 +132,10 @@ export default function OperationsDashboardPage() {
     toastSuccess(`Ticket ${ticketId} reassigned to ${newAgent} by Manager.`);
   };
 
-  const handleStatusChange = (ticketId: string, newStatus: TicketStatus) => {
-    setTickets((prev) => prev.map((t) => (t.ticketId === ticketId ? { ...t, status: newStatus } : t)));
-    toastSuccess(`Ticket ${ticketId} status updated to ${newStatus}.`);
+  const handleStatusChange = async (ticketId: string, newStatus: TicketStatus) => {
+    const ticket=tickets.find(item=>item.ticketId===ticketId);if(!ticket)return;
+    const apiStatus=newStatus==='Processing'?'IN_PROGRESS':newStatus==='Closed'?'RESOLVED':'REOPENED';
+    try{await helpDeskService.updateStatus(ticket.id,apiStatus,`Status updated to ${newStatus} by Operations`);setTickets((prev) => prev.map((t) => (t.ticketId === ticketId ? { ...t, status: newStatus } : t)));toastSuccess(`Ticket ${ticketId} status updated to ${newStatus}.`);}catch{/* Global API feedback handles authorization/network failures. */}
   };
 
   const openCount = tickets.filter((t) => t.status === 'Open').length;
@@ -239,10 +264,10 @@ export default function OperationsDashboardPage() {
           <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
             <div className="flex items-center gap-2">
               <RotateCcw className="w-4 h-4 text-amber-600" />
-              <h2 className="text-sm font-bold text-slate-900">Support Tickets (Hybrid Queue)</h2>
+              <h2 className="text-sm font-bold text-slate-900">Incoming Help Desk Tickets</h2>
             </div>
             <span className="text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold">
-              Round-Robin + Supervisory Override
+              Unassigned Intake Queue
             </span>
           </div>
 
@@ -280,22 +305,11 @@ export default function OperationsDashboardPage() {
                     <span className="font-mono text-slate-900 font-bold">{tkt.ticketId}</span> • {tkt.merchant} ({tkt.date})
                   </div>
 
-                  {/* Manager Supervisory Re-assignment dropdown */}
+                  {/* Assignment workflow will be enabled after the allocation rules are finalized. */}
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded font-bold border border-indigo-200">
-                      {tkt.assignmentType === 'AUTOMATED_ROUND_ROBIN' ? 'Auto Round-Robin' : 'Manager Override'}
+                    <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded font-bold border border-amber-200">
+                      Unassigned
                     </span>
-                    <select
-                      value={tkt.assignedAgent}
-                      onChange={(e) => handleReassignTicket(tkt.ticketId, e.target.value)}
-                      className="text-[11px] py-0.5 px-1.5 bg-white border border-slate-200 rounded text-slate-800 font-bold focus:border-[var(--primary)] focus:outline-none"
-                    >
-                      {supportAgents.map((agent) => (
-                        <option key={agent} value={agent}>
-                          {agent}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
               </div>
@@ -304,7 +318,7 @@ export default function OperationsDashboardPage() {
 
           <div className="p-3 bg-sky-50 border border-sky-100 rounded-lg text-xs text-sky-900 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-sky-600 shrink-0" />
-            <span>Hybrid Workflow: Automated round-robin assigns initial tickets; managers can manually reassign to prevent bottlenecks.</span>
+            <span>New tickets enter this common Operations intake queue. Assignment controls will be added after the allocation workflow is finalized.</span>
           </div>
         </div>
       </div>

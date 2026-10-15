@@ -29,7 +29,34 @@ export interface InvoiceListResult {
   summary: InvoiceSummary;
 }
 
+export interface ServiceTemplate {
+  id: string; categoryId: string; categoryCode: string; categoryName: string;
+  templateName: string; fileName: string; isActive: boolean; updatedAt: string;
+}
+
+export interface TransactionInvoice {
+  id: string; invoiceNumber: string; transactionId: string; status: 'PENDING' | 'ISSUED' | 'CANCELLED';
+  data: Record<string, string>; renderedHtml: string; createdAt: string;
+}
+
 export const invoiceService = {
+  async getServiceTemplates(): Promise<ApiResponse<ServiceTemplate[]>> {
+    return apiClient.get('/invoices/service-templates');
+  },
+  async uploadServiceTemplate(input: { categoryId: string; templateName: string; file: File }): Promise<ApiResponse<ServiceTemplate>> {
+    const data = new FormData(); data.append('categoryId', input.categoryId); data.append('templateName', input.templateName);
+    data.append('template', input.file);
+    return apiClient.upload('/invoices/service-templates', data);
+  },
+  async setServiceTemplateStatus(id: string, isActive: boolean): Promise<ApiResponse<{ id: string; isActive: boolean }>> {
+    return apiClient.patch(`/invoices/service-templates/${id}/status`, { isActive });
+  },
+  async previewServiceTemplate(id: string): Promise<ApiResponse<{ renderedHtml: string }>> {
+    return apiClient.post(`/invoices/service-templates/${id}/preview`);
+  },
+  async getTransactionInvoice(transactionId: string): Promise<ApiResponse<TransactionInvoice>> {
+    return apiClient.get(`/invoices/transactions/${transactionId}`);
+  },
   /**
    * Fetch invoice summary metrics dynamically from centralized state.
    */

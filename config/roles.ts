@@ -194,17 +194,17 @@ export function isRouteAuthorizedForRole(role: UserRole | string, pathname: stri
 
   // 6. Master Distributor
   if (role === 'MASTER_DISTRIBUTOR') {
-    return pathname.startsWith('/master-distributor');
+    return pathname.startsWith('/master-distributor') || pathname.startsWith('/help-desk');
   }
 
   // 7. Distributor
   if (role === 'DISTRIBUTOR') {
-    return pathname.startsWith('/distributor');
+    return pathname.startsWith('/distributor') || pathname.startsWith('/help-desk');
   }
 
   // 8. Retailer
   if (role === 'RETAILER') {
-    return pathname.startsWith('/retailer');
+    return pathname.startsWith('/retailer') || pathname.startsWith('/help-desk');
   }
 
   return false;

@@ -26,6 +26,12 @@ import {
   QrCode,
   BadgeIndianRupee,
   Link2,
+  Headphones,
+  Store,
+  User,
+  ArrowDownLeft,
+  ArrowUpRight,
+  ClipboardList,
 } from 'lucide-react';
 
 export interface IconRendererProps {
@@ -59,6 +65,12 @@ const iconMap: Record<string, React.ElementType> = {
   QrCode,
   BadgeIndianRupee,
   Link2,
+  Headphones,
+  Store,
+  User,
+  ArrowDownLeft,
+  ArrowUpRight,
+  ClipboardList,
 };
 
 export const IconRenderer: React.FC<IconRendererProps> = ({ name, className = 'w-4 h-4' }) => {

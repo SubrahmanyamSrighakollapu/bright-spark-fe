@@ -9,6 +9,7 @@ import { AnnouncementBanner } from '@/components/features/notifications/Announce
 import { Drawer } from '@/components/ui/Drawer';
 import { useAuth } from '@/context/AuthContext';
 import { ExcelExportProvider } from '@/components/features/reports/ExcelExportProvider';
+import { HelpDeskFloatingButton } from '@/components/features/help-desk/HelpDeskFloatingButton';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -68,6 +69,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   return (
     <div className="h-screen w-screen overflow-hidden bg-[var(--bg-app)] flex">
       <ExcelExportProvider />
+      <HelpDeskFloatingButton />
       {/* Persistent Desktop Sidebar */}
       <div className="hidden lg:flex flex-col h-screen shrink-0 z-40">
         <Sidebar

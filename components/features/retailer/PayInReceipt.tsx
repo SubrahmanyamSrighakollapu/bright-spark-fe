@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Transaction } from '@/types/domain';
 import { PayInPreviewResult } from '@/services/payInService';
 import { formatCurrency, formatDateTime } from '@/utils/formatters';
 import { Button, StatusBadge } from '@/components/ui';
 import { Printer, Copy, Check, ShieldCheck, Store, User, ArrowDownLeft } from 'lucide-react';
+import { invoiceService, TransactionInvoice } from '@/services/invoiceService';
 
 interface PayInReceiptProps {
   transaction: Transaction;
@@ -24,6 +25,15 @@ export const PayInReceipt: React.FC<PayInReceiptProps> = ({
 }) => {
   const [copyType, setCopyType] = useState<'RETAILER' | 'CUSTOMER'>('RETAILER');
   const [copied, setCopied] = useState(false);
+  const [generatedInvoice, setGeneratedInvoice] = useState<TransactionInvoice | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    invoiceService.getTransactionInvoice(transaction.id).then((response) => {
+      if (active && response.success && response.data) setGeneratedInvoice(response.data);
+    }).catch(() => { /* A Pay-In can proceed when no template is mapped. */ });
+    return () => { active = false; };
+  }, [transaction.id]);
 
   const isSuccess = transaction.status === 'SUCCESS';
   const charges = transaction.fee || preview?.charges || 0;
@@ -33,7 +43,9 @@ export const PayInReceipt: React.FC<PayInReceiptProps> = ({
   const commission = preview?.retailerCommissionAmount || +(transaction.amount * 0.0025).toFixed(2);
 
   const handlePrint = () => {
-    window.print();
+    if (!generatedInvoice) return window.print();
+    const frame = document.getElementById('service-invoice-frame') as HTMLIFrameElement | null;
+    frame?.contentWindow?.print();
   };
 
   const handleCopySummary = () => {
@@ -111,7 +123,18 @@ ${transaction.utr ? `UTR: ${transaction.utr}` : ''}
         </div>
       </div>
 
-      {/* Printable Receipt Container */}
+      {generatedInvoice && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3">
+          <div className="mb-2 flex items-center justify-between text-xs">
+            <div><b>Configured Service Invoice</b><span className="ml-2 font-mono text-blue-700">{generatedInvoice.invoiceNumber}</span></div>
+            <span className="rounded-full bg-amber-100 px-2 py-1 font-semibold text-amber-800">{generatedInvoice.status}</span>
+          </div>
+          <iframe id="service-invoice-frame" title={`Invoice ${generatedInvoice.invoiceNumber}`} srcDoc={generatedInvoice.renderedHtml} sandbox="" className="h-[620px] w-full rounded-lg border bg-white" />
+        </div>
+      )}
+
+      {/* Standard receipt remains as a safe fallback when no service template is configured. */}
+      {!generatedInvoice && <>
       <div className="p-6 rounded-2xl border border-slate-300 bg-white shadow-md text-slate-900 space-y-6 print:border-none print:shadow-none print:p-0">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-200 pb-4">
@@ -212,6 +235,7 @@ ${transaction.utr ? `UTR: ${transaction.utr}` : ''}
           <p>Thank you for using Qin Star Pay collection switch services.</p>
         </div>
       </div>
+      </>}
     </div>
   );
 };

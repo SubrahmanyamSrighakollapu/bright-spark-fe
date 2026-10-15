@@ -1,378 +1,82 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { FileCode2, Eye, Upload, CheckCircle2, Power } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Modal } from '@/components/ui/Modal';
-import { ServiceInvoiceConfig, ServiceCode, InvoiceTemplateStyle } from '@/types/domain';
-import { invoiceService } from '@/services/invoiceService';
-import { ServiceInvoiceRenderer } from '@/components/features/invoices/ServiceInvoiceRenderer';
-import { Edit3, FileText, CheckCircle2 } from 'lucide-react';
+import { Button, Card, EmptyState, Input, Select, Modal, useToast } from '@/components/ui';
+import { serviceCategoryService, ServiceCategoryItem } from '@/services/serviceCategoryService';
+import { invoiceService, ServiceTemplate } from '@/services/invoiceService';
 
-export default function ServiceInvoiceTemplatesPage() {
-  const [configs, setConfigs] = useState<ServiceInvoiceConfig[]>([]);
-  const [selectedConfig, setSelectedConfig] = useState<ServiceInvoiceConfig | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+const SAMPLE_TEMPLATE = `<!doctype html>
+<html><head><meta charset="utf-8"><style>
+body{font-family:Arial,sans-serif;color:#172033;padding:32px}.header{border-bottom:3px solid #174f86;padding-bottom:16px}
+.row{display:flex;justify-content:space-between;margin:10px 0}.total{font-size:20px;font-weight:700;border-top:2px solid #ddd;padding-top:14px}
+</style></head><body><div class="header"><h1>QIN STAR PAY</h1><p>Service Invoice {{invoiceNumber}}</p></div>
+<div class="row"><span>Date</span><b>{{invoiceDate}}</b></div><div class="row"><span>Transaction</span><b>{{transactionReference}}</b></div>
+<div class="row"><span>Customer</span><b>{{customerName}} / {{customerMobile}}</b></div><div class="row"><span>Service</span><b>{{serviceCategory}} - {{serviceProduct}}</b></div>
+<div class="row"><span>Payment method</span><b>{{paymentMethod}}</b></div><div class="row"><span>Amount</span><b>INR {{amount}}</b></div>
+<div class="row"><span>Service charge</span><b>INR {{charge}}</b></div><div class="row"><span>GST</span><b>INR {{gst}}</b></div>
+<div class="row total"><span>Net amount</span><span>INR {{netAmount}}</span></div><p>Status: {{status}}</p></body></html>`;
 
-  // Form State
-  const [form, setForm] = useState<Partial<ServiceInvoiceConfig>>({});
+export default function ServiceTemplatesPage() {
+  const { toastSuccess, toastError } = useToast();
+  const [categories, setCategories] = useState<ServiceCategoryItem[]>([]);
+  const [templates, setTemplates] = useState<ServiceTemplate[]>([]);
+  const [categoryId, setCategoryId] = useState('');
+  const [templateName, setTemplateName] = useState(''); const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadConfigs();
-  }, []);
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [catalogue, configured] = await Promise.all([serviceCategoryService.getCategories(), invoiceService.getServiceTemplates()]);
+      setCategories(catalogue.data ?? []); setTemplates(configured.data ?? []);
+      if (!categoryId && catalogue.data?.[0]) setCategoryId(catalogue.data[0].id);
+    } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to load service templates.'); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { void load(); }, []);
 
-  const loadConfigs = async () => {
-    setIsLoading(true);
-    const res = await invoiceService.getServiceConfigs();
-    if (res.success && res.data) {
-      setConfigs(res.data);
-      if (!selectedConfig && res.data.length > 0) {
-        setSelectedConfig(res.data[0]!);
-      }
-    }
-    setIsLoading(false);
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!file || !categoryId) return toastError('Select a service and an invoice template file.');
+    setSaving(true);
+    try {
+      await invoiceService.uploadServiceTemplate({ categoryId, templateName, file });
+      toastSuccess('Invoice template saved for the selected service.'); setFile(null); setTemplateName(''); await load();
+    } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to save template.'); }
+    finally { setSaving(false); }
   };
 
-  const handleEditOpen = (cfg: ServiceInvoiceConfig) => {
-    setSelectedConfig(cfg);
-    setForm({ ...cfg });
-    setIsEditing(true);
+  const preview = async (id: string) => {
+    try { const response = await invoiceService.previewServiceTemplate(id); setPreviewHtml(response.data?.renderedHtml ?? null); }
+    catch (error) { toastError(error instanceof Error ? error.message : 'Unable to preview template.'); }
+  };
+  const downloadSample = () => {
+    const url = URL.createObjectURL(new Blob([SAMPLE_TEMPLATE], { type: 'text/html' }));
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'qin-star-invoice-template.html'; anchor.click(); URL.revokeObjectURL(url);
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.serviceCode) return;
-    setIsSaving(true);
-    const res = await invoiceService.saveServiceConfig(form as Partial<ServiceInvoiceConfig> & { serviceCode: ServiceCode });
-    if (res.success && res.data) {
-      setSelectedConfig(res.data);
-      await loadConfigs();
-      setIsEditing(false);
-    }
-    setIsSaving(false);
-  };
-
-  // Sample dummy invoice for live preview of the service template
-  const previewInvoice = selectedConfig
-    ? {
-        id: 'INV_20260903_PREVIEW',
-        entityId: 'ent_mch_01',
-        entityName: 'Apex Pay Solutions Pvt Ltd',
-        entityCode: 'QSP-MCH-001',
-        entityType: 'MERCHANT' as const,
-        serviceCode: selectedConfig.serviceCode,
-        serviceConfig: selectedConfig,
-        gstin: selectedConfig.gstin,
-        billingAddress: `${selectedConfig.address}, ${selectedConfig.city}, ${selectedConfig.state} ${selectedConfig.pincode}`,
-        invoiceType: 'PLATFORM_FEE' as const,
-        billingPeriod: 'September 2026',
-        lineItems: [
-          {
-            id: 'li_prev_01',
-            description: `${selectedConfig.serviceName} Merchant Fee & Tax Billing`,
-            quantity: 1,
-            rate: 15400,
-            taxableAmount: 15400,
-            gstRate: 18,
-            gstAmount: 2772,
-            totalAmount: 18172,
-          },
-        ],
-        taxableAmount: 15400,
-        gstRate: 18,
-        gstAmount: 2772,
-        cgstAmount: 1386,
-        sgstAmount: 1386,
-        igstAmount: 0,
-        tdsApplicable: true,
-        tdsRate: 10,
-        tdsAmount: 1540,
-        grossAmount: 18172,
-        netReceivable: 16632,
-        paidAmount: 0,
-        outstandingAmount: 16632,
-        status: 'ISSUED' as const,
-        issueDate: new Date().toISOString(),
-        dueDate: new Date(Date.now() + 14 * 86400000).toISOString(),
-        transactionIds: ['TXN_PREVIEW_001'],
-        settlementIds: ['SET_PREVIEW_001'],
-        ledgerEntryIds: ['LED_PREVIEW_001'],
-        walletId: 'wlt_mch_001',
-        payments: [],
-        timeline: [],
-        createdAt: new Date().toISOString(),
-      }
-    : null;
-
-  return (
-    <PageContainer
-      title="Service Invoice Configurations & Templates"
-      description="Configure dedicated invoice templates, brand styling, SAC tax codes, and bank details per platform service (Pay-In, Pay-Out, AEPS, BBPS, DMT, Recharge)."
-    >
-      <div className="space-y-6">
-        {/* Service Selection Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
-          {configs.map((cfg) => {
-            const isSelected = selectedConfig?.serviceCode === cfg.serviceCode;
-            return (
-              <button
-                key={cfg.id}
-                onClick={() => setSelectedConfig(cfg)}
-                className={`p-3.5 rounded-xl border text-left transition-all ${
-                  isSelected
-                    ? 'border-2 border-slate-900 bg-white shadow-md ring-2 ring-slate-900/10 scale-[1.02]'
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: cfg.primaryColor }}
-                  />
-                  {isSelected && <CheckCircle2 className="w-4 h-4 text-slate-900" />}
-                </div>
-                <div className="font-bold text-xs text-slate-900 truncate">{cfg.serviceName}</div>
-                <div className="text-[10px] text-slate-500 font-mono mt-0.5">{cfg.serviceCode}</div>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 font-bold uppercase text-slate-700">
-                    SAC {cfg.sacCode}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {cfg.templateStyle.replace(/_/g, ' ')}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Selected Service Details & Controls */}
-        {selectedConfig && (
-          <div className="space-y-6">
-            <Card
-              title={`${selectedConfig.serviceName} Invoice Settings`}
-              subtitle={`Configured template style: ${selectedConfig.templateName}`}
-              action={
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => handleEditOpen(selectedConfig)}
-                  leftIcon={<Edit3 className="w-3.5 h-3.5" />}
-                >
-                  Edit Service Invoice Configuration
-                </Button>
-              }
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-sans">
-                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Service Unit & Branding</span>
-                  <p className="font-bold text-slate-900">{selectedConfig.businessName}</p>
-                  <p className="text-slate-600 font-mono">GSTIN: {selectedConfig.gstin} | PAN: {selectedConfig.pan}</p>
-                  <p className="text-slate-500">{selectedConfig.address}, {selectedConfig.city}</p>
-                </div>
-
-                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Bank Account & Remittance</span>
-                  <p className="font-bold text-slate-900">{selectedConfig.beneficiaryName}</p>
-                  <p className="text-slate-600 font-mono">{selectedConfig.bankName} - A/C: {selectedConfig.accountNumber}</p>
-                  <p className="text-slate-500 font-mono">IFSC: {selectedConfig.ifscCode} ({selectedConfig.branchName})</p>
-                </div>
-
-                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Taxation & SAC Mapping</span>
-                  <p className="font-bold text-slate-900">SAC Code: <span className="font-mono text-purple-700">{selectedConfig.sacCode}</span></p>
-                  <p className="text-slate-600">Template: <span className="font-semibold">{selectedConfig.templateStyle}</span></p>
-                  <p className="text-slate-500">Contact: {selectedConfig.email} | {selectedConfig.mobile}</p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Live Service Invoice Preview */}
-            {previewInvoice && (
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[var(--primary)]" />
-                  <span>Live Template Preview for {selectedConfig.serviceName}</span>
-                </h3>
-                <ServiceInvoiceRenderer invoice={previewInvoice} serviceConfig={selectedConfig} />
-              </div>
-            )}
+  return <PageContainer title="Service Invoice Templates" description="Configure one invoice template for each admin-configured service category.">
+    <div className="space-y-5">
+      <Card title="Upload & map template" subtitle="Every service category has one template. Uploading again for the same service replaces its current template.">
+        <form onSubmit={save} className="grid grid-cols-1 gap-4 lg:grid-cols-3 items-end">
+          <Select label="Service Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} options={categories.map((c) => ({ value: c.id, label: `${c.name} (${c.code})` }))} required />
+          <Input label="Template Name" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="e.g. Electricity Bill Receipt" required />
+          <div><label className="mb-1.5 block text-xs font-semibold text-slate-700">Invoice Template File</label><input type="file" accept=".html,.htm,.png,.jpg,.jpeg,text/html,image/png,image/jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} required className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-blue-700" /></div>
+          <div className="lg:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+            <p className="text-xs text-slate-500">Supports PNG/JPG designs up to 5 MB or HTML. HTML files must include <code>{'{{transactionReference}}'}</code>.</p>
+            <div className="flex gap-2"><Button type="button" variant="outline" onClick={downloadSample} leftIcon={<FileCode2 className="h-4 w-4" />}>Download Sample</Button><Button type="submit" isLoading={saving} leftIcon={<Upload className="h-4 w-4" />}>Upload Template</Button></div>
           </div>
-        )}
+        </form>
+      </Card>
 
-        {/* Edit Configuration Modal */}
-        <Modal
-          isOpen={isEditing}
-          onClose={() => setIsEditing(false)}
-          title={`Configure Invoice Details — ${form.serviceName || form.serviceCode}`}
-          size="lg"
-        >
-          <form onSubmit={handleSave} className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input
-                label="Service Display Name"
-                value={form.serviceName || ''}
-                onChange={(e) => setForm((p) => ({ ...p, serviceName: e.target.value }))}
-                required
-              />
-
-              <Select
-                label="Template Layout Style"
-                value={form.templateStyle || 'STANDARD_TAX'}
-                onChange={(e) => setForm((p) => ({ ...p, templateStyle: e.target.value as InvoiceTemplateStyle }))}
-                options={[
-                  { value: 'STANDARD_TAX', label: 'Standard Platform Tax Layout' },
-                  { value: 'ITEMIZED_SERVICE', label: 'Itemized Service Fee Layout' },
-                  { value: 'PAYOUT_DISBURSAL', label: 'Pay-Out Disbursal Layout' },
-                  { value: 'BANKING_CORRESPONDENT', label: 'Aadhaar Banking (AEPS) Layout' },
-                  { value: 'UTILITY_BILL_RECEIPT', label: 'Utility Bill Pay Layout' },
-                  { value: 'REMITTANCE_COMMISSION', label: 'Domestic Remittance (DMT) Layout' },
-                  { value: 'COMPACT_RECEIPT', label: 'Compact Instant Receipt' },
-                ]}
-              />
-
-              <Input
-                label="Business Unit Name"
-                value={form.businessName || ''}
-                onChange={(e) => setForm((p) => ({ ...p, businessName: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="Legal Registered Name"
-                value={form.legalName || ''}
-                onChange={(e) => setForm((p) => ({ ...p, legalName: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="GSTIN"
-                value={form.gstin || ''}
-                onChange={(e) => setForm((p) => ({ ...p, gstin: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="PAN Number"
-                value={form.pan || ''}
-                onChange={(e) => setForm((p) => ({ ...p, pan: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="SAC / HSN Code"
-                value={form.sacCode || ''}
-                onChange={(e) => setForm((p) => ({ ...p, sacCode: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="Brand Accent Color (Hex)"
-                type="color"
-                value={form.primaryColor || '#0f172a'}
-                onChange={(e) => setForm((p) => ({ ...p, primaryColor: e.target.value }))}
-                className="h-10 cursor-pointer"
-              />
-
-              <Input
-                label="Beneficiary Account Name"
-                value={form.beneficiaryName || ''}
-                onChange={(e) => setForm((p) => ({ ...p, beneficiaryName: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="Bank Name"
-                value={form.bankName || ''}
-                onChange={(e) => setForm((p) => ({ ...p, bankName: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="Account Number"
-                value={form.accountNumber || ''}
-                onChange={(e) => setForm((p) => ({ ...p, accountNumber: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="IFSC Code"
-                value={form.ifscCode || ''}
-                onChange={(e) => setForm((p) => ({ ...p, ifscCode: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="Branch Name"
-                value={form.branchName || ''}
-                onChange={(e) => setForm((p) => ({ ...p, branchName: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="Support Email"
-                type="email"
-                value={form.email || ''}
-                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="Support Mobile"
-                value={form.mobile || ''}
-                onChange={(e) => setForm((p) => ({ ...p, mobile: e.target.value }))}
-                required
-              />
-
-              <Input
-                label="City & State"
-                value={`${form.city || ''}, ${form.state || ''}`}
-                onChange={(e) => {
-                  const parts = e.target.value.split(',');
-                  setForm((p) => ({ ...p, city: parts[0]?.trim() || '', state: parts[1]?.trim() || '' }));
-                }}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Full Business Address</label>
-              <textarea
-                rows={2}
-                value={form.address || ''}
-                onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                className="w-full p-2.5 rounded-lg border border-slate-200 font-sans text-xs focus:ring-2 focus:ring-slate-900"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Service Terms & Conditions</label>
-              <textarea
-                rows={3}
-                value={form.termsAndConditions || ''}
-                onChange={(e) => setForm((p) => ({ ...p, termsAndConditions: e.target.value }))}
-                className="w-full p-2.5 rounded-lg border border-slate-200 font-mono text-[11px] focus:ring-2 focus:ring-slate-900"
-                required
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-              <Button variant="outline" size="sm" type="button" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-              <Button variant="primary" size="sm" type="submit" isLoading={isSaving}>
-                Save Service Invoice Configuration
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      </div>
-    </PageContainer>
-  );
+      <Card title="Configured templates" subtitle={`${templates.length} service mappings saved`}>
+        {loading ? <div className="py-12 text-center text-sm text-slate-500">Loading templates...</div> : templates.length === 0 ? <EmptyState title="No service templates configured" description="Upload the first invoice template for a service above." className="border-0 bg-transparent py-8 shadow-none" /> :
+          <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b bg-slate-50 text-slate-600"><th className="p-3">Service</th><th className="p-3">Template</th><th className="p-3">Status</th><th className="p-3 text-right">Actions</th></tr></thead><tbody>{templates.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-3"><b>{item.categoryName}</b><div className="text-slate-400">{item.categoryCode}</div></td><td className="p-3"><b>{item.templateName}</b><div className="text-slate-400">{item.fileName}</div></td><td className="p-3"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 font-semibold ${item.isActive?'bg-emerald-50 text-emerald-700':'bg-slate-100 text-slate-500'}`}><CheckCircle2 className="h-3 w-3"/>{item.isActive?'Active':'Inactive'}</span></td><td className="p-3"><div className="flex justify-end gap-2"><Button size="sm" variant="outline" onClick={() => void preview(item.id)} leftIcon={<Eye className="h-3.5 w-3"/>}>Preview</Button><Button size="sm" variant="outline" onClick={async()=>{await invoiceService.setServiceTemplateStatus(item.id,!item.isActive);await load();}} leftIcon={<Power className="h-3.5 w-3"/>}>{item.isActive?'Disable':'Enable'}</Button></div></td></tr>)}</tbody></table></div>}
+      </Card>
+    </div>
+    <Modal isOpen={Boolean(previewHtml)} onClose={() => setPreviewHtml(null)} title="Invoice Template Preview" size="xl"><iframe title="Invoice template preview" srcDoc={previewHtml ?? ''} sandbox="" className="h-[65vh] w-full rounded-lg border bg-white" /></Modal>
+  </PageContainer>;
 }

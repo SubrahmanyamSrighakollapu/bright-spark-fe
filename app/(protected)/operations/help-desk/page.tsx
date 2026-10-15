@@ -1,0 +1,33 @@
+'use client';
+
+import React,{useEffect,useMemo,useState} from 'react';
+import {Eye,Headphones,RefreshCw} from 'lucide-react';
+import {PageContainer} from '@/components/layout/PageContainer';
+import {Button,Card,EmptyState,Input,Modal,Select,TextArea,useToast} from '@/components/ui';
+import {HelpDeskTicket,helpDeskService} from '@/services/helpDeskService';
+import {formatDateTime} from '@/utils/formatters';
+
+const statuses=['ALL','ASSIGNED','IN_PROGRESS','RESOLVED','CLOSED','REOPENED'];
+
+export default function OperationsHelpDeskPage(){
+ const {toastSuccess,toastError}=useToast();const [tickets,setTickets]=useState<HelpDeskTicket[]>([]);const [loading,setLoading]=useState(true);
+ const [search,setSearch]=useState('');const [status,setStatus]=useState('ALL');const [selected,setSelected]=useState<HelpDeskTicket|null>(null);const [remarks,setRemarks]=useState('');const [saving,setSaving]=useState(false);
+ const load=async()=>{setLoading(true);try{const response=await helpDeskService.getTickets({pageSize:100});setTickets(response.data?.items??[]);}catch(error){toastError(error instanceof Error?error.message:'Unable to load assigned tickets.');}finally{setLoading(false);}};
+ useEffect(()=>{void load();},[]);
+ const filtered=useMemo(()=>tickets.filter(ticket=>(status==='ALL'||ticket.status===status)&&(!search||`${ticket.ticketId} ${ticket.raisedByName} ${ticket.category} ${ticket.subcategory}`.toLowerCase().includes(search.toLowerCase()))),[tickets,status,search]);
+ const counts={assigned:tickets.filter(t=>t.status==='ASSIGNED'||t.status==='REOPENED').length,progress:tickets.filter(t=>t.status==='IN_PROGRESS').length,resolved:tickets.filter(t=>t.status==='RESOLVED'||t.status==='CLOSED').length};
+ const update=async(next:'IN_PROGRESS'|'RESOLVED'|'CLOSED'|'REOPENED')=>{if(!selected||remarks.trim().length<3)return toastError('Enter status remarks of at least 3 characters.');setSaving(true);try{await helpDeskService.updateStatus(selected.id,next,remarks);toastSuccess(`Ticket moved to ${next.replaceAll('_',' ')}.`);setSelected(null);setRemarks('');await load();}catch(error){toastError(error instanceof Error?error.message:'Unable to update ticket status.');}finally{setSaving(false);}};
+ return <PageContainer title="Operations Help Desk" description="Review and process support tickets automatically assigned to your Operations account.">
+  <div className="space-y-5"><div className="grid gap-3 sm:grid-cols-3">{[{label:'Assigned / Reopened',value:counts.assigned,tone:'text-amber-700'},{label:'In Progress',value:counts.progress,tone:'text-blue-700'},{label:'Resolved / Closed',value:counts.resolved,tone:'text-emerald-700'}].map(item=><Card key={item.label}><div className="text-xs font-bold uppercase text-slate-500">{item.label}</div><div className={`mt-2 text-2xl font-extrabold ${item.tone}`}>{item.value}</div></Card>)}</div>
+  <Card title="My Assigned Tickets" subtitle="Only tickets assigned to your employee account are shown." action={<Button size="sm" variant="outline" onClick={()=>void load()} leftIcon={<RefreshCw className="h-4 w-4"/>}>Refresh</Button>}>
+   <div className="mb-4 grid gap-3 md:grid-cols-[1fr_220px]"><Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search ticket, requester, category..."/><Select value={status} onChange={e=>setStatus(e.target.value)} options={statuses.map(value=>({value,label:value.replaceAll('_',' ')}))}/></div>
+   {loading?<div className="py-16 text-center text-sm text-slate-500">Loading assigned tickets...</div>:!filtered.length?<EmptyState title="No assigned tickets found" description="New tickets will appear here when the workload assignment engine allocates them to you." className="border-0 bg-transparent shadow-none"/>:<div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="border-b bg-slate-50"><th className="p-3">Ticket</th><th className="p-3">Raised By</th><th className="p-3">Issue</th><th className="p-3">Status</th><th className="p-3">Assigned On</th><th className="p-3 text-right">Action</th></tr></thead><tbody>{filtered.map(ticket=><tr key={ticket.id} className="border-b last:border-0"><td className="p-3 font-mono font-bold text-blue-700">{ticket.ticketId}</td><td className="p-3"><b>{ticket.raisedByName}</b><div className="text-slate-500">{ticket.raisedByRole?.replaceAll('_',' ')}</div></td><td className="p-3"><b>{ticket.category}</b><div className="text-slate-500">{ticket.subcategory}</div><p className="mt-1 max-w-md truncate text-slate-400">{ticket.description}</p></td><td className="p-3"><span className="rounded-full bg-blue-50 px-2 py-1 font-bold text-blue-700">{ticket.status.replaceAll('_',' ')}</span></td><td className="p-3 text-slate-500">{formatDateTime(ticket.assignedAt??ticket.createdAt)}</td><td className="p-3 text-right"><Button size="sm" variant="outline" onClick={()=>{setSelected(ticket);setRemarks('');}} leftIcon={<Eye className="h-3.5 w-3.5"/>}>Open</Button></td></tr>)}</tbody></table></div>}
+  </Card></div>
+  <Modal isOpen={Boolean(selected)} onClose={()=>setSelected(null)} title={`Ticket Details — ${selected?.ticketId??''}`} size="lg"><div className="space-y-4">
+   <div className="grid gap-3 rounded-xl border bg-slate-50 p-4 text-xs sm:grid-cols-2"><div><span className="text-slate-500">Raised By</span><p className="font-bold">{selected?.raisedByName}</p></div><div><span className="text-slate-500">Current Status</span><p className="font-bold">{selected?.status.replaceAll('_',' ')}</p></div><div><span className="text-slate-500">Category</span><p className="font-bold">{selected?.category}</p></div><div><span className="text-slate-500">Subcategory</span><p className="font-bold">{selected?.subcategory}</p></div></div>
+   <div><div className="mb-1 text-xs font-bold text-slate-600">Issue Description</div><div className="whitespace-pre-wrap rounded-xl border bg-white p-4 text-sm text-slate-700">{selected?.description}</div></div>
+   <TextArea label="Status Remarks" value={remarks} onChange={e=>setRemarks(e.target.value)} rows={3} placeholder="Enter work performed or resolution details..." required/>
+   <div className="flex flex-wrap justify-end gap-2"><Button variant="outline" onClick={()=>setSelected(null)}>Cancel</Button>{selected?.status!=='IN_PROGRESS'&&<Button variant="outline" isLoading={saving} onClick={()=>void update('IN_PROGRESS')}>Start Processing</Button>}{selected?.status!=='RESOLVED'&&selected?.status!=='CLOSED'&&<Button isLoading={saving} onClick={()=>void update('RESOLVED')}>Mark Resolved</Button>}{(selected?.status==='RESOLVED'||selected?.status==='CLOSED')&&<Button isLoading={saving} onClick={()=>void update('REOPENED')}>Reopen Ticket</Button>}</div>
+  </div></Modal>
+ </PageContainer>;
+}

@@ -115,6 +115,13 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
     roles: ['SUPER_ADMIN', 'OPERATIONS', 'ACCOUNTS'],
   },
   {
+    id: 'help-desk-admin',
+    label: 'Help Desk',
+    iconName: 'Headphones',
+    path: '/admin/help-desk',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+  },
+  {
     id: 'invoices',
     label: 'Invoices & Tax',
     iconName: 'Receipt',
@@ -154,6 +161,7 @@ export const NAVIGATION_CONFIG: NavigationItem[] = [
       { id: 'payout-charges', label: 'Payout Charges Manager', path: '/admin/administration/payout-charges' },
       { id: 'min-balance', label: 'Min Wallet Balance Req', path: '/admin/administration/balance-requirement' },
       { id: 'payment-methods', label: 'Payment Methods Manager', path: '/admin/administration/payment-methods' },
+      { id: 'qr-pay-in-accounts', label: 'QR Pay-In Accounts', path: '/admin/administration/qr-pay-in' },
       { id: 'invoice-details', label: 'Invoice Details Setup', path: '/admin/administration/invoice-details' },
     ],
   },
@@ -185,7 +193,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
   SUPER_ADMIN: NAVIGATION_CONFIG,
   MASTER_DISTRIBUTOR: [
     { id: 'md-dashboard', label: 'Dashboard', iconName: 'LayoutDashboard', path: '/master-distributor/dashboard' },
-    { id: 'md-distributors', label: 'Distributors', iconName: 'Users', path: '/master-distributor/distributors' },
+    { id: 'md-distributors', label: 'Distributors', iconName: 'Network', path: '/master-distributor/distributors' },
     { id: 'md-retailers', label: 'Retailers', iconName: 'Store', path: '/master-distributor/retailers' },
     {
       id: 'md-transactions',
@@ -219,7 +227,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
     },
     { id: 'md-reports', label: 'Reports', iconName: 'BarChart3', path: '/master-distributor/reports' },
     { id: 'md-kyc-documents', label: 'KYC & Documents', iconName: 'ShieldCheck', path: '/kyc/documents' },
-    { id: 'md-notifications', label: 'Notifications', iconName: 'Bell', path: '/notifications' },
+    { id: 'md-notifications', label: 'Notifications', iconName: 'Bell', path: '/master-distributor/notifications' },
   ],
   DISTRIBUTOR: [
     { id: 'dst-dashboard', label: 'Dashboard', iconName: 'LayoutDashboard', path: '/distributor/dashboard' },
@@ -288,6 +296,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
   ],
   OPERATIONS: [
     { id: 'ops-dashboard', label: 'Dashboard', iconName: 'LayoutDashboard', path: '/operations/dashboard' },
+    { id: 'ops-help-desk', label: 'Help Desk', iconName: 'Headphones', path: '/operations/help-desk' },
     {
       id: 'transactions',
       label: 'Transactions',
@@ -378,6 +387,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
   ],
   SUPPORT: [
     { id: 'ops-dashboard', label: 'Dashboard', iconName: 'LayoutDashboard', path: '/operations/dashboard' },
+    { id: 'ops-help-desk', label: 'Help Desk', iconName: 'Headphones', path: '/operations/help-desk' },
     { id: 'support-txns', label: 'Transactions Search', iconName: 'ArrowLeftRight', path: '/admin/transactions/search' },
     { id: 'support-chargebacks', label: 'Support Tickets / Disputes', iconName: 'RotateCcw', path: '/admin/chargebacks' },
     { id: 'notifications', label: 'Notifications', iconName: 'Bell', path: '/admin/notifications' },

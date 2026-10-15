@@ -25,7 +25,7 @@ export interface SidebarProps {
 
 function getCategoryForNavItem(id: string): string | null {
   if (id === 'dashboard' || id === 'md-dashboard' || id === 'dst-dashboard' || id === 'ret-dashboard') return 'MAIN';
-  if (id === 'transactions' || id === 'users' || id === 'employees' || id === 'kyc' || id === 'ret-bbps' || id === 'ret-payin' || id === 'ret-qr-payin' || id === 'ret-payment-links' || id === 'ret-payout' || id === 'ret-transactions' || id === 'md-distributors' || id === 'md-retailers' || id === 'dst-retailers') return 'OPERATIONS';
+  if (id === 'transactions' || id === 'users' || id === 'employees' || id === 'kyc' || id === 'help-desk-admin' || id === 'ops-help-desk' || id === 'ret-bbps' || id === 'ret-payin' || id === 'ret-qr-payin' || id === 'ret-payment-links' || id === 'ret-payout' || id === 'ret-transactions' || id === 'md-distributors' || id === 'md-retailers' || id === 'dst-retailers' || id === 'md-kyc-documents' || id === 'dst-kyc-documents') return 'OPERATIONS';
   if (id === 'wallet' || id === 'wallet-management' || id === 'topup-approvals' || id === 'settlements' || id === 'reports' || id === 'chargebacks' || id === 'invoices' || id === 'ret-topup' || id === 'md-wallet' || id === 'dst-wallet' || id === 'ret-wallet' || id === 'md-commissions' || id === 'dst-commissions' || id === 'ret-commissions' || id === 'md-reports' || id === 'dst-reports' || id === 'ret-reports') return 'FINANCE';
   if (id === 'notifications' || id === 'md-notifications' || id === 'dst-notifications' || id === 'ret-notifications') return 'COMMUNICATIONS';
   if (id === 'integrations' || id === 'administration' || id === 'website') return 'SYSTEM';
