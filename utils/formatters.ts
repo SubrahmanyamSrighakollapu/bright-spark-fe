@@ -150,8 +150,9 @@ export function formatDate(
   try {
     let date: Date;
     if (typeof dateInput === 'string') {
-      const cleaned = dateInput.endsWith('Z') || dateInput.endsWith('z') ? dateInput.slice(0, -1) : dateInput;
-      date = new Date(cleaned);
+      // Preserve an explicit timezone marker. Removing the trailing `Z`
+      // makes a UTC value look like local time and shifts IST displays by 5½ hours.
+      date = new Date(dateInput);
     } else {
       date = new Date(dateInput);
     }
@@ -180,8 +181,7 @@ export function formatDateTime(
   try {
     let date: Date;
     if (typeof dateInput === 'string') {
-      const cleaned = dateInput.endsWith('Z') || dateInput.endsWith('z') ? dateInput.slice(0, -1) : dateInput;
-      date = new Date(cleaned);
+      date = new Date(dateInput);
     } else {
       date = new Date(dateInput);
     }

@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, KeyRound, Settings, LogOut, ChevronDown, Shield, RefreshCw } from 'lucide-react';
+import { User, KeyRound, LogOut, ChevronDown } from 'lucide-react';
 import { UserContext, UserRole, MOCK_CURRENT_USER, USER_ROLE_LABELS } from '@/config/roles';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/utils/cn';
 
-import { DEV_FEATURES } from '@/config/devFeatures';
-
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { ChangePasswordModal } from '@/components/features/auth/ChangePasswordModal';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 
 export interface UserMenuProps {
   currentUser?: UserContext;
@@ -35,8 +35,18 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { toastInfo, toastSuccess } = useToast();
+  const { toastSuccess } = useToast();
+
+  const profilePath = currentUser.role === 'DISTRIBUTOR'
+    ? '/distributor/profile'
+    : currentUser.role === 'MASTER_DISTRIBUTOR'
+    ? '/master-distributor/profile'
+    : currentUser.role === 'RETAILER'
+    ? '/retailer/profile'
+    : null;
 
   useEffect(() => {
     setImageError(false);
@@ -120,27 +130,22 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 
           {/* Menu Options */}
           <div className="py-1 text-xs text-[var(--text-secondary)]">
-            <button
+            {profilePath && <button
               type="button"
               onClick={() => {
-                const targetPath = currentUser.role === 'DISTRIBUTOR'
-                  ? '/distributor/profile'
-                  : currentUser.role === 'MASTER_DISTRIBUTOR'
-                  ? '/master-distributor/profile'
-                  : '/retailer/profile';
-                router.push(targetPath);
+                router.push(profilePath);
                 setIsOpen(false);
               }}
               className="w-full px-4 py-2 flex items-center gap-2.5 hover:bg-slate-50 transition-colors text-left cursor-pointer"
             >
               <User className="w-4 h-4 text-[var(--text-muted)]" />
               <span>My Profile</span>
-            </button>
+            </button>}
 
             <button
               type="button"
               onClick={() => {
-                toastInfo('Change Password: Password reset modal requested');
+                setShowChangePassword(true);
                 setIsOpen(false);
               }}
               className="w-full px-4 py-2 flex items-center gap-2.5 hover:bg-slate-50 transition-colors text-left cursor-pointer"
@@ -149,24 +154,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               <span>Change Password</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                toastInfo('System Settings: Platform options requested');
-                setIsOpen(false);
-              }}
-              className="w-full px-4 py-2 flex items-center gap-2.5 hover:bg-slate-50 transition-colors text-left cursor-pointer"
-            >
-              <Settings className="w-4 h-4 text-[var(--text-muted)]" />
-              <span>System Settings</span>
-            </button>
           </div>
 
           {/* Logout Button */}
           <div className="border-t border-[var(--border-subtle)] p-1 bg-slate-50">
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => { setIsOpen(false); setShowLogoutConfirmation(true); }}
               className="w-full px-3 py-2 flex items-center gap-2.5 text-xs text-rose-700 font-semibold hover:bg-rose-100/60 rounded-md transition-colors text-left cursor-pointer"
             >
               <LogOut className="w-4 h-4 text-rose-600" />
@@ -175,6 +169,20 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           </div>
         </div>
       )}
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onSuccess={() => toastSuccess('Password changed successfully.')}
+      />
+      <ConfirmationDialog
+        isOpen={showLogoutConfirmation}
+        onCancel={() => setShowLogoutConfirmation(false)}
+        onConfirm={handleLogout}
+        title="Sign out of Qin Star Pay?"
+        message="You will need to sign in again to access your account."
+        confirmText="Sign Out"
+        variant="danger"
+      />
     </div>
   );
 };

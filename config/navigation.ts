@@ -308,16 +308,6 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
         { id: 'txn-search', label: 'Transaction Search', path: '/admin/transactions/search' },
       ],
     },
-    { id: 'chargebacks', label: 'Chargebacks & Disputes', iconName: 'RotateCcw', path: '/admin/chargebacks' },
-    {
-      id: 'logs-audit',
-      label: 'Logs & Audit',
-      iconName: 'ClipboardList',
-      children: [
-        { id: 'activity-logs', label: 'Activity Logs', path: '/admin/logs/activity' },
-        { id: 'api-performance-logs', label: 'API Performance Logs', path: '/admin/logs/api' },
-      ],
-    },
     { id: 'notifications', label: 'Notifications', iconName: 'Bell', path: '/admin/notifications' },
   ],
   ACCOUNTS: [
@@ -329,15 +319,6 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
       path: '/admin/wallet-management',
     },
     { id: 'settlements', label: 'Settlements', iconName: 'Landmark', path: '/admin/settlements' },
-    {
-      id: 'logs-audit',
-      label: 'Logs & Audit',
-      iconName: 'ClipboardList',
-      children: [
-        { id: 'activity-logs', label: 'Activity Logs', path: '/admin/logs/activity' },
-        { id: 'api-performance-logs', label: 'API Performance Logs', path: '/admin/logs/api' },
-      ],
-    },
     {
       id: 'invoices',
       label: 'Invoices & Tax',
@@ -362,26 +343,16 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
   ],
   KYC: [
     { id: 'kyc-dashboard', label: 'Dashboard', iconName: 'LayoutDashboard', path: '/kyc/dashboard' },
-    { id: 'kyc-desk', label: 'KYC & Onboarding Desk', iconName: 'ShieldCheck', path: '/admin/kyc' },
     { id: 'notifications', label: 'Notifications', iconName: 'Bell', path: '/admin/notifications' },
   ],
   SALES: [
     { id: 'sales-dashboard', label: 'Dashboard', iconName: 'LayoutDashboard', path: '/sales/dashboard' },
-    {
-      id: 'users',
-      label: 'Network Users',
-      iconName: 'Users',
-      children: [
-        { id: 'user-list', label: 'User List', path: '/admin/users' },
-      ],
-    },
     {
       id: 'reports',
       label: 'Sales Reports',
       iconName: 'BarChart3',
       children: [
         { id: 'txn-report', label: 'Transaction Growth', path: '/admin/reports/transactions' },
-        { id: 'balance-report', label: 'Network Balance Summary', path: '/admin/reports/balance' },
       ],
     },
   ],

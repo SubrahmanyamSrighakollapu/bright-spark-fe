@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Menu, RefreshCw, Wallet, Lock } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { walletService } from '@/services/walletService';
 import { formatCurrency } from '@/utils/formatters';
 import { getBreadcrumbsForPath } from '@/utils/breadcrumbs';
@@ -25,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   onRoleChange,
 }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const { session } = useAuth();
   const [walletInfo, setWalletInfo] = useState<{ available: number; hold: number; ledger: number } | null>(null);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
@@ -95,6 +96,14 @@ export const Header: React.FC<HeaderProps> = ({
     setTimeout(() => setIsRefreshingBalance(false), 300);
   };
 
+  const walletPath = session?.role === 'RETAILER'
+    ? '/retailer/wallet'
+    : session?.role === 'DISTRIBUTOR'
+    ? '/distributor/wallet'
+    : session?.role === 'MASTER_DISTRIBUTOR'
+    ? '/master-distributor/wallet'
+    : null;
+
   return (
     <header className="h-[68px] bg-white border-b border-[#E5EAF1] px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 shadow-none">
       {/* Left Area: Sidebar Toggle & Breadcrumbs */}
@@ -124,7 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
         {(session?.role === 'RETAILER' || session?.role === 'DISTRIBUTOR' || session?.role === 'MASTER_DISTRIBUTOR') && (
           <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs">
             <Wallet className="w-4 h-4 text-[#155EEF] shrink-0" />
-            <div className="flex items-center gap-3">
+            <button type="button" onClick={() => walletPath && router.push(walletPath)} className="flex items-center gap-3 text-left cursor-pointer" aria-label="Open wallet">
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-bold text-slate-500 leading-none">
                   Available Balance
@@ -146,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </Tooltip>
               )}
-            </div>
+            </button>
 
             <Tooltip content="Refresh Balance">
               <button

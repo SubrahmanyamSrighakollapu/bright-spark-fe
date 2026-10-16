@@ -10,7 +10,6 @@ import { getDefaultRouteForRole } from '@/services/mockAuthService';
 import { DEV_FEATURES } from '@/config/devFeatures';
 import { captureLoginLocation } from '@/utils/geolocation';
 import type { LoginLocation } from '@/utils/geolocation';
-import { authService } from '@/services/authService';
 import { Input } from '@/components/ui/Input';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Checkbox } from '@/components/ui/Checkbox';
@@ -29,15 +28,20 @@ const demoAccounts = [
   ['Retailer', 'retailer@qinstarpay.com', 'Demo@123456'],
 ] as const;
 
-const INITIAL_LOCATION_BUDGET_MS = 900;
-
-async function locationWithinLoginBudget(locationPromise: Promise<LoginLocation>): Promise<LoginLocation> {
-  return Promise.race([
-    locationPromise,
-    new Promise<LoginLocation>((resolve) => {
-      window.setTimeout(() => resolve({ locationStatus: 'PENDING' }), INITIAL_LOCATION_BUDGET_MS);
-    }),
-  ]);
+function locationErrorMessage(location: LoginLocation): string {
+  if (location.locationStatus === 'DENIED') {
+    return 'Location access is required to sign in. Allow location permission in your browser settings and try again.';
+  }
+  if (location.locationStatus === 'TIMEOUT') {
+    return 'Location selection was not completed. Please try again and choose Allow when the browser asks for location access.';
+  }
+  if (location.locationStatus === 'UNSUPPORTED') {
+    return 'Location access is not available in this browser or connection. Use a supported browser over a secure connection.';
+  }
+  if (location.locationStatus === 'UNAVAILABLE') {
+    return 'Your location could not be determined. Enable device location services and try again.';
+  }
+  return 'Unable to capture your location. Please enable location access and try again.';
 }
 
 export default function LoginPage() {
@@ -64,17 +68,17 @@ export default function LoginPage() {
     if (errors.identifier || errors.password) return;
     setIsSubmitting(true);
     try {
-      const locationPromise = captureLoginLocation();
-      const initialLocation = await locationWithinLoginBudget(locationPromise);
-      const result = await login(identifier, password, rememberMe, initialLocation);
+      const location = await captureLoginLocation();
+      const hasLocation = location.locationStatus === 'GRANTED'
+        && typeof location.latitude === 'number'
+        && typeof location.longitude === 'number';
+      if (!hasLocation) {
+        setErrorMessage(locationErrorMessage(location));
+        return;
+      }
+
+      const result = await login(identifier, password, rememberMe, location);
       if (result.success && result.defaultRoute) {
-        if (initialLocation.locationStatus === 'PENDING' && result.sessionId && result.accessToken) {
-          // Permission prompts can outlive authentication. Complete the exact
-          // session's audit records in the background without delaying login.
-          void locationPromise.then((location) =>
-            authService.updateLoginLocation(result.sessionId!, location, result.accessToken!)
-          );
-        }
         router.push(result.defaultRoute);
       } else {
         setErrorMessage(result.error || 'Invalid credentials or account restricted.');

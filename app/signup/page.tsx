@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Building2, CheckCircle2, Clock3, Eye, EyeOff, FileCheck2, LockKeyhole, Mail, ShieldCheck, UserPlus } from 'lucide-react';
@@ -8,26 +8,28 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { PhoneInputWithCountryCode } from '@/components/ui/PhoneInputWithCountryCode';
-import { externalSignupService, type ExternalApplicantRole } from '@/services/externalSignupService';
-
-const initialFiles = { ID_PROOF: null, PAN: null, ADDRESS_PROOF: null, BANK_PROOF: null, PROFILE_PHOTO: null, GST_CERTIFICATE: null };
+import { externalSignupService, type ExternalApplicantRole, type PublicDocumentRequirement } from '@/services/externalSignupService';
 
 export default function SignupPage() {
   const [role, setRole] = useState<ExternalApplicantRole>('RETAILER');
   const [countryCode, setCountryCode] = useState('+91');
   const [fields, setFields] = useState({ fullName: '', businessName: '', email: '', mobile: '', password: '', confirmPassword: '', address: '', city: '', state: '', postalCode: '' });
-  const [documents, setDocuments] = useState<Record<keyof typeof initialFiles, File | null>>(initialFiles);
+  const [documents, setDocuments] = useState<Record<string, File | null>>({});
+  const [requirements,setRequirements]=useState<PublicDocumentRequirement[]>([]);
+  const [loadingRequirements,setLoadingRequirements]=useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [reference, setReference] = useState<{ reference: string; message: string } | null>(null);
   const [showPassword,setShowPassword]=useState(false);
   const [error,setError]=useState('');
   const update = (key: keyof typeof fields, value: string) => setFields((current) => ({ ...current, [key]: value }));
 
+  useEffect(()=>{let active=true;setLoadingRequirements(true);setError('');externalSignupService.getDocumentRequirements(role).then(response=>{if(!active)return;const items=response.data??[];setRequirements(items);setDocuments({});}).catch(error=>{if(active){setRequirements([]);setError(error instanceof Error?error.message:'Unable to load KYC document requirements.');}}).finally(()=>{if(active)setLoadingRequirements(false);});return()=>{active=false;};},[role]);
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
     if(fields.password!==fields.confirmPassword){setError('Passwords do not match.');return;}
-    if (!documents.ID_PROOF || !documents.PAN || !documents.ADDRESS_PROOF || !documents.BANK_PROOF || !documents.PROFILE_PHOTO) {setError('Upload every required KYC document.');return;}
+    const missing=requirements.filter(item=>item.configuration.required&&!documents[item.code]);if(missing.length){setError(`Upload all required documents: ${missing.map(item=>item.label).join(', ')}.`);return;}
     setSubmitting(true);
     try {
       const response=await externalSignupService.submit({ role, fullName:fields.fullName,businessName:fields.businessName,email:fields.email,mobile:fields.mobile,password:fields.password,address:fields.address,city:fields.city,state:fields.state,postalCode:fields.postalCode,documents });
@@ -88,12 +90,10 @@ export default function SignupPage() {
               <Input label="Business address" required value={fields.address} onChange={(e) => update('address', e.target.value)} placeholder="Complete registered address" />
               <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
                 <div className="mb-4 flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#0F4C81]"><Building2 className="h-4 w-4" /></span><div><h3 className="text-sm font-bold text-slate-900">KYC documents</h3><p className="text-xs text-slate-500">PNG, JPG or PDF files</p></div></div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {([['ID_PROOF', 'Aadhaar / Identity Proof *'], ['PAN', 'PAN Card *'], ['ADDRESS_PROOF','Address Proof *'],['BANK_PROOF', 'Cancelled Cheque / Bank Proof *'],['PROFILE_PHOTO','Profile Photo *'], ['GST_CERTIFICATE', 'GST Certificate']] as const).map(([key, label]) => <label key={key} className="flex cursor-pointer flex-col gap-2 text-xs font-bold text-slate-700"><span>{label}</span><input type="file" accept={key==='PROFILE_PHOTO'?'image/png,image/jpeg':'image/png,image/jpeg,application/pdf'} required={key !== 'GST_CERTIFICATE'} onChange={(e) => setDocuments((current) => ({ ...current, [key]: e.target.files?.[0] || null }))} className="min-h-11 cursor-pointer rounded-lg border border-slate-200 bg-white p-2 text-xs file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:font-bold file:text-[#0F4C81]" /></label>)}
-                </div>
+                {loadingRequirements?<div className="py-8 text-center text-xs font-semibold text-slate-500">Loading document requirements...</div>:requirements.length?<div className="grid gap-4 sm:grid-cols-2">{requirements.map(item=>{const accepted=item.configuration.acceptedMimeTypes?.join(',')||'image/png,image/jpeg,application/pdf';return <label key={item.code} className="flex cursor-pointer flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 text-xs font-bold text-slate-700"><span>{item.label}{item.configuration.required?' *':''}</span>{item.description&&<span className="font-normal text-slate-500">{item.description}</span>}<input type="file" accept={accepted} required={Boolean(item.configuration.required)} onChange={(e)=>setDocuments(current=>({...current,[item.code]:e.target.files?.[0]||null}))} className="min-h-11 cursor-pointer rounded-lg border border-slate-200 bg-white p-2 text-xs file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:font-bold file:text-[#0F4C81]"/><span className="font-normal text-slate-400">Maximum {item.configuration.maxSizeMb??5} MB</span></label>;})}</div>:<div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs font-semibold text-amber-800">No active KYC document requirements are configured for this role.</div>}
               </div>
               {error&&<div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>}
-              <Button type="submit" size="lg" fullWidth isLoading={submitting} leftIcon={<ShieldCheck className="h-4 w-4" />}>Submit for admin approval</Button>
+              <Button type="submit" size="lg" fullWidth isLoading={submitting} disabled={loadingRequirements||requirements.length===0} leftIcon={<ShieldCheck className="h-4 w-4" />}>Submit for admin approval</Button>
             </form>
           </section>
         </div>

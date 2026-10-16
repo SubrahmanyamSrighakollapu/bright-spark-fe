@@ -1,103 +1,46 @@
-/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
-import { Copy, ExternalLink, Link2, Plus, Share2 } from 'lucide-react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Copy, ExternalLink, Link2, Plus, Power, RefreshCw, Share2 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { FinancialPageHeader } from '@/components/features/financial/FinancialPageHeader';
-import { Button, Card, Input, StatusBadge, useToast } from '@/components/ui';
-import { useAuth } from '@/context/AuthContext';
-import { merchantPaymentService, type PaymentLink } from '@/services/merchantPaymentService';
-import { formatCurrency } from '@/utils/formatters';
+import { Button, Card, ConfirmationDialog, EmptyState, Input, LoadingSkeleton, StatusBadge, Table, useToast } from '@/components/ui';
+import { paymentLinkService, type PaymentLink, type PaymentLinkAttempt } from '@/services/paymentLinkService';
+import { formatCurrency, formatDateTime } from '@/utils/formatters';
+import type { ColumnDefinition } from '@/types/common';
 
 export default function PaymentLinksPage() {
-  const { session } = useAuth();
   const { toastSuccess, toastError } = useToast();
-  const retailerId = session?.entityId || 'RET001';
-  const [links, setLinks] = useState<PaymentLink[]>([]);
-  const [description, setDescription] = useState('Customer payment');
-  const [amount, setAmount] = useState('');
-  const [expiry, setExpiry] = useState('2027-12-31');
+  const [links, setLinks] = useState<PaymentLink[]>([]); const [payments, setPayments] = useState<PaymentLinkAttempt[]>([]); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false);
+  const [description, setDescription] = useState('Customer payment'); const [amount, setAmount] = useState('');
+  const [expiry, setExpiry] = useState(() => { const date = new Date(); date.setDate(date.getDate() + 30); return date.toISOString().slice(0, 10); });
+  const [statusTarget, setStatusTarget] = useState<PaymentLink | null>(null);
 
-  const load = () => setLinks(merchantPaymentService.getLinks(retailerId));
-  useEffect(() => load(), [retailerId]);
+  const load = useCallback(async () => { setLoading(true); try { const [linkResponse, paymentResponse] = await Promise.all([paymentLinkService.list(), paymentLinkService.listPayments()]); setLinks(linkResponse.data ?? []); setPayments(paymentResponse.data ?? []); } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to load payment links.'); } finally { setLoading(false); } }, [toastError]);
+  useEffect(() => { void load(); }, [load]);
+  const getUrl = (token: string) => typeof window === 'undefined' ? `/pay/${token}` : `${window.location.origin}/pay/${token}`;
+  const copy = async (value: string) => { await navigator.clipboard.writeText(value); toastSuccess('Payment link copied.'); };
+  const share = async (link: PaymentLink) => { const paymentUrl = getUrl(link.token); const text = `${link.description}${link.fixedAmount ? ` - ${formatCurrency(link.fixedAmount)}` : ''}\nPay securely: ${paymentUrl}`; if (navigator.share) { try { await navigator.share({ title: link.description, text, url: paymentUrl }); return; } catch {} } window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer'); };
+  const create = async (event: FormEvent) => { event.preventDefault(); if (!description.trim()) return toastError('Enter a payment purpose.'); if (amount && Number(amount) <= 0) return toastError('Enter a valid fixed amount.'); if (new Date(`${expiry}T23:59:59`).getTime() <= Date.now()) return toastError('Choose a future expiry date.'); setSaving(true); try { await paymentLinkService.create({ description: description.trim(), fixedAmount: amount ? Number(amount) : undefined, expiresAt: new Date(`${expiry}T23:59:59`).toISOString() }); setAmount(''); await load(); toastSuccess('Secure hosted payment link created.'); } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to create payment link.'); } finally { setSaving(false); } };
+  const changeStatus = async () => { if (!statusTarget || statusTarget.status === 'EXPIRED') return; const next = statusTarget.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'; setSaving(true); try { await paymentLinkService.updateStatus(statusTarget.id, next); setStatusTarget(null); await load(); toastSuccess(`Payment link ${next === 'ACTIVE' ? 'activated' : 'deactivated'}.`); } catch (error) { toastError(error instanceof Error ? error.message : 'Unable to update payment link.'); } finally { setSaving(false); } };
+  const paymentColumns: ColumnDefinition<PaymentLinkAttempt>[] = [
+    { key: 'reference', header: 'Reference', render: (row) => <div><b className="font-mono text-[#0F4C81]">{row.reference}</b><small className="block text-slate-500">{formatDateTime(row.createdAt)}</small></div> },
+    { key: 'linkDescription', header: 'Payment Link' },
+    { key: 'payerName', header: 'Customer', render: (row) => <div><b>{row.payerName}</b><small className="block text-slate-500">{row.mobile}</small></div> },
+    { key: 'paymentMethod', header: 'Method' },
+    { key: 'amount', header: 'Amount', align: 'right', render: (row) => <b>{formatCurrency(row.amount)}</b> },
+    { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+  ];
 
-  const getUrl = (token: string) => typeof window === 'undefined'
-    ? `/pay/${token}`
-    : `${window.location.origin}/pay/${token}`;
-
-  const copy = async (value: string) => {
-    await navigator.clipboard.writeText(value);
-    toastSuccess('Payment link copied.');
-  };
-
-  const share = async (link: PaymentLink) => {
-    const paymentUrl = getUrl(link.token);
-    const text = `${link.description}${link.fixedAmount ? ` - ${formatCurrency(link.fixedAmount)}` : ''}\nPay securely: ${paymentUrl}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: link.description, text, url: paymentUrl });
-        return;
-      } catch { /* user cancelled or browser rejected; use WhatsApp fallback */ }
-    }
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-  };
-
-  const create = (event: FormEvent) => {
-    event.preventDefault();
-    if (!description.trim()) return toastError('Enter a payment purpose.');
-    if (amount && Number(amount) <= 0) return toastError('Enter a valid fixed amount.');
-    merchantPaymentService.createLink({
-      retailerId,
-      businessName: session?.name || 'Metro Store #01',
-      description: description.trim(),
-      fixedAmount: amount ? Number(amount) : undefined,
-      expiresAt: new Date(`${expiry}T23:59:59`).toISOString(),
-    });
-    setAmount('');
-    load();
-    toastSuccess('Secure hosted payment link created.');
-  };
-
-  return (
-    <PageContainer>
-      <div className="mx-auto max-w-7xl space-y-6">
-        <FinancialPageHeader
-          title="Payment Links"
-          subtitle="Create and share hosted checkout links. UPI QR collections are managed separately under QR Pay-In."
-          statusBadge={<StatusBadge status="ACTIVE" label="Hosted checkout" />}
-        />
-
-        <Card title="Create payment link" subtitle="Use a fixed amount for an invoice, or leave it blank so the customer can enter the amount.">
-          <form onSubmit={create} className="grid gap-4 md:grid-cols-4">
-            <Input label="Payment purpose" required value={description} onChange={(event) => setDescription(event.target.value)} />
-            <Input label="Fixed amount (optional)" type="number" min="1" value={amount} onChange={(event) => setAmount(event.target.value)} />
-            <Input label="Expires on" type="date" required value={expiry} onChange={(event) => setExpiry(event.target.value)} />
-            <Button type="submit" className="self-end" leftIcon={<Plus className="h-4 w-4" />}>Create Link</Button>
-          </form>
-        </Card>
-
-        <Card title="Active payment links" subtitle="Copy, share through WhatsApp or open the hosted customer checkout." noPadding>
-          {links.length === 0 ? (
-            <div className="py-14 text-center text-slate-500"><Link2 className="mx-auto mb-3 h-10 w-10" /><p>No payment links created yet.</p></div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {links.map((link) => {
-                const paymentUrl = getUrl(link.token);
-                return (
-                  <div key={link.token} className="grid gap-4 p-5 lg:grid-cols-[minmax(220px,0.8fr)_minmax(320px,1.4fr)_auto] lg:items-center">
-                    <div className="min-w-0"><div className="flex items-center gap-2"><b className="truncate text-sm text-slate-900">{link.description}</b><StatusBadge status={link.status} /></div><p className="mt-1 text-xs text-slate-500">{link.fixedAmount ? `Fixed collection · ${formatCurrency(link.fixedAmount)}` : 'Open amount · customer enters value'}</p><p className="mt-1 text-[10px] text-slate-400">Expires {new Date(link.expiresAt).toLocaleDateString('en-IN')}</p></div>
-                    <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600"><p className="truncate" title={paymentUrl}>{paymentUrl}</p></div>
-                    <div className="flex flex-wrap gap-2"><Button size="sm" onClick={() => copy(paymentUrl)} leftIcon={<Copy className="h-4 w-4" />}>Copy</Button><Button size="sm" variant="outline" onClick={() => share(link)} leftIcon={<Share2 className="h-4 w-4" />}>Share</Button><a href={`/pay/${link.token}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" leftIcon={<ExternalLink className="h-4 w-4" />}>Open</Button></a></div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
-
-        <div className="flex gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs text-slate-700"><Link2 className="h-5 w-5 shrink-0 text-[#0F4C81]" /><p>A payment link opens the hosted customer checkout and processes payment through the configured gateway. For direct UPI QR scanning, UTR entry and receipt verification, use the separate <b>QR Pay-In</b> module.</p></div>
-      </div>
-    </PageContainer>
-  );
+  return <PageContainer><div className="mx-auto max-w-7xl space-y-6">
+    <FinancialPageHeader title="Payment Links" subtitle="Create and manage secure hosted checkout links for customer collections." statusBadge={<StatusBadge status="ACTIVE" label={`${links.filter((link) => link.status === 'ACTIVE').length} active`} />} />
+    <Card title="Create payment link" subtitle="Use a fixed amount for an invoice, or leave it blank so the customer can enter the amount."><form onSubmit={create} className="grid gap-4 md:grid-cols-4"><Input label="Payment purpose" required value={description} onChange={(event) => setDescription(event.target.value)} /><Input label="Fixed amount (optional)" type="number" min="1" max="2000000" value={amount} onChange={(event) => setAmount(event.target.value)} /><Input label="Expires on" type="date" required min={new Date().toISOString().slice(0, 10)} value={expiry} onChange={(event) => setExpiry(event.target.value)} /><Button type="submit" className="self-end" isLoading={saving} leftIcon={<Plus className="h-4 w-4" />}>Create Link</Button></form></Card>
+    <Card title="Payment links" subtitle="Only active, unexpired links can accept a customer payment." action={<Button size="sm" variant="outline" onClick={() => void load()} leftIcon={<RefreshCw className="h-4 w-4" />}>Refresh</Button>} noPadding>
+      {loading ? <div className="p-5"><LoadingSkeleton count={6} /></div> : links.length === 0 ? <EmptyState className="border-0 shadow-none" title="No payment links created" description="Create your first secure hosted checkout link above." /> : <div className="divide-y divide-slate-100">{links.map((link) => { const paymentUrl = getUrl(link.token); return <div key={link.id} className="grid gap-4 p-5 xl:grid-cols-[minmax(220px,.8fr)_minmax(300px,1.2fr)_180px_auto] xl:items-center"><div className="min-w-0"><div className="flex items-center gap-2"><b className="truncate text-sm text-slate-900">{link.description}</b><StatusBadge status={link.status} /></div><p className="mt-1 text-xs text-slate-500">{link.fixedAmount ? `Fixed collection · ${formatCurrency(link.fixedAmount)}` : 'Open amount · customer enters value'}</p><p className="mt-1 text-[10px] text-slate-400">Expires {new Date(link.expiresAt).toLocaleDateString('en-IN')}</p></div><div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600"><p className="truncate" title={paymentUrl}>{paymentUrl}</p></div><div className="text-xs text-slate-500"><b className="block text-sm text-slate-900">{link.paymentCount} attempts</b>{formatCurrency(link.collectedAmount)} successful</div><div className="flex flex-wrap justify-end gap-2"><Button size="sm" onClick={() => void copy(paymentUrl)} leftIcon={<Copy className="h-4 w-4" />}>Copy</Button><Button size="sm" variant="outline" onClick={() => void share(link)} leftIcon={<Share2 className="h-4 w-4" />}>Share</Button>{link.status === 'ACTIVE' && <a href={`/pay/${link.token}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" leftIcon={<ExternalLink className="h-4 w-4" />}>Open</Button></a>}{link.status !== 'EXPIRED' && <Button size="sm" variant={link.status === 'ACTIVE' ? 'danger' : 'outline'} onClick={() => setStatusTarget(link)} leftIcon={<Power className="h-4 w-4" />}>{link.status === 'ACTIVE' ? 'Disable' : 'Enable'}</Button>}</div></div>; })}</div>}
+    </Card>
+    <Card title="Recent payment attempts" subtitle="Gateway confirmation will update pending attempts to their final status." noPadding><Table columns={paymentColumns} data={payments} keyExtractor={(row) => row.id} emptyTitle="No payment attempts yet" emptyDescription="Customer attempts made through your payment links will appear here." /></Card>
+    <div className="flex gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs text-slate-700"><Link2 className="h-5 w-5 shrink-0 text-[#0F4C81]" /><p>Customer payment attempts remain pending until the configured payment gateway confirms their final status. The application does not mark an unprocessed payment as successful.</p></div>
+    <ConfirmationDialog isOpen={Boolean(statusTarget)} onCancel={() => setStatusTarget(null)} onConfirm={() => void changeStatus()} isLoading={saving} variant={statusTarget?.status === 'ACTIVE' ? 'warning' : 'info'} title={`${statusTarget?.status === 'ACTIVE' ? 'Disable' : 'Enable'} payment link?`} message={statusTarget?.status === 'ACTIVE' ? 'Customers will immediately be prevented from opening or paying through this link.' : 'The link will accept payment attempts again until its expiry date.'} confirmText={statusTarget?.status === 'ACTIVE' ? 'Disable link' : 'Enable link'} />
+  </div></PageContainer>;
 }

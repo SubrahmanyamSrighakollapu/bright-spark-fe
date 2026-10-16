@@ -185,9 +185,6 @@ export function isRouteAuthorizedForRole(role: UserRole | string, pathname: stri
       pathname.startsWith('/operations') ||
       pathname.startsWith('/admin/operations') ||
       pathname.startsWith('/admin/transactions') ||
-      pathname.startsWith('/admin/chargebacks') ||
-      pathname.startsWith('/admin/integrations') ||
-      pathname.startsWith('/admin/logs') ||
       pathname.startsWith('/admin/notifications')
     );
   }
