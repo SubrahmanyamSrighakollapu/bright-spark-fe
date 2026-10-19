@@ -11,7 +11,7 @@ const SAMPLE_TEMPLATE = `<!doctype html>
 <html><head><meta charset="utf-8"><style>
 body{font-family:Arial,sans-serif;color:#172033;padding:32px}.header{border-bottom:3px solid #174f86;padding-bottom:16px}
 .row{display:flex;justify-content:space-between;margin:10px 0}.total{font-size:20px;font-weight:700;border-top:2px solid #ddd;padding-top:14px}
-</style></head><body><div class="header"><h1>QIN STAR PAY</h1><p>Service Invoice {{invoiceNumber}}</p></div>
+</style></head><body><div class="header"><h1>BRIGHT SPARK</h1><p>Service Invoice {{invoiceNumber}}</p></div>
 <div class="row"><span>Date</span><b>{{invoiceDate}}</b></div><div class="row"><span>Transaction</span><b>{{transactionReference}}</b></div>
 <div class="row"><span>Customer</span><b>{{customerName}} / {{customerMobile}}</b></div><div class="row"><span>Service</span><b>{{serviceCategory}} - {{serviceProduct}}</b></div>
 <div class="row"><span>Payment method</span><b>{{paymentMethod}}</b></div><div class="row"><span>Amount</span><b>INR {{amount}}</b></div>
@@ -55,7 +55,7 @@ export default function ServiceTemplatesPage() {
   };
   const downloadSample = () => {
     const url = URL.createObjectURL(new Blob([SAMPLE_TEMPLATE], { type: 'text/html' }));
-    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'qin-star-invoice-template.html'; anchor.click(); URL.revokeObjectURL(url);
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'bright-spark-invoice-template.html'; anchor.click(); URL.revokeObjectURL(url);
   };
 
   return <PageContainer title="Service Invoice Templates" description="Configure one invoice template for each admin-configured service category.">
@@ -64,7 +64,7 @@ export default function ServiceTemplatesPage() {
         <form onSubmit={save} className="grid grid-cols-1 gap-4 lg:grid-cols-3 items-end">
           <Select label="Service Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} options={categories.map((c) => ({ value: c.id, label: `${c.name} (${c.code})` }))} required />
           <Input label="Template Name" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="e.g. Electricity Bill Receipt" required />
-          <div><label className="mb-1.5 block text-xs font-semibold text-slate-700">Invoice Template File</label><input type="file" accept=".html,.htm,.png,.jpg,.jpeg,text/html,image/png,image/jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} required className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-blue-700" /></div>
+          <div><label className="mb-1.5 block text-xs font-semibold text-slate-700">Invoice Template File</label><input type="file" accept=".html,.htm,.png,.jpg,.jpeg,text/html,image/png,image/jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} required className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs file:mr-3 file:rounded file:border-0 file:bg-[#F3F7E9] file:px-3 file:py-1 file:text-[#2F6F5E]" /></div>
           <div className="lg:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
             <p className="text-xs text-slate-500">Supports PNG/JPG designs up to 5 MB or HTML. HTML files must include <code>{'{{transactionReference}}'}</code>.</p>
             <div className="flex gap-2"><Button type="button" variant="outline" onClick={downloadSample} leftIcon={<FileCode2 className="h-4 w-4" />}>Download Sample</Button><Button type="submit" isLoading={saving} leftIcon={<Upload className="h-4 w-4" />}>Upload Template</Button></div>

@@ -44,7 +44,7 @@ export const MasterDistributorNetworkOverview: React.FC<MasterDistributorNetwork
           <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-[var(--radius-lg)] space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold uppercase text-slate-700 flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#0F4C81]" />
+                <Users className="w-4 h-4 text-[#2F6F5E]" />
                 Distributor Partners
               </span>
               <span className="text-sm font-bold font-mono text-slate-900">{totalDistributors} Total</span>
@@ -123,7 +123,7 @@ export const MasterDistributorNetworkOverview: React.FC<MasterDistributorNetwork
                   {topDistributors.map((dist) => (
                     <tr key={dist.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-3 px-3 font-sans font-semibold text-slate-900">{dist.name}</td>
-                      <td className="py-3 px-3 text-[#0F4C81] font-bold">{dist.code}</td>
+                      <td className="py-3 px-3 text-[#2F6F5E] font-bold">{dist.code}</td>
                       <td className="py-3 px-3 text-center">{dist.retailersCount}</td>
                       <td className="py-3 px-3 text-right">{formatNumber(dist.todayTransactions)}</td>
                       <td className="py-3 px-3 text-right font-bold text-slate-900">

@@ -1,0 +1,151 @@
+.marketing-site {
+  --marketing-background: #f8fafc;
+  --marketing-foreground: #0f172a;
+  --marketing-card: #ffffff;
+  --marketing-border: rgba(15, 23, 42, 0.08);
+  --marketing-muted: #f1f5f9;
+  --marketing-muted-foreground: #64748b;
+  --marketing-primary: #2F6F5E;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --border: rgba(15, 23, 42, 0.08);
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --primary: #2F6F5E;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --shadow-lg: 0 18px 45px rgba(47, 111, 94, 0.16);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--marketing-background);
+  color: var(--marketing-foreground);
+  font-family: Inter, system-ui, sans-serif;
+}
+.marketing-site ::selection { background: rgba(168, 190, 97, 0.3); color: var(--marketing-foreground); }
+.marketing-site *:focus-visible { outline-color: #2F6F5E; }
+@layer utilities {
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .glass-dark {
+    background: rgba(2, 8, 23, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .mesh-bg {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(5, 150, 105, 0.1) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(14, 165, 233, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 50% 100%, rgba(245, 158, 11, 0.05) 0%, transparent 60%),
+      #f8fafc;
+  }
+
+  .dark .mesh-bg {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(14, 165, 233, 0.1) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 50% 100%, rgba(245, 158, 11, 0.06) 0%, transparent 60%),
+      #020817;
+  }
+
+  .aurora {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .aurora::before {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    pointer-events: none;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      rgba(5, 150, 105, 0.08) 0deg,
+      rgba(14, 165, 233, 0.08) 90deg,
+      rgba(245, 158, 11, 0.06) 180deg,
+      rgba(244, 63, 94, 0.06) 270deg,
+      rgba(5, 150, 105, 0.08) 360deg
+    );
+    animation: aurora-spin 20s linear infinite;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #059669 0%, #0ea5e9 50%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-warm {
+    background: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .card-lift {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  }
+
+  .card-lift:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, #f1f5f9 25%, rgba(255, 255, 255, 0.6) 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(5, 150, 105, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(5, 150, 105, 0.6);
+}
+
+.swiper-pagination-bullet {
+  background: #059669 !important;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #059669 !important;
+}

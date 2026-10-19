@@ -33,7 +33,7 @@ export function Checkbox({ checked, defaultChecked = false, indeterminate = fals
         onChange={handleChange}
         className="peer absolute inset-0 z-10 m-0 h-4 w-4 cursor-pointer opacity-0 disabled:cursor-not-allowed"
         />
-        <span className={cn('flex h-4 w-4 items-center justify-center rounded border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-blue-200 peer-focus-visible:ring-offset-1', currentChecked || indeterminate ? 'border-[var(--primary)] bg-[var(--primary)] text-white' : 'border-slate-300 bg-white text-transparent')}>
+        <span className={cn('flex h-4 w-4 items-center justify-center rounded border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#D4E1AE] peer-focus-visible:ring-offset-1', currentChecked || indeterminate ? 'border-[var(--primary)] bg-[var(--primary)] text-white' : 'border-slate-300 bg-white text-transparent')}>
           {indeterminate ? <Minus className="h-3 w-3" /> : <Check className="h-3 w-3" />}
         </span>
       </span>

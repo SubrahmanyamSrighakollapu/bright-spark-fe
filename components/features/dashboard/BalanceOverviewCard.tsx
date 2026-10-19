@@ -36,7 +36,7 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({ balanc
           <div className="p-4 bg-blue-50/60 border border-blue-100 rounded-xl space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[var(--text-muted)] font-semibold">Available Balance</span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#155EEF] ring-1 ring-blue-100">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#2F6F5E] ring-1 ring-blue-100">
                 <WalletCards className="h-4 w-4" />
               </span>
             </div>
@@ -78,14 +78,14 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({ balanc
               <span className="text-[11px] font-semibold text-[#64748B]">Managed: {formatCurrency(managedFunds, { compact: true })}</span>
             </div>
             <div className="flex h-3 overflow-hidden rounded-full bg-slate-100" aria-label={`${availablePercentage.toFixed(1)} percent available and ${holdPercentage.toFixed(1)} percent held`}>
-              <div className="h-full bg-[#155EEF]" style={{ width: `${availablePercentage}%` }} />
+              <div className="h-full bg-[#2F6F5E]" style={{ width: `${availablePercentage}%` }} />
               <div className="h-full bg-slate-400" style={{ width: `${holdPercentage}%` }} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-3">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#155EEF]" />
+              <span className="h-2 w-2 rounded-full bg-[#2F6F5E]" />
               <div>
                 <span className="block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Available</span>
                 <span className="font-bold text-[#334155]">{availablePercentage.toFixed(1)}%</span>

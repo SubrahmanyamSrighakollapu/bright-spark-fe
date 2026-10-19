@@ -21,7 +21,7 @@ export const FinancialMetricCard: React.FC<FinancialMetricCardProps> = ({
 }) => {
   // Softly tinted icon background colors for intentional accenting
   const iconTintStyles = {
-    primary: 'bg-blue-50 text-[#155EEF]',
+    primary: 'bg-blue-50 text-[#2F6F5E]',
     payin: 'bg-emerald-50 text-emerald-600',
     payout: 'bg-amber-50 text-amber-600',
     success: 'bg-emerald-50 text-emerald-600',

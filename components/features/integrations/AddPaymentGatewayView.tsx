@@ -40,7 +40,7 @@ export const AddPaymentGatewayView: React.FC = () => {
     toastSuccess('Gateway deleted successfully.');
   };
   const columns: ColumnDefinition<PaymentGatewayItem>[] = [
-    { key: 'name', header: 'Gateway Name', render: (row) => <span className="flex items-center gap-2 font-bold text-slate-900"><span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-[#155EEF]"><CreditCard className="h-4 w-4" /></span>{row.gatewayName}</span> },
+    { key: 'name', header: 'Gateway Name', render: (row) => <span className="flex items-center gap-2 font-bold text-slate-900"><span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-[#2F6F5E]"><CreditCard className="h-4 w-4" /></span>{row.gatewayName}</span> },
     { key: 'status', header: 'Status', render: (row) => <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${row.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{row.isActive ? 'Active' : 'Inactive'}</span> },
     { key: 'created', header: 'Created At', render: (row) => <span className="text-sm text-slate-500">{formatDateTime(row.createdAt)}</span> },
     { key: 'actions', header: 'Actions', render: (row) => <div className="flex gap-1"><Button variant="ghost" size="sm" leftIcon={<Edit2 className="h-4 w-4" />} onClick={() => showEdit(row)}>Edit</Button><Button variant="ghost" size="sm" className="text-rose-600 hover:bg-rose-50" leftIcon={<Trash2 className="h-4 w-4" />} onClick={() => remove(row)}>Delete</Button></div> },

@@ -31,7 +31,7 @@ export const TransactionProcessingState: React.FC<TransactionProcessingStateProp
       <div className="relative inline-flex items-center justify-center">
         <div
           className={`w-20 h-20 rounded-full flex items-center justify-center ${
-            isPayIn ? 'bg-indigo-50 text-[#0F4C81]' : 'bg-orange-50 text-[#F97316]'
+            isPayIn ? 'bg-indigo-50 text-[#2F6F5E]' : 'bg-orange-50 text-[#F97316]'
           }`}
         >
           {isPayIn ? <ArrowDownLeft className="w-10 h-10" /> : <ArrowUpRight className="w-10 h-10" />}

@@ -155,7 +155,7 @@ export const chargebackService = {
   async assignCase(
     chargebackId: string,
     assignedTo: string,
-    assignedBy = 'Qin Star Admin'
+    assignedBy = 'Bright Spark Admin'
   ): Promise<ApiResponse<Chargeback>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 250));
@@ -230,7 +230,7 @@ export const chargebackService = {
     chargebackId: string,
     responseSummary: string,
     merchantExplanation: string,
-    submittedBy = 'Qin Star Risk Lead'
+    submittedBy = 'Bright Spark Risk Lead'
   ): Promise<ApiResponse<Chargeback>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 400));
@@ -273,7 +273,7 @@ export const chargebackService = {
     chargebackId: string,
     resolution: 'WON' | 'LOST' | 'WITHDRAWN',
     resolutionReason: string,
-    resolvedBy = 'Qin Star Risk Board'
+    resolvedBy = 'Bright Spark Risk Board'
   ): Promise<ApiResponse<Chargeback>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 450));

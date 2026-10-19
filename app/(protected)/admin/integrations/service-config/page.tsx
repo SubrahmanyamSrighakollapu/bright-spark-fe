@@ -45,7 +45,7 @@ export default function ServiceConfigPage() {
   return (
     <PageContainer
       title="Service Configuration"
-      description="Configure which provider supports which Qin Star Pay service, supported payment modes, and min/max transaction limits."
+      description="Configure which provider supports which Bright Spark service, supported payment modes, and min/max transaction limits."
     >
       <div className="space-y-6">
         <ServiceConfigTable

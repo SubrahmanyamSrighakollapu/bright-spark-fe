@@ -9,7 +9,7 @@ export interface UserHierarchyViewProps {
 }
 
 export const UserHierarchyView: React.FC<UserHierarchyViewProps> = ({ entity }) => {
-  const masterNode = 'QSP Master Headquarters';
+  const masterNode = 'BSP Master Headquarters';
   const distributorNode = entity.type === 'DISTRIBUTOR' ? entity.name : entity.parentName || 'North Zone Dist';
   const retailerNode = entity.type === 'RETAILER' ? entity.name : entity.type === 'MERCHANT' ? entity.parentName || 'Metro Store #12' : undefined;
   const merchantNode = entity.type === 'MERCHANT' ? entity.name : undefined;

@@ -344,7 +344,7 @@ export const MerchantOnboardingWizard: React.FC = () => {
                         accept="image/png,image/jpeg,application/pdf"
                         required={type !== 'GST_CERTIFICATE'}
                         onChange={(e) => handleDocumentUpload(type as KYCDocument['type'], e.target.files?.[0])}
-                        className="block w-full text-[11px] file:mr-2 file:rounded-md file:border-0 file:bg-blue-100 file:px-2 file:py-1 file:font-bold file:text-blue-700"
+                        className="block w-full text-[11px] file:mr-2 file:rounded-md file:border-0 file:bg-blue-100 file:px-2 file:py-1 file:font-bold file:text-[#2F6F5E]"
                       />
                       {uploaded && <span className="mt-2 block truncate font-medium text-emerald-700">Uploaded: {uploaded.title}</span>}
                     </label>

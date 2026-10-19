@@ -74,7 +74,7 @@ export default function ApiLogsPage() {
   return (
     <PageContainer
       title="API Logs"
-      description="Inspect Qin Star Pay API requests, provider interactions, response statuses and processing latency."
+      description="Inspect Bright Spark API requests, provider interactions, response statuses and processing latency."
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => traceDrawer.open('TRACE_20260903_001')} leftIcon={<GitCommit className="w-3.5 h-3.5" />}>

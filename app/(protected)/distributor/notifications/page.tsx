@@ -86,7 +86,7 @@ export default function DistributorNotificationsPage() {
       case 'APPROVAL':
         return <Clock className="w-4 h-4 text-amber-600" />;
       case 'TRANSACTION':
-        return <CheckCircle2 className="w-4 h-4 text-[#0F4C81]" />;
+        return <CheckCircle2 className="w-4 h-4 text-[#2F6F5E]" />;
       case 'WALLET':
         return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
       case 'SYSTEM':
@@ -135,7 +135,7 @@ export default function DistributorNotificationsPage() {
                   <div className="flex items-center gap-2">
                     <h4 className="text-xs font-bold text-slate-900">{notif.title}</h4>
                     {!notif.read && (
-                      <span className="w-2 h-2 rounded-full bg-[#0F4C81]" />
+                      <span className="w-2 h-2 rounded-full bg-[#2F6F5E]" />
                     )}
                   </div>
                   <span className="text-[11px] text-slate-400 font-mono">

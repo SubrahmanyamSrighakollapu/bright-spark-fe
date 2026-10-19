@@ -23,11 +23,11 @@ export const TransactionStepIndicator: React.FC<TransactionStepIndicatorProps> =
   const isPayIn = type === 'PAY_IN';
 
   // Theme styles
-  const activeBg = isPayIn ? 'bg-[#0F4C81]' : 'bg-[#F97316]';
+  const activeBg = isPayIn ? 'bg-[#2F6F5E]' : 'bg-[#F97316]';
   const activeRing = isPayIn ? 'ring-indigo-100' : 'ring-orange-100';
-  const activeText = isPayIn ? 'text-[#0F4C81]' : 'text-[#F97316]';
+  const activeText = isPayIn ? 'text-[#2F6F5E]' : 'text-[#F97316]';
   const completedBg = isPayIn ? 'bg-indigo-600' : 'bg-orange-500';
-  const progressLineBg = isPayIn ? 'bg-[#0F4C81]' : 'bg-[#F97316]';
+  const progressLineBg = isPayIn ? 'bg-[#2F6F5E]' : 'bg-[#F97316]';
 
   const activeStepObj = steps.find((s) => s.step === currentStep) || steps[0];
   const progressPercent = Math.min(100, Math.max(0, ((currentStep - 1) / (steps.length - 1)) * 100));

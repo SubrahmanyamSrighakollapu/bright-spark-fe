@@ -32,6 +32,7 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   ClipboardList,
+  Fingerprint,
 } from 'lucide-react';
 
 export interface IconRendererProps {
@@ -71,6 +72,7 @@ const iconMap: Record<string, React.ElementType> = {
   ArrowDownLeft,
   ArrowUpRight,
   ClipboardList,
+  Fingerprint,
 };
 
 export const IconRenderer: React.FC<IconRendererProps> = ({ name, className = 'w-4 h-4' }) => {

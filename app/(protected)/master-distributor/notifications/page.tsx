@@ -49,7 +49,7 @@ export default function MasterDistributorNotificationsPage() {
     {
       id: 'notif_102',
       title: 'Commission Auto-Credited',
-      message: 'Retailer transaction QSP20260903001 generated +₹38.50 Master Distributor commission.',
+      message: 'Retailer transaction BSP20260903001 generated +₹38.50 Master Distributor commission.',
       type: 'WALLET',
       timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
       read: false,
@@ -125,7 +125,7 @@ export default function MasterDistributorNotificationsPage() {
                   onClick={() => setFilter(t)}
                   className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                     filter === t
-                      ? 'bg-[#0F4C81] text-white shadow-2xs'
+                      ? 'bg-[#2F6F5E] text-white shadow-2xs'
                       : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
                   }`}
                 >
@@ -156,7 +156,7 @@ export default function MasterDistributorNotificationsPage() {
                         ? 'bg-amber-50 text-amber-700 border border-amber-200'
                         : item.type === 'WALLET'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-indigo-50 text-[#0F4C81] border border-indigo-200'
+                        : 'bg-indigo-50 text-[#2F6F5E] border border-[#D4E1AE]'
                     }`}
                   >
                     {item.type === 'APPROVAL' ? (
@@ -173,7 +173,7 @@ export default function MasterDistributorNotificationsPage() {
                       <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                         {item.title}
                         {!item.read && (
-                          <span className="w-2 h-2 rounded-full bg-[#0F4C81]" />
+                          <span className="w-2 h-2 rounded-full bg-[#2F6F5E]" />
                         )}
                       </h4>
                       <span className="text-[11px] font-mono text-slate-400">

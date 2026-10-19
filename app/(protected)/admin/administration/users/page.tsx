@@ -86,7 +86,7 @@ export default function AdminUsersPage() {
   return (
     <PageContainer
       title="Admin User Management"
-      description="Manage internal Qin Star Pay operational staff, department assignments, role access, and account statuses."
+      description="Manage internal Bright Spark operational staff, department assignments, role access, and account statuses."
       actions={
         <Button variant="primary" size="sm" onClick={() => createModal.open()} leftIcon={<UserPlus className="w-3.5 h-3.5" />}>
           Invite Admin Staff

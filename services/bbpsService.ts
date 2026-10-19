@@ -18,7 +18,7 @@ export interface BbpsBiller { id: string; category: BbpsCategoryCode; name: stri
 export interface BbpsBill { billerId: string; consumerId: string; customerName: string; billNumber: string; billPeriod: string; dueDate: string; billAmount: number; partialPaymentAllowed: boolean; fetchedAt: string; }
 export interface BbpsPayment { id: string; retailerId: string; billerId: string; billerName: string; category: BbpsCategoryCode; consumerId: string; customerName: string; billNumber: string; amount: number; convenienceFee: number; gst: number; commission: number; totalWalletDebit: number; status: 'SUCCESS' | 'PENDING' | 'FAILED'; bbpsReference: string; transactionReference: string; createdAt: string; }
 
-const HISTORY_KEY = 'qinstar_bbps_payments_v1';
+const HISTORY_KEY = 'bright_spark_bbps_payments_v1';
 export const BBPS_CATEGORIES: BbpsCategory[] = [
   { code: 'DTH', name: 'BBPS DTH', description: 'Direct-to-home television recharge', icon: 'Satellite', popular: true },
   { code: 'BROADBAND', name: 'Broadband', description: 'Fiber and broadband bills', icon: 'Wifi', popular: true },
@@ -140,9 +140,9 @@ export const bbpsService = {
     const duplicate = readHistory().some((item) => item.billNumber === bill.billNumber && item.status !== 'FAILED'); if (duplicate) throw new Error('This fetched bill has already been paid or submitted.');
     const charges = this.calculate(amount); const walletRes = await walletService.getRetailerWallet(walletEntityId(retailerId)); const wallet = walletRes.data;
     if (!wallet || wallet.availableBalance < charges.totalWalletDebit) throw new Error('Insufficient available wallet balance for this BBPS payment.');
-    const txRef = reference('QSPBBPS'); const opening = wallet.availableBalance; wallet.availableBalance = +(opening - charges.totalWalletDebit + charges.commission).toFixed(2); wallet.ledgerBalance = +(wallet.ledgerBalance - charges.totalWalletDebit + charges.commission).toFixed(2); wallet.updatedAt = new Date().toISOString();
+    const txRef = reference('BSPBBPS'); const opening = wallet.availableBalance; wallet.availableBalance = +(opening - charges.totalWalletDebit + charges.commission).toFixed(2); wallet.ledgerBalance = +(wallet.ledgerBalance - charges.totalWalletDebit + charges.commission).toFixed(2); wallet.updatedAt = new Date().toISOString();
     ledgerService.addMockLedgerEntry({ walletId: wallet.walletId, entityId: retailerId, entityType: 'RETAILER', entityName: wallet.entityName, referenceId: txRef, entryType: 'PAY_OUT', openingBalance: opening, amount: charges.totalWalletDebit, closingBalance: +(opening - charges.totalWalletDebit).toFixed(2), direction: 'DEBIT', description: `BBPS ${biller.shortName} bill payment · ${bill.consumerId}`, createdBy: wallet.entityName });
-    ledgerService.addMockLedgerEntry({ walletId: wallet.walletId, entityId: retailerId, entityType: 'RETAILER', entityName: wallet.entityName, referenceId: txRef, entryType: 'WALLET_CREDIT', openingBalance: +(opening - charges.totalWalletDebit).toFixed(2), amount: charges.commission, closingBalance: wallet.availableBalance, direction: 'CREDIT', description: `BBPS retailer commission · ${biller.shortName}`, createdBy: 'Qin Star BBPS Switch' });
+    ledgerService.addMockLedgerEntry({ walletId: wallet.walletId, entityId: retailerId, entityType: 'RETAILER', entityName: wallet.entityName, referenceId: txRef, entryType: 'WALLET_CREDIT', openingBalance: +(opening - charges.totalWalletDebit).toFixed(2), amount: charges.commission, closingBalance: wallet.availableBalance, direction: 'CREDIT', description: `BBPS retailer commission · ${biller.shortName}`, createdBy: 'Bright Spark BBPS Switch' });
     const payment: BbpsPayment = { id: `bbps_${Date.now()}`, retailerId, billerId, billerName: biller.name, category, consumerId: bill.consumerId, customerName: bill.customerName, billNumber: bill.billNumber, amount, ...charges, status: 'SUCCESS', bbpsReference: reference('BBPS'), transactionReference: txRef, createdAt: new Date().toISOString() };
     saveHistory([payment, ...readHistory()]); return payment;
   },

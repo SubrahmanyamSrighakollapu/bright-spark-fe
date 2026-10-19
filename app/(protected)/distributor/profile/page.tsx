@@ -54,7 +54,7 @@ export default function DistributorProfilePage() {
             name: session?.name || u.displayName || u.name || 'North Zone Distributor',
             displayName: u.displayName || u.name || 'North Zone Distribution',
             businessName: u.businessName || 'North Zone Distribution Enterprises',
-            email: session?.email || u.email || 'dst001@qinstarpay.com',
+            email: session?.email || u.email || 'dst001@brightspark.com',
             mobile: session?.mobile || u.mobile || '+91 9830033333',
             contactNo: session?.mobile || u.mobile || '+91 9830033333',
             role: 'DISTRIBUTOR',
@@ -91,7 +91,7 @@ export default function DistributorProfilePage() {
       name: session?.name || 'North Zone Distributor',
       displayName: 'North Zone Distribution Enterprises',
       businessName: 'North Zone Distribution Enterprises',
-      email: session?.email || 'dst001@qinstarpay.com',
+      email: session?.email || 'dst001@brightspark.com',
       mobile: '+91 9830033333',
       contactNo: '+91 9830033333',
       role: 'DISTRIBUTOR',
@@ -166,7 +166,7 @@ export default function DistributorProfilePage() {
       }
     >
       {/* Identity & Photo Card */}
-      <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white via-indigo-50/30 to-slate-50 p-6 shadow-xs space-y-4">
+      <div className="rounded-2xl border border-[#D4E1AE]/80 bg-gradient-to-br from-white via-indigo-50/30 to-slate-50 p-6 shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             {/* Avatar / Profile Photo */}
@@ -179,7 +179,7 @@ export default function DistributorProfilePage() {
                   className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover shadow-md ring-4 ring-indigo-50 border border-slate-200"
                 />
               ) : (
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-[#0F4C81] text-white font-extrabold text-2xl md:text-3xl flex items-center justify-center shadow-md ring-4 ring-indigo-50">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-[#2F6F5E] text-white font-extrabold text-2xl md:text-3xl flex items-center justify-center shadow-md ring-4 ring-indigo-50">
                   {(profile?.fullName || session?.name || 'DS').slice(0, 2).toUpperCase()}
                 </div>
               )}
@@ -207,7 +207,7 @@ export default function DistributorProfilePage() {
                 <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
                   {profile?.fullName || session?.name || 'North Zone Distributor'}
                 </h2>
-                <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#0F4C81] font-bold border border-indigo-200">
+                <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#2F6F5E] font-bold border border-[#D4E1AE]">
                   {profile?.code || 'DST001'}
                 </span>
                 <StatusBadge status={profile?.accountStatus || 'ACTIVE'} label="Distributor Partner" />
@@ -219,9 +219,9 @@ export default function DistributorProfilePage() {
           <div className="flex items-center gap-3 shrink-0">
             <label
               htmlFor="dist-photo-btn"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-[#0F4C81] border border-indigo-200 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-[#2F6F5E] border border-[#D4E1AE] rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-2xs"
             >
-              <Upload className="w-4 h-4 text-[#0F4C81]" />
+              <Upload className="w-4 h-4 text-[#2F6F5E]" />
               <span>{isUploadingPhoto ? 'Uploading...' : 'Upload Photo'}</span>
               <input
                 id="dist-photo-btn"
@@ -236,8 +236,8 @@ export default function DistributorProfilePage() {
             <div className="p-3 rounded-xl bg-white border border-indigo-100 shadow-2xs space-y-0.5">
               <span className="text-[10px] uppercase font-bold text-slate-400 block">Parent Master Distributor</span>
               <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-[#0F4C81]" />
-                {profile?.parentName || 'Apex National Network'} <span className="font-mono text-[#0F4C81]">({profile?.parentCode || 'MD001'})</span>
+                <Building2 className="w-3.5 h-3.5 text-[#2F6F5E]" />
+                {profile?.parentName || 'Apex National Network'} <span className="font-mono text-[#2F6F5E]">({profile?.parentCode || 'MD001'})</span>
               </p>
             </div>
           </div>
@@ -249,7 +249,7 @@ export default function DistributorProfilePage() {
         {/* Business Credentials */}
         <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-            <Building2 className="w-4 h-4 text-[#0F4C81]" /> Business Credentials & Entity
+            <Building2 className="w-4 h-4 text-[#2F6F5E]" /> Business Credentials & Entity
           </h3>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between py-1 border-b border-slate-50">
@@ -258,7 +258,7 @@ export default function DistributorProfilePage() {
             </div>
             <div className="flex justify-between py-1 border-b border-slate-50">
               <span className="text-slate-500">Distributor Code:</span>
-              <span className="font-mono font-bold text-[#0F4C81]">{profile?.code}</span>
+              <span className="font-mono font-bold text-[#2F6F5E]">{profile?.code}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-50">
               <span className="text-slate-500">Entity ID:</span>
@@ -278,7 +278,7 @@ export default function DistributorProfilePage() {
         {/* Contact Profile */}
         <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-            <User className="w-4 h-4 text-[#0F4C81]" /> Contact & Communication
+            <User className="w-4 h-4 text-[#2F6F5E]" /> Contact & Communication
           </h3>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between py-1 border-b border-slate-50">
@@ -295,7 +295,7 @@ export default function DistributorProfilePage() {
             </div>
             <div className="flex justify-between py-1">
               <span className="text-slate-500">Security Scope Role:</span>
-              <span className="font-mono font-bold text-[#0F4C81]">DISTRIBUTOR</span>
+              <span className="font-mono font-bold text-[#2F6F5E]">DISTRIBUTOR</span>
             </div>
           </div>
         </div>
@@ -305,7 +305,7 @@ export default function DistributorProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-            <Store className="w-4 h-4 text-[#0F4C81]" /> Network Scope Summary
+            <Store className="w-4 h-4 text-[#2F6F5E]" /> Network Scope Summary
           </h3>
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/80">
@@ -321,7 +321,7 @@ export default function DistributorProfilePage() {
 
         <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-            <CreditCard className="w-4 h-4 text-[#0F4C81]" /> Treasury & Wallet Context
+            <CreditCard className="w-4 h-4 text-[#2F6F5E]" /> Treasury & Wallet Context
           </h3>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between py-1 border-b border-slate-50">
@@ -330,7 +330,7 @@ export default function DistributorProfilePage() {
             </div>
             <div className="flex justify-between py-1">
               <span className="text-slate-500">Commission Plan:</span>
-              <span className="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+              <span className="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-[#D4E1AE]">
                 DISTRIBUTOR_STANDARD_SLAB
               </span>
             </div>

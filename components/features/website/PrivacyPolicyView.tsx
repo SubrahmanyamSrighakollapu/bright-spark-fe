@@ -9,7 +9,7 @@ import { formatDateTime } from '@/utils/formatters';
 import { Shield, Save, History, CheckCircle2, FileText, Tag, Clock } from 'lucide-react';
 
 const DEFAULT_PRIVACY_POLICY = `## 1. Information Collection & Usage
-Qin Star Pay collects personal verification documents (PAN, Aadhaar, Bank Account Statements) to satisfy RBI KYC mandates and enable seamless crop settlement payments across our agriculture distribution network.
+Bright Spark collects personal verification documents (PAN, Aadhaar, Bank Account Statements) to satisfy RBI KYC mandates and enable seamless crop settlement payments across our agriculture distribution network.
 
 ## 2. Data Protection & Security Controls
 All sensitive transaction tokens and encryption keys are protected using AES-256 bit encryption in compliance with PCI-DSS guidelines.
@@ -41,7 +41,7 @@ export const PrivacyPolicyView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <Shield className="w-6 h-6 text-[#155EEF]" />
+            <Shield className="w-6 h-6 text-[#2F6F5E]" />
             Privacy Policy Management
           </h1>
           <p className="text-sm text-[#64748B] mt-0.5">
@@ -58,7 +58,7 @@ export const PrivacyPolicyView: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-[#334155] mb-1 flex items-center gap-1">
-                    <Tag className="w-3.5 h-3.5 text-[#155EEF]" /> Version Tag
+                    <Tag className="w-3.5 h-3.5 text-[#2F6F5E]" /> Version Tag
                   </label>
                   <Input
                     value={versionTag}
@@ -82,13 +82,13 @@ export const PrivacyPolicyView: React.FC = () => {
                   rows={14}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full p-4 rounded-lg border border-[#CBD5E1] text-xs font-mono text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#155EEF] leading-relaxed"
+                  className="w-full p-4 rounded-lg border border-[#CBD5E1] text-xs font-mono text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#2F6F5E] leading-relaxed"
                   required
                 />
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button type="submit" variant="primary" isLoading={isPublishing} className="bg-[#155EEF] hover:bg-[#124BCC]">
+                <Button type="submit" variant="primary" isLoading={isPublishing} className="bg-[#2F6F5E] hover:bg-[#25594C]">
                   <Save className="w-4 h-4 mr-2" />
                   Save & Publish Policy
                 </Button>

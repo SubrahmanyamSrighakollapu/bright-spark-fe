@@ -124,7 +124,7 @@ export const ActionKebabMenu: React.FC<ActionKebabMenuProps> = ({
         className={cn(
           'flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-200/60 bg-white text-slate-500 transition-all',
           'hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 hover:shadow-xs',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500/20',
+          'focus:outline-none focus:ring-2 focus:ring-[#D4E1AE]',
           isOpen && 'border-blue-300 bg-blue-50/50 text-blue-600 shadow-xs'
         )}
         aria-haspopup="true"

@@ -17,7 +17,7 @@ import {
 import { cn } from '@/utils/cn';
 
 const POLL_INTERVAL_MS = 30_000;
-const DISMISSED_BANNER_STORAGE_KEY = 'qsp_dismissed_announcement_banner_id';
+const DISMISSED_BANNER_STORAGE_KEY = 'bsp_dismissed_announcement_banner_id';
 
 const severityStyles: Record<
   NotificationSeverity,

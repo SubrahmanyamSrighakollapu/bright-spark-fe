@@ -121,7 +121,7 @@ export const SetBalanceRequirementView: React.FC = () => {
       header: 'Target User Role',
       render: (row) => (
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#155EEF]" />
+          <ShieldCheck className="w-4 h-4 text-[#2F6F5E]" />
           <span className="font-bold text-[#0F172A]">{row.targetRole}</span>
         </div>
       ),
@@ -139,7 +139,7 @@ export const SetBalanceRequirementView: React.FC = () => {
       key: 'minLeanWalletBalance',
       header: 'Min Lean Wallet Balance (₹)',
       render: (row) => (
-        <span className="font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200">
+        <span className="font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded border border-[#D4E1AE]">
           {formatCurrency(row.minLeanWalletBalance)}
         </span>
       ),
@@ -153,7 +153,7 @@ export const SetBalanceRequirementView: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => handleOpenEdit(row)}
-            className="h-8 px-2 text-[#155EEF] hover:bg-[#F1F5F9]"
+            className="h-8 px-2 text-[#2F6F5E] hover:bg-[#F1F5F9]"
           >
             <Edit className="w-3.5 h-3.5 mr-1" />
             Edit
@@ -177,7 +177,7 @@ export const SetBalanceRequirementView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-[#155EEF]" />
+            <Wallet className="w-6 h-6 text-[#2F6F5E]" />
             Minimum Wallet Balance Requirement
           </h1>
           <p className="text-sm text-[#64748B] mt-0.5">

@@ -38,7 +38,7 @@ export const PayOutReceipt: React.FC<PayOutReceiptProps> = ({
 
   const handleCopySummary = () => {
     const text = `
-=== QIN STAR PAY - PAY-OUT DISBURSEMENT RECEIPT ===
+=== BRIGHT SPARK - PAY-OUT DISBURSEMENT RECEIPT ===
 Txn ID: ${transaction.transactionRef}
 Disbursement Reference: ${transaction.orderId}
 Date: ${formatDateTime(transaction.createdAt)}
@@ -118,7 +118,7 @@ ${transaction.utr ? `UTR / Ref: ${transaction.utr}` : ''}
         <div className="flex items-start justify-between border-b border-slate-200 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-indigo-700 text-lg tracking-tight">QIN STAR PAY</span>
+              <span className="font-extrabold text-indigo-700 text-lg tracking-tight">BRIGHT SPARK</span>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 border text-slate-700">
                 {copyType === 'RETAILER' ? 'Retailer Copy' : 'Beneficiary Copy'}
               </span>
@@ -164,7 +164,7 @@ ${transaction.utr ? `UTR / Ref: ${transaction.utr}` : ''}
           </div>
           <div className="flex justify-between py-1 border-b border-slate-200">
             <span className="text-slate-500">Disbursement Reference:</span>
-            <span className="font-bold text-[#0F4C81]">{transaction.orderId}</span>
+            <span className="font-bold text-[#2F6F5E]">{transaction.orderId}</span>
           </div>
           {transaction.utr && (
             <div className="flex justify-between py-1 border-b border-slate-200">
@@ -226,7 +226,7 @@ ${transaction.utr ? `UTR / Ref: ${transaction.utr}` : ''}
         {/* Footer Guarantee */}
         <div className="pt-3 border-t border-slate-200 text-center text-[10px] text-slate-400 space-y-0.5">
           <p className="flex items-center justify-center gap-1 font-semibold text-slate-500">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Authorized Qin Star Pay Disbursement Receipt
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Authorized Bright Spark Disbursement Receipt
           </p>
           <p>Funds dispatched safely via banking switch network.</p>
         </div>

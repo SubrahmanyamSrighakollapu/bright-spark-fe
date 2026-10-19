@@ -473,7 +473,7 @@ export const transactionService = {
   async createMockPayinRequest(input: PayInRequestInput): Promise<ApiResponse<Transaction>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 400));
-      const refNum = `QSP${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
+      const refNum = `BSP${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
       const newTx: Transaction = {
         id: `tx_${Date.now()}`,
         transactionRef: refNum,
@@ -520,7 +520,7 @@ export const transactionService = {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 500));
       const charges = this.calculateMockPayoutCharges(input.amount);
-      const refNum = `QSP${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
+      const refNum = `BSP${new Date().getFullYear()}${String(Date.now()).slice(-6)}`;
       const newTx: Transaction = {
         id: `tx_${Date.now()}`,
         transactionRef: refNum,

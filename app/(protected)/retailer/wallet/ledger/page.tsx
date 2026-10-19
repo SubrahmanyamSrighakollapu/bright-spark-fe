@@ -150,7 +150,7 @@ export default function RetailerLedgerPage() {
             label="Available Balance"
             value={formatCurrency(availableBalance)}
             variant="payin"
-            icon={<Wallet className="w-3.5 h-3.5 text-[#0F4C81]" />}
+            icon={<Wallet className="w-3.5 h-3.5 text-[#2F6F5E]" />}
             subtext="Spendable wallet funds"
             isDominant
           />
@@ -186,7 +186,7 @@ export default function RetailerLedgerPage() {
                     setPage(1);
                   }}
                   placeholder="Search Ledger ID, Ref, Description..."
-                  className="w-full pl-9 pr-3.5 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white"
+                  className="w-full pl-9 pr-3.5 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E] focus:ring-2 focus:ring-[#D4E1AE] bg-white"
                 />
                 {searchQuery && (
                   <button
@@ -230,7 +230,7 @@ export default function RetailerLedgerPage() {
                   setMovementFilter(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded-xl bg-white focus:outline-hidden focus:border-[#0F4C81]"
+                className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded-xl bg-white focus:outline-hidden focus:border-[#2F6F5E]"
               >
                 <option value="ALL">All Movements</option>
                 <option value="PAY_IN">PAY_IN (Collection)</option>
@@ -276,7 +276,7 @@ export default function RetailerLedgerPage() {
           <div className="overflow-x-auto rounded-b-2xl">
             {loading ? (
               <div className="py-16 text-center text-xs text-slate-400 space-y-2">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#0F4C81]" />
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#2F6F5E]" />
                 <p>Loading ledger entries...</p>
               </div>
             ) : entries.length === 0 ? (
@@ -322,7 +322,7 @@ export default function RetailerLedgerPage() {
                       >
                         {/* Ledger ID / Date */}
                         <td className="py-3.5 px-4">
-                          <span className="font-bold text-slate-900 group-hover:text-[#0F4C81] transition-colors block font-mono" title={e.id}>
+                          <span className="font-bold text-slate-900 group-hover:text-[#2F6F5E] transition-colors block font-mono" title={e.id}>
                             {formattedTxId}
                           </span>
                           <span className="text-[11px] text-slate-400 font-sans">
@@ -342,7 +342,7 @@ export default function RetailerLedgerPage() {
                               🔒 HOLD
                             </span>
                           ) : entryType === 'RELEASE' ? (
-                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-indigo-50 text-indigo-800 border border-indigo-200">
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-indigo-50 text-indigo-800 border border-[#D4E1AE]">
                               🔓 RELEASE
                             </span>
                           ) : (

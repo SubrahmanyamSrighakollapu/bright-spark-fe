@@ -111,11 +111,11 @@ export default function DistributorWalletPage() {
       </div>
 
       {/* Main Operating Wallet Card */}
-      <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white via-indigo-50/30 to-slate-50 p-6 md:p-8 shadow-xs relative overflow-hidden space-y-6">
+      <div className="rounded-2xl border border-[#D4E1AE]/80 bg-gradient-to-br from-white via-indigo-50/30 to-slate-50 p-6 md:p-8 shadow-xs relative overflow-hidden space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[#0F4C81]">
-              <div className="w-6 h-6 rounded-lg bg-indigo-100 text-[#0F4C81] flex items-center justify-center">
+            <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[#2F6F5E]">
+              <div className="w-6 h-6 rounded-lg bg-indigo-100 text-[#2F6F5E] flex items-center justify-center">
                 <Wallet className="w-3.5 h-3.5" />
               </div>
               <span>DISTRIBUTOR OPERATING WALLET</span>
@@ -123,7 +123,7 @@ export default function DistributorWalletPage() {
             </div>
             <div>
               <span className="text-xs text-slate-500 font-medium">Available Balance</span>
-              <div className="text-4xl md:text-5xl font-extrabold font-mono text-[#0F4C81] tracking-tight">
+              <div className="text-4xl md:text-5xl font-extrabold font-mono text-[#2F6F5E] tracking-tight">
                 {formatCurrency(wallet?.availableBalance ?? 0)}
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function DistributorWalletPage() {
 
           <div className="flex items-center gap-3 shrink-0">
             <Link href="/distributor/wallet/ledger">
-              <Button variant="primary" size="md" className="bg-[#0F4C81] hover:bg-indigo-900 text-white font-bold px-5" leftIcon={<FileText className="w-4 h-4" />}>
+              <Button variant="primary" size="md" className="bg-[#2F6F5E] hover:bg-[#1B4339] text-white font-bold px-5" leftIcon={<FileText className="w-4 h-4" />}>
                 View Operating Ledger
               </Button>
             </Link>
@@ -147,7 +147,7 @@ export default function DistributorWalletPage() {
               <span className="text-slate-500 font-semibold">Available Balance</span>
               <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Spendable</span>
             </div>
-            <p className="text-xl font-bold font-mono text-[#0F4C81]">{formatCurrency(wallet?.availableBalance ?? 0)}</p>
+            <p className="text-xl font-bold font-mono text-[#2F6F5E]">{formatCurrency(wallet?.availableBalance ?? 0)}</p>
             <p className="text-[10px] text-slate-400">Ready for operations & settlements</p>
           </div>
 

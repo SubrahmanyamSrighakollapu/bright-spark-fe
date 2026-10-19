@@ -82,8 +82,8 @@ export default function RetailerProfilePage() {
           isAadharVerify: u.isAadharVerify ?? true,
           panNoVerify: u.panNoVerify ?? true,
           parentId: u.parentId || null,
-          parentName: u.parentName || (u.parentType === 'PLATFORM' ? 'Qin Star Pay' : null),
-          parentCode: u.parentCode || (u.parentType === 'PLATFORM' ? 'QSP' : null),
+          parentName: u.parentName || (u.parentType === 'PLATFORM' ? 'Bright Spark' : null),
+          parentCode: u.parentCode || (u.parentType === 'PLATFORM' ? 'BSP' : null),
           parentType: u.parentType || null,
           masterDistributorId: u.masterDistributorId || null,
           masterDistributorName: u.masterDistributorName || null,
@@ -119,8 +119,8 @@ export default function RetailerProfilePage() {
           isAadharVerify: true,
           panNoVerify: true,
           parentId: null,
-          parentName: 'Qin Star Pay',
-          parentCode: 'QSP',
+          parentName: 'Bright Spark',
+          parentCode: 'BSP',
           parentType: 'PLATFORM',
           masterDistributorId: null,
           availableBalance: 5000,
@@ -170,7 +170,7 @@ export default function RetailerProfilePage() {
               const dataUrl = reader.result as string;
               if (dataUrl && dataUrl.startsWith('data:image')) {
                 const latestCustom = session?.userId
-                  ? localStorage.getItem(`qsp_custom_profile_photo_${session.userId}`)
+                  ? localStorage.getItem(`bsp_custom_profile_photo_${session.userId}`)
                   : null;
                 if (!latestCustom) {
                   setImageError(false);
@@ -271,7 +271,7 @@ export default function RetailerProfilePage() {
                     className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover shadow-md ring-4 ring-indigo-50 border border-slate-200"
                   />
                 ) : (
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#0F4C81] to-indigo-700 text-white font-extrabold text-2xl md:text-3xl flex items-center justify-center shadow-md ring-4 ring-indigo-50">
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-[#2F6F5E] to-indigo-700 text-white font-extrabold text-2xl md:text-3xl flex items-center justify-center shadow-md ring-4 ring-indigo-50">
                     {(profile?.fullName || session?.name || 'TR').slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -301,7 +301,7 @@ export default function RetailerProfilePage() {
                   <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
                     {profile?.fullName || session?.name || 'Testing Retailer'}
                   </h2>
-                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#0F4C81] font-bold border border-indigo-200">
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#2F6F5E] font-bold border border-[#D4E1AE]">
                     {profile?.code || profile?.userId || 'RET696'}
                   </span>
                   <StatusBadge
@@ -321,9 +321,9 @@ export default function RetailerProfilePage() {
             <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row items-start md:items-end lg:items-center gap-3 shrink-0">
               <label
                 htmlFor="profile-photo-input-btn"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-[#0F4C81] border border-indigo-200 rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-[#E8F0D4] text-[#2F6F5E] border border-[#D4E1AE] rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-2xs"
               >
-                <Upload className="w-4 h-4 text-[#0F4C81]" />
+                <Upload className="w-4 h-4 text-[#2F6F5E]" />
                 <span>{isUploadingPhoto ? 'Uploading Photo...' : 'Upload Profile Photo'}</span>
                 <input
                   id="profile-photo-input-btn"
@@ -348,7 +348,7 @@ export default function RetailerProfilePage() {
           {/* Left Column: Contact & Account Information */}
           <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
             <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
-              <Store className="w-4 h-4 text-[#0F4C81]" /> Retailer Contact Information
+              <Store className="w-4 h-4 text-[#2F6F5E]" /> Retailer Contact Information
             </h3>
 
             <div className="space-y-3 text-xs">
@@ -358,7 +358,7 @@ export default function RetailerProfilePage() {
               </div>
               <div className="flex justify-between py-1.5 border-b border-slate-100">
                 <span className="text-slate-500">Retailer Code:</span>
-                <span className="font-mono font-bold text-[#0F4C81]">{profile?.code || profile?.userId || '-'}</span>
+                <span className="font-mono font-bold text-[#2F6F5E]">{profile?.code || profile?.userId || '-'}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-slate-100">
                 <span className="text-slate-500">Business / Store Name:</span>

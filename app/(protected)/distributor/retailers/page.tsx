@@ -276,7 +276,7 @@ export default function DistributorRetailersPage() {
       render: (r: Retailer) => {
         const plan = planMap.get(r.planId);
         return (
-          <span className="inline-flex items-center gap-1 font-semibold text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
+          <span className="inline-flex items-center gap-1 font-semibold text-xs text-indigo-700 bg-indigo-50 border border-[#D4E1AE] px-2 py-0.5 rounded-md">
             <Tag className="w-3 h-3 text-indigo-500 shrink-0" />
             {plan ? plan.name : r.planId || 'Standard Plan'}
           </span>
@@ -386,7 +386,7 @@ export default function DistributorRetailersPage() {
                   setCurrentPage(1);
                 }}
                 placeholder="Search by name, code, store name, email or mobile..."
-                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-blue-500"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-[#2F6F5E]"
               />
             </div>
 

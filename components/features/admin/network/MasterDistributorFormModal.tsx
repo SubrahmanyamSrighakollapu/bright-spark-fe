@@ -164,7 +164,7 @@ export const MasterDistributorFormModal: React.FC<MasterDistributorFormModalProp
               label="Email Address *"
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="md@qinstarpay.com"
+              placeholder="md@brightspark.com"
               type="email"
               error={errors.email}
             />

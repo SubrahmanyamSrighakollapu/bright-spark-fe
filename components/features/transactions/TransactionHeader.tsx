@@ -30,7 +30,7 @@ export const TransactionHeader: React.FC<TransactionHeaderProps> = ({
         <div
           className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${
             isPayIn
-              ? 'bg-gradient-to-br from-indigo-500 to-[#0F4C81] text-white ring-4 ring-indigo-50'
+              ? 'bg-gradient-to-br from-indigo-500 to-[#2F6F5E] text-white ring-4 ring-indigo-50'
               : 'bg-gradient-to-br from-amber-500 to-[#F97316] text-white ring-4 ring-orange-50'
           }`}
         >
@@ -44,7 +44,7 @@ export const TransactionHeader: React.FC<TransactionHeaderProps> = ({
             <span
               className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
                 isPayIn
-                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/60'
+                  ? 'bg-indigo-50 text-indigo-700 border border-[#D4E1AE]/60'
                   : 'bg-orange-50 text-orange-700 border border-orange-200/60'
               }`}
             >

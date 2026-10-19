@@ -240,7 +240,7 @@ export const walletService = {
     amount: number,
     reason: string,
     reference?: string,
-    createdBy = 'Qin Star Admin'
+    createdBy = 'Bright Spark Admin'
   ): Promise<ApiResponse<WalletAccount>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 350));
@@ -286,7 +286,7 @@ export const walletService = {
     amount: number,
     reason: string,
     reference?: string,
-    createdBy = 'Qin Star Admin'
+    createdBy = 'Bright Spark Admin'
   ): Promise<ApiResponse<WalletAccount>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 350));
@@ -330,7 +330,7 @@ export const walletService = {
 
   async bulkAdjustWallets(
     rows: BulkAdjustmentRow[],
-    createdBy = 'Qin Star Admin'
+    createdBy = 'Bright Spark Admin'
   ): Promise<ApiResponse<{ processedRows: number; failedRows: number }>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 500));

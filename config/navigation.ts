@@ -270,6 +270,7 @@ export const ROLE_NAVIGATION_MAPS: Record<UserRole, NavigationItem[]> = {
   RETAILER: [
     { id: 'ret-dashboard', label: 'Dashboard', iconName: 'LayoutDashboard', path: '/retailer/dashboard' },
     { id: 'ret-bbps', label: 'BBPS', iconName: 'Receipt', path: '/retailer/bbps' },
+    { id: 'ret-aeps', label: 'AEPS', iconName: 'Fingerprint', path: '/retailer/aeps' },
     { id: 'ret-payin', label: 'Pay-In', iconName: 'ArrowDownLeft', path: '/retailer/pay-in' },
     { id: 'ret-qr-payin', label: 'QR Pay-In', iconName: 'QrCode', path: '/retailer/qr-pay-in' },
     { id: 'ret-payment-links', label: 'Payment Links', iconName: 'Link2', path: '/retailer/payment-links' },

@@ -187,7 +187,7 @@ export default function AdminMasterDistributorsPage() {
           <div>
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-slate-900">{row.name}</span>
-              <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+              <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-[#D4E1AE]">
                 {row.code}
               </span>
             </div>
@@ -364,7 +364,7 @@ export default function AdminMasterDistributorsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleOpenDetail(row)}
-                className="p-1.5 h-8 w-8 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+                className="p-1.5 h-8 w-8 text-slate-600 hover:text-[#2F6F5E] hover:bg-[#F3F7E9]"
               >
                 <Eye className="w-4 h-4" />
               </Button>
@@ -372,7 +372,7 @@ export default function AdminMasterDistributorsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleOpenEdit(row)}
-                className="p-1.5 h-8 w-8 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+                className="p-1.5 h-8 w-8 text-slate-600 hover:text-[#2F6F5E] hover:bg-[#F3F7E9]"
               >
                 <Edit className="w-4 h-4" />
               </Button>

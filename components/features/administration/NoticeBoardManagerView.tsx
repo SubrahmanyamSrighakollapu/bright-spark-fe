@@ -175,7 +175,7 @@ export const NoticeBoardManagerView: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => handleOpenEdit(row)}
-            className="h-8 px-2 text-[#0F4C81] hover:bg-indigo-50"
+            className="h-8 px-2 text-[#2F6F5E] hover:bg-[#F3F7E9]"
           >
             <Edit className="w-3.5 h-3.5 mr-1" />
             Edit
@@ -199,7 +199,7 @@ export const NoticeBoardManagerView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Bell className="w-6 h-6 text-[#0F4C81]" />
+            <Bell className="w-6 h-6 text-[#2F6F5E]" />
             Notice Board & Bulletin Manager
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
@@ -210,7 +210,7 @@ export const NoticeBoardManagerView: React.FC = () => {
           <Button variant="outline" size="sm" onClick={fetchNotices} leftIcon={<RefreshCw className="w-3.5 h-3.5" />}>
             Refresh
           </Button>
-          <Button variant="primary" size="sm" onClick={handleOpenAdd} className="bg-[#0F4C81] text-white font-bold">
+          <Button variant="primary" size="sm" onClick={handleOpenAdd} className="bg-[#2F6F5E] text-white font-bold">
             <Plus className="w-4 h-4 mr-1.5" />
             Create Notice
           </Button>
@@ -230,7 +230,7 @@ export const NoticeBoardManagerView: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         title={
           <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
-            <Bell className="w-5 h-5 text-[#0F4C81]" />
+            <Bell className="w-5 h-5 text-[#2F6F5E]" />
             <span>{editingNotice ? 'Edit Platform Notice' : 'Publish Platform Notice'}</span>
           </div>
         }
@@ -240,7 +240,7 @@ export const NoticeBoardManagerView: React.FC = () => {
             <Button type="button" variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" form="notice-form" variant="primary" size="sm" className="bg-[#0F4C81] text-white font-bold">
+            <Button type="submit" form="notice-form" variant="primary" size="sm" className="bg-[#2F6F5E] text-white font-bold">
               {editingNotice ? 'Save Notice' : 'Publish Notice'}
             </Button>
           </>
@@ -281,7 +281,7 @@ export const NoticeBoardManagerView: React.FC = () => {
               placeholder="Detailed announcement text..."
               value={noticeContent}
               onChange={(e) => setNoticeContent(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0F4C81]"
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#2F6F5E]"
               required
             />
           </div>

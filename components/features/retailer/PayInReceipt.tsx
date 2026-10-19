@@ -50,7 +50,7 @@ export const PayInReceipt: React.FC<PayInReceiptProps> = ({
 
   const handleCopySummary = () => {
     const text = `
-=== QIN STAR PAY - PAY-IN RECEIPT ===
+=== BRIGHT SPARK - PAY-IN RECEIPT ===
 Txn ID: ${transaction.transactionRef}
 Date: ${formatDateTime(transaction.createdAt)}
 Status: ${transaction.status}
@@ -140,7 +140,7 @@ ${transaction.utr ? `UTR: ${transaction.utr}` : ''}
         <div className="flex items-start justify-between border-b border-slate-200 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-indigo-700 text-lg tracking-tight">QIN STAR PAY</span>
+              <span className="font-extrabold text-indigo-700 text-lg tracking-tight">BRIGHT SPARK</span>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 border text-slate-700">
                 {copyType === 'RETAILER' ? 'Retailer Copy' : 'Customer Copy'}
               </span>
@@ -230,9 +230,9 @@ ${transaction.utr ? `UTR: ${transaction.utr}` : ''}
         {/* Footer Guarantee */}
         <div className="pt-3 border-t border-slate-200 text-center text-[10px] text-slate-400 space-y-0.5">
           <p className="flex items-center justify-center gap-1 font-semibold text-slate-500">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Authorized Qin Star Pay Retailer Receipt
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Authorized Bright Spark Retailer Receipt
           </p>
-          <p>Thank you for using Qin Star Pay collection switch services.</p>
+          <p>Thank you for using Bright Spark collection switch services.</p>
         </div>
       </div>
       </>}

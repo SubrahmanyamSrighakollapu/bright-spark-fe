@@ -141,7 +141,7 @@ export const PhoneInputWithCountryCode: React.FC<PhoneInputWithCountryCodeProps>
 
       {/* PrimeReact Styled Combined Input Box */}
       <div
-        className={`flex items-center rounded-xl border bg-white shadow-2xs transition-all duration-200 focus-within:border-[#155EEF] focus-within:ring-2 focus-within:ring-[#155EEF]/15 ${
+        className={`flex items-center rounded-xl border bg-white shadow-2xs transition-all duration-200 focus-within:border-[#2F6F5E] focus-within:ring-2 focus-within:ring-[#2F6F5E]/15 ${
           error ? 'border-rose-300 ring-2 ring-rose-100' : 'border-[#E5EAF1] hover:border-slate-300'
         } ${disabled ? 'bg-slate-50 opacity-65 cursor-not-allowed' : ''}`}
       >

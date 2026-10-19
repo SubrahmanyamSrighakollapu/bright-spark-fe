@@ -123,13 +123,13 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={cn(
-          'flex w-full min-w-36 cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-white px-4 text-[var(--text-primary)] transition-colors hover:border-slate-300 focus-visible:border-[var(--border-focus)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100',
+          'flex w-full min-w-36 cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-white px-4 text-[var(--text-primary)] transition-colors hover:border-slate-300 focus-visible:border-[var(--border-focus)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4E1AE]',
           size === 'sm' ? 'h-9 text-xs' : 'h-11 text-sm',
           isOpen ? 'border-[var(--border-focus)] ring-2 ring-blue-100' : ''
         )}
       >
         <div className="flex items-center gap-1.5 truncate">
-          {showIcon && <Calendar className="w-3.5 h-3.5 text-[#0F4C81] shrink-0" />}
+          {showIcon && <Calendar className="w-3.5 h-3.5 text-[#2F6F5E] shrink-0" />}
           <span className="truncate font-semibold">{getDisplayLabel()}</span>
         </div>
         <ChevronDown
@@ -177,7 +177,7 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
                       {preset.description}
                     </span>
                   </div>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-[#0F4C81] shrink-0" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-[#2F6F5E] shrink-0" />}
                 </button>
               );
             })}
@@ -196,7 +196,7 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-hidden focus:border-[#0F4C81]"
+                    className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-hidden focus:border-[#2F6F5E]"
                   />
                 </div>
                 <div>
@@ -205,14 +205,14 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-hidden focus:border-[#0F4C81]"
+                    className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-hidden focus:border-[#2F6F5E]"
                   />
                 </div>
               </div>
               <button
                 type="button"
                 onClick={handleApplyCustom}
-                className="w-full py-1.5 bg-[#0F4C81] hover:bg-indigo-900 text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                className="w-full py-1.5 bg-[#2F6F5E] hover:bg-[#1B4339] text-white rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
               >
                 <span>Apply Date Range</span>
                 <ArrowRight className="w-3 h-3" />

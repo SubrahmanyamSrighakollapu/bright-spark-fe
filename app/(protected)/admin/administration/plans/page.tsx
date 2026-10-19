@@ -2,7 +2,7 @@ import React from 'react';
 import { PlansManagementView } from '@/components/features/administration/PlansManagementView';
 
 export const metadata = {
-  title: 'Plans Management | Qin Star Pay Admin',
+  title: 'Plans Management | Bright Spark Admin',
   description: 'Create subscription and operational commission tiers',
 };
 

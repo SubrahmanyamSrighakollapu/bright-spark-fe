@@ -423,7 +423,7 @@ export default function AdminDistributorsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleOpenDetail(row)}
-                className="p-1.5 h-8 w-8 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+                className="p-1.5 h-8 w-8 text-slate-600 hover:text-[#2F6F5E] hover:bg-[#F3F7E9]"
               >
                 <Eye className="w-4 h-4" />
               </Button>
@@ -431,7 +431,7 @@ export default function AdminDistributorsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleOpenEdit(row)}
-                className="p-1.5 h-8 w-8 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+                className="p-1.5 h-8 w-8 text-slate-600 hover:text-[#2F6F5E] hover:bg-[#F3F7E9]"
               >
                 <Edit className="w-4 h-4" />
               </Button>

@@ -1,5 +1,5 @@
 {
-  "name": "qin-star-pay",
+  "name": "bright-spark",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,8 +10,11 @@
   },
   "dependencies": {
     "@types/qrcode": "^1.5.6",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "country-codes-list": "^3.2.0",
+    "framer-motion": "^12.43.0",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.40.0",
     "next": "16.3.4",
     "primeicons": "^8.0.2",
@@ -20,7 +23,8 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

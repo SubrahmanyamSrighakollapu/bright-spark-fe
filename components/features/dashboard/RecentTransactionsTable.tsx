@@ -73,7 +73,7 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
         <button
           type="button"
           onClick={() => detailDrawer.open(row)}
-          className="font-mono font-semibold text-[#155EEF] hover:underline text-xs cursor-pointer text-left"
+          className="font-mono font-semibold text-[#2F6F5E] hover:underline text-xs cursor-pointer text-left"
         >
           {row.transactionRef}
         </button>
@@ -87,7 +87,7 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
         <span
           className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
             row.type === 'PAY_IN'
-              ? 'bg-blue-50 text-[#155EEF] border border-blue-100'
+              ? 'bg-blue-50 text-[#2F6F5E] border border-blue-100'
               : row.type === 'PAY_OUT'
               ? 'bg-slate-100 text-[#334155] border border-slate-200'
               : 'bg-indigo-50 text-indigo-700 border border-indigo-100'
@@ -203,7 +203,7 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
           <div className="space-y-4 text-xs">
             <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E5EAF1] space-y-1">
               <span className="text-[#64748B]">Reference Number:</span>
-              <div className="font-mono font-extrabold text-sm text-[#155EEF]">
+              <div className="font-mono font-extrabold text-sm text-[#2F6F5E]">
                 {detailDrawer.data.transactionRef}
               </div>
             </div>
@@ -226,7 +226,7 @@ export const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = (
 
               <div className="flex justify-between py-1.5 border-b border-[#E5EAF1]">
                 <span className="text-[#64748B]">Amount:</span>
-                <span className="font-mono font-bold text-[#155EEF]">
+                <span className="font-mono font-bold text-[#2F6F5E]">
                   {formatCurrency(detailDrawer.data.amount)}
                 </span>
               </div>

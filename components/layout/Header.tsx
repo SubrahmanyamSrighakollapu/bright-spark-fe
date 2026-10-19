@@ -132,13 +132,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Wallet Balance Indicator for Wallet Roles */}
         {(session?.role === 'RETAILER' || session?.role === 'DISTRIBUTOR' || session?.role === 'MASTER_DISTRIBUTOR') && (
           <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs">
-            <Wallet className="w-4 h-4 text-[#155EEF] shrink-0" />
+            <Wallet className="w-4 h-4 text-[#2F6F5E] shrink-0" />
             <button type="button" onClick={() => walletPath && router.push(walletPath)} className="flex items-center gap-3 text-left cursor-pointer" aria-label="Open wallet">
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-bold text-slate-500 leading-none">
                   Available Balance
                 </span>
-                <span className="font-mono font-bold text-xs text-[#155EEF] tabular-nums leading-tight">
+                <span className="font-mono font-bold text-xs text-[#2F6F5E] tabular-nums leading-tight">
                   {formatCurrency(walletInfo?.available ?? 0)}
                 </span>
               </div>
@@ -162,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={handleRefreshBalance}
                 disabled={isRefreshingBalance}
-                className="p-1 text-blue-700 hover:text-blue-900 rounded transition-colors cursor-pointer ml-1"
+                className="p-1 text-blue-700 hover:text-[#25594C] rounded transition-colors cursor-pointer ml-1"
                 aria-label="Refresh balance"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingBalance ? 'animate-spin' : ''}`} />

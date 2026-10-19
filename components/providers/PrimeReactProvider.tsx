@@ -3,18 +3,18 @@
 import { PrimeReactProvider as PrimeProvider } from 'primereact/api';
 import type { ReactNode } from 'react';
 
-export interface QinStarPrimeReactProviderProps {
+export interface BrightSparkPrimeReactProviderProps {
   children: ReactNode;
 }
 
 /**
  * Application-wide PrimeReact boundary.
  *
- * Qin Star uses PrimeReact 10's unstyled components so the product's existing
+ * Bright Spark uses PrimeReact 10's unstyled components so the product's existing
  * design tokens remain authoritative and tenant branding can be swapped
  * without changing component code.
  */
-export function QinStarPrimeReactProvider({ children }: QinStarPrimeReactProviderProps) {
+export function BrightSparkPrimeReactProvider({ children }: BrightSparkPrimeReactProviderProps) {
   return (
     <PrimeProvider value={{
       ripple: false,

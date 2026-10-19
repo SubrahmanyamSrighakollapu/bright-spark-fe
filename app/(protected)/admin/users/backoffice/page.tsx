@@ -69,7 +69,7 @@ export default function BackOfficeUsersPage() {
   return (
     <PageContainer
       title="Back Office Users"
-      description="Manage internal Qin Star Pay team members (Sales, KYC, Accounts, Operations, Support)."
+      description="Manage internal Bright Spark team members (Sales, KYC, Accounts, Operations, Support)."
       className="space-y-6"
     >
       {/* 1. Summary Cards */}

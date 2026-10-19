@@ -164,7 +164,7 @@ export const userService = {
             code: 'MD901',
             fullName: 'Ramesh Kumar Hub',
             name: 'Ramesh Kumar Hub',
-            email: 'ramesh.md@qinstarpay.com',
+            email: 'ramesh.md@brightspark.com',
             mobile: '9876543210',
             contactNo: '9876543210',
             displayName: 'Ramesh Hub & Services',
@@ -190,7 +190,7 @@ export const userService = {
             code: 'DST402',
             fullName: 'Apex Distro Agency',
             name: 'Apex Distro Agency',
-            email: 'apex.dist@qinstarpay.com',
+            email: 'apex.dist@brightspark.com',
             mobile: '9812345678',
             contactNo: '9812345678',
             displayName: 'Apex Distro Agency',
@@ -614,7 +614,7 @@ export const userService = {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 300));
       if (mode === 'TEMP_PASSWORD') {
-        const tempPassword = `QinStar@${Math.floor(100000 + Math.random() * 900000)}`;
+        const tempPassword = `BrightSpark@${Math.floor(100000 + Math.random() * 900000)}`;
         return {
           success: true,
           data: {

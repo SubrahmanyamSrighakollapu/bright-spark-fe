@@ -24,7 +24,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
       <div className="h-screen w-screen bg-[var(--bg-app)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center font-bold animate-pulse">
-            QSP
+            BSP
           </div>
           <span className="text-xs text-[var(--text-muted)] font-medium">Verifying authorization...</span>
         </div>

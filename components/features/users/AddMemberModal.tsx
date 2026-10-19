@@ -64,7 +64,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
         role: (memberType === 'BACKOFFICE' ? 'RETAILER' : memberType) as any,
         fullName: name.trim(),
         displayName: businessName.trim() || name.trim(),
-        email: email.trim() || `${mobile.trim()}@qinstarpay.com`,
+        email: email.trim() || `${mobile.trim()}@brightspark.com`,
         mobile: mobile.trim(),
       });
 
@@ -143,7 +143,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
                     accept="image/png,image/jpeg,application/pdf"
                     required={type !== 'GST_CERTIFICATE'}
                     onChange={(e) => setKycFiles((prev) => ({ ...prev, [type]: e.target.files?.[0] || null }))}
-                    className="block min-h-11 w-full cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-blue-50 file:px-2.5 file:py-1.5 file:font-bold file:text-blue-700 hover:border-slate-300"
+                    className="block min-h-11 w-full cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-[#F3F7E9] file:px-2.5 file:py-1.5 file:font-bold file:text-[#2F6F5E] hover:border-slate-300"
                   />
                 </label>
               ))}
@@ -172,7 +172,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({
 
           <Input
             label="Email Address"
-            placeholder="member@qinstar.in"
+            placeholder="member@brightspark.in"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

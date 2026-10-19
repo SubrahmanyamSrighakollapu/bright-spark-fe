@@ -129,7 +129,7 @@ export const UsersListView: React.FC = () => {
       key: 'userId',
       header: 'User ID',
       render: (row) => (
-        <span className="font-mono font-bold text-[#155EEF] text-xs">
+        <span className="font-mono font-bold text-[#2F6F5E] text-xs">
           {row.userId || row.code}
         </span>
       ),
@@ -249,7 +249,7 @@ export const UsersListView: React.FC = () => {
       <div className="shrink-0 bg-white rounded-2xl border border-[#E5EAF1] p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#155EEF]" />
+            <Users className="w-5 h-5 text-[#2F6F5E]" />
             User Management Directory
           </h1>
           <p className="text-xs text-[#64748B] mt-1 font-medium">

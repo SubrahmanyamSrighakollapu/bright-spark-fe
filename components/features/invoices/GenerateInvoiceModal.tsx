@@ -37,7 +37,7 @@ export const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
   const [serviceCode, setServiceCode] = useState<ServiceCode>('DEFAULT');
   const [entityId, setEntityId] = useState('ent_mch_01');
   const [entityName, setEntityName] = useState('Apex Pay Solutions');
-  const [entityCode, setEntityCode] = useState('QSP-MCH-001');
+  const [entityCode, setEntityCode] = useState('BSP-MCH-001');
   const [entityType, setEntityType] = useState<EntityType>('MERCHANT');
   const [invoiceType, setInvoiceType] = useState<InvoiceType>('PLATFORM_FEE');
   const [taxableAmount, setTaxableAmount] = useState('15400');
@@ -63,19 +63,19 @@ export const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
     setEntityId(val);
     if (val === 'ent_mch_01') {
       setEntityName('Apex Pay Solutions');
-      setEntityCode('QSP-MCH-001');
+      setEntityCode('BSP-MCH-001');
       setEntityType('MERCHANT');
     } else if (val === 'ent_mch_02') {
       setEntityName('Global Fintech Ltd');
-      setEntityCode('QSP-MCH-002');
+      setEntityCode('BSP-MCH-002');
       setEntityType('MERCHANT');
     } else if (val === 'ent_dist_01') {
       setEntityName('North Zone Dist');
-      setEntityCode('QSP-DIST-001');
+      setEntityCode('BSP-DIST-001');
       setEntityType('DISTRIBUTOR');
     } else if (val === 'ent_rtl_01') {
       setEntityName('Zenith Retail');
-      setEntityCode('QSP-RTL-001');
+      setEntityCode('BSP-RTL-001');
       setEntityType('RETAILER');
     }
   };
@@ -111,7 +111,7 @@ export const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
             value={serviceCode}
             onChange={(e) => setServiceCode(e.target.value as ServiceCode)}
             options={[
-              { value: 'DEFAULT', label: 'Qin Star Pay Platform Default (SAC 998311)' },
+              { value: 'DEFAULT', label: 'Bright Spark Platform Default (SAC 998311)' },
               { value: 'PAY_IN', label: 'Pay-In Collection Service (SAC 998311)' },
               { value: 'PAY_OUT', label: 'Pay-Out Disbursal Service (SAC 998312)' },
               { value: 'AEPS', label: 'AEPS & MicroATM Service (SAC 998313)' },

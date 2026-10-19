@@ -64,7 +64,7 @@ export const UserTable: React.FC<UserTableProps> = ({
       header: 'Mapped Parent',
       render: (row) => (
         <span className="text-xs text-slate-700 font-medium">
-          {row.parentName || (row.type === 'BACK_OFFICE' ? 'Qin Star Pay Admin' : 'Direct')}
+          {row.parentName || (row.type === 'BACK_OFFICE' ? 'Bright Spark Admin' : 'Direct')}
         </span>
       ),
     },

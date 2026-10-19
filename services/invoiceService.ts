@@ -186,7 +186,7 @@ export const invoiceService = {
     calcInput: InvoiceCalculationInput,
     billingPeriod = 'September 2026',
     description = 'Platform service fee billing',
-    createdBy = 'Qin Star Billing Admin',
+    createdBy = 'Bright Spark Billing Admin',
     serviceCode: ServiceCode = 'DEFAULT'
   ): Promise<ApiResponse<Invoice>> {
     if (APP_CONFIG.useMockData) {
@@ -291,7 +291,7 @@ export const invoiceService = {
     receivedAmount: number,
     utr: string,
     remarks = 'Payment received',
-    receivedBy = 'Qin Star Accounts'
+    receivedBy = 'Bright Spark Accounts'
   ): Promise<ApiResponse<Invoice>> {
     if (APP_CONFIG.useMockData) {
       await new Promise((res) => setTimeout(res, 300));
@@ -374,7 +374,7 @@ export const invoiceService = {
         invoiceId,
         entityId: inv?.entityId || 'ent_mch_01',
         entityName: inv?.entityName || 'Retailer',
-        entityCode: inv?.entityCode || 'QSP-MCH',
+        entityCode: inv?.entityCode || 'BSP-MCH',
         entityType: inv?.entityType || 'MERCHANT',
         noteType,
         reason,
@@ -481,18 +481,18 @@ export const invoiceService = {
           serviceName: config.serviceName || config.serviceCode,
           templateStyle: config.templateStyle || 'STANDARD_TAX',
           templateName: config.templateName || 'Standard Layout',
-          businessName: config.businessName || 'Qin Star Pay',
-          legalName: config.legalName || 'Qin Star Pay Pvt Ltd',
-          gstin: config.gstin || '36QSPAY9981P1Z0',
-          pan: config.pan || 'QSPAY9981P',
+          businessName: config.businessName || 'Bright Spark',
+          legalName: config.legalName || 'Bright Spark Pvt Ltd',
+          gstin: config.gstin || '36BSPAY9981P1Z0',
+          pan: config.pan || 'BSPAY9981P',
           sacCode: config.sacCode || '998311',
-          email: config.email || 'billing@qinstarpay.com',
+          email: config.email || 'billing@brightspark.com',
           mobile: config.mobile || '+91 9876543210',
           address: config.address || 'Hitec City',
           city: config.city || 'Hyderabad',
           state: config.state || 'Telangana',
           pincode: config.pincode || '500081',
-          beneficiaryName: config.beneficiaryName || 'Qin Star Pay',
+          beneficiaryName: config.beneficiaryName || 'Bright Spark',
           bankName: config.bankName || 'State Bank of India',
           accountNumber: config.accountNumber || '38291029384',
           ifscCode: config.ifscCode || 'SBIN0009981',

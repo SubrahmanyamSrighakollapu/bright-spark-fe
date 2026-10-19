@@ -242,7 +242,7 @@ export const WalletDetailsDrawer: React.FC<WalletDetailsDrawerProps> = ({
             <div className="space-y-3 text-xs">
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-1">
                 <div className="flex justify-between font-bold">
-                  <span>QSP20260903001 (PAY_IN)</span>
+                  <span>BSP20260903001 (PAY_IN)</span>
                   <StatusBadge status="SUCCESS" size="sm" />
                 </div>
                 <div className="flex justify-between text-slate-600">

@@ -372,7 +372,7 @@ export default function AdminApprovalsPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as 'PENDING' | 'APPROVED' | 'REJECTED')}
-              className={`inline-flex min-h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-xs font-bold transition-all ${selected ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'}`}
+              className={`inline-flex min-h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-xs font-bold transition-all ${selected ? 'bg-white text-[#2F6F5E] shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'}`}
             >
               <span>{tab.label}</span>
               <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${selected ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'}`}>{tab.badge}</span>
@@ -438,7 +438,7 @@ export default function AdminApprovalsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleOpenDetail(row)}
-                  className="p-1.5 h-8 w-8 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+                  className="p-1.5 h-8 w-8 text-slate-600 hover:text-[#2F6F5E] hover:bg-[#F3F7E9]"
                 >
                   <Eye className="w-4 h-4" />
                 </Button>

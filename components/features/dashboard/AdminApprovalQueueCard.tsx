@@ -36,7 +36,7 @@ export const AdminApprovalQueueCard: React.FC<AdminApprovalQueueCardProps> = ({
         </div>
         <Link
           href="/admin/network/approvals"
-          className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+          className="text-xs font-bold text-indigo-600 hover:text-[#25594C] flex items-center gap-1 transition-colors"
         >
           <span>View Approval Center ({items.filter((i) => i.approvalStatus === 'PENDING_APPROVAL').length})</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -87,7 +87,7 @@ export const AdminApprovalQueueCard: React.FC<AdminApprovalQueueCardProps> = ({
                 <button
                   type="button"
                   onClick={() => onReviewItem(item)}
-                  className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-xs"
+                  className="px-3 py-1 bg-indigo-600 hover:bg-[#25594C] text-white text-xs font-semibold rounded-lg transition-colors shadow-xs"
                 >
                   Review
                 </button>

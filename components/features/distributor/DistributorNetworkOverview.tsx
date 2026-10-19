@@ -65,7 +65,7 @@ export const DistributorNetworkOverview: React.FC<DistributorNetworkOverviewProp
                 contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}
               />
               <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '12px' }} />
-              <Bar dataKey="payinVolume" name="Pay-In Volume" fill="#0F4C81" radius={[4, 4, 0, 0]} barSize={16} />
+              <Bar dataKey="payinVolume" name="Pay-In Volume" fill="#2F6F5E" radius={[4, 4, 0, 0]} barSize={16} />
               <Bar dataKey="payoutVolume" name="Pay-Out Volume" fill="#F97316" radius={[4, 4, 0, 0]} barSize={16} />
             </BarChart>
           </ResponsiveContainer>

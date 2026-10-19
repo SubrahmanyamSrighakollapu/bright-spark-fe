@@ -21,7 +21,7 @@ const nameOf = (items: Named[], id: string) => items.find((item) => item.id === 
 
 const CommissionRateField = ({ initialValue, disabled, onValueChange }: { initialValue: string; disabled: boolean; onValueChange: (value: string) => void }) => {
   const [value, setValue] = useState(initialValue);
-  return <input type="number" inputMode="decimal" min="0.01" step="0.01" placeholder="0.00" disabled={disabled} value={value} onChange={(event) => { const nextValue = event.target.value; setValue(nextValue); onValueChange(nextValue); }} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} className="h-10 w-32 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-[#155EEF] focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500" />;
+  return <input type="number" inputMode="decimal" min="0.01" step="0.01" placeholder="0.00" disabled={disabled} value={value} onChange={(event) => { const nextValue = event.target.value; setValue(nextValue); onValueChange(nextValue); }} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} className="h-10 w-32 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-[#2F6F5E] focus:ring-2 focus:ring-[#D4E1AE] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500" />;
 };
 
 export const PlanCommissionView: React.FC = () => {

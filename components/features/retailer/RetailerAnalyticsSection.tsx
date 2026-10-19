@@ -69,8 +69,8 @@ export const RetailerAnalyticsSection: React.FC<RetailerAnalyticsSectionProps> =
           <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
             <defs>
               <linearGradient id="payInGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#0F4C81" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#0F4C81" stopOpacity={0.0} />
+                <stop offset="5%" stopColor="#2F6F5E" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#2F6F5E" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="payOutGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#F97316" stopOpacity={0.2} />
@@ -95,7 +95,7 @@ export const RetailerAnalyticsSection: React.FC<RetailerAnalyticsSectionProps> =
             <Area
               type="monotone"
               dataKey="payInVolume"
-              stroke="#0F4C81"
+              stroke="#2F6F5E"
               strokeWidth={2.5}
               fillOpacity={1}
               fill="url(#payInGradient)"

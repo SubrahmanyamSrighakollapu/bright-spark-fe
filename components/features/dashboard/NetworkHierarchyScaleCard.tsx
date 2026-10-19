@@ -61,7 +61,7 @@ export const NetworkHierarchyScaleCard: React.FC<NetworkHierarchyScaleProps> = (
         {/* Tier 2: Distributors */}
         <Link
           href="/admin/network/distributors"
-          className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200/80 hover:bg-indigo-100/60 hover:shadow-md transition-all group"
+          className="p-3.5 rounded-xl bg-indigo-50/70 border border-[#D4E1AE]/80 hover:bg-[#E8F0D4] hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider">Tier 2 • Distributors</span>
@@ -74,7 +74,7 @@ export const NetworkHierarchyScaleCard: React.FC<NetworkHierarchyScaleProps> = (
         {/* Tier 3: Retailers */}
         <Link
           href="/admin/network/retailers"
-          className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200/80 hover:bg-blue-100/60 hover:shadow-md transition-all group"
+          className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200/80 hover:bg-[#E8F0D4] hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Tier 3 • Retailers</span>

@@ -170,7 +170,7 @@ export const ScrollTextManagerView: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => handleOpenEdit(row)}
-            className="h-8 px-2 text-[#0F4C81] hover:bg-indigo-50"
+            className="h-8 px-2 text-[#2F6F5E] hover:bg-[#F3F7E9]"
           >
             <Edit className="w-3.5 h-3.5 mr-1" />
             Edit
@@ -197,7 +197,7 @@ export const ScrollTextManagerView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Radio className="w-6 h-6 text-[#0F4C81]" />
+            <Radio className="w-6 h-6 text-[#2F6F5E]" />
             Scroll Text Manager (News Tickers)
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
@@ -208,7 +208,7 @@ export const ScrollTextManagerView: React.FC = () => {
           <Button variant="outline" size="sm" onClick={fetchTickers} leftIcon={<RefreshCw className="w-3.5 h-3.5" />}>
             Refresh
           </Button>
-          <Button variant="primary" size="sm" onClick={handleOpenAdd} className="bg-[#0F4C81] text-white font-bold">
+          <Button variant="primary" size="sm" onClick={handleOpenAdd} className="bg-[#2F6F5E] text-white font-bold">
             <Plus className="w-4 h-4 mr-1.5" />
             Add News Ticker
           </Button>
@@ -217,7 +217,7 @@ export const ScrollTextManagerView: React.FC = () => {
 
       {/* Redesigned Premium Live Ticker Banner */}
       {activeTicker ? (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-[#0F4C81] to-slate-900 border border-indigo-400/20 shadow-lg text-white flex items-center gap-3 overflow-hidden relative">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-[#2F6F5E] to-slate-900 border border-indigo-400/20 shadow-lg text-white flex items-center gap-3 overflow-hidden relative">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-mono font-extrabold shrink-0 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-0.5" />
             <Sparkles className="w-3.5 h-3.5" /> LIVE TICKER
@@ -251,7 +251,7 @@ export const ScrollTextManagerView: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         title={
           <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
-            <Radio className="w-5 h-5 text-[#0F4C81]" />
+            <Radio className="w-5 h-5 text-[#2F6F5E]" />
             <span>{editingTicker ? 'Edit Ticker Announcement' : 'Publish Ticker Announcement'}</span>
           </div>
         }
@@ -261,7 +261,7 @@ export const ScrollTextManagerView: React.FC = () => {
             <Button type="button" variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" form="ticker-form" variant="primary" size="sm" className="bg-[#0F4C81] text-white font-bold">
+            <Button type="submit" form="ticker-form" variant="primary" size="sm" className="bg-[#2F6F5E] text-white font-bold">
               {editingTicker ? 'Save Ticker Changes' : 'Publish Ticker'}
             </Button>
           </>
@@ -277,7 +277,7 @@ export const ScrollTextManagerView: React.FC = () => {
               placeholder="Enter announcement text to scroll across downline dashboards..."
               value={scrollText}
               onChange={(e) => setScrollText(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#0F4C81]"
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-[#2F6F5E]"
               required
             />
           </div>
@@ -316,7 +316,7 @@ export const ScrollTextManagerView: React.FC = () => {
               id="tickerActive"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="w-4 h-4 text-[#0F4C81] rounded"
+              className="w-4 h-4 text-[#2F6F5E] rounded"
             />
             <label htmlFor="tickerActive" className="text-xs font-medium text-slate-800">
               Publish as Active Ticker

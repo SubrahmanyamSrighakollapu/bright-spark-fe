@@ -1,4 +1,5 @@
 export type RetailerModulePermission =
+  | 'aeps'
   | 'pay-in'
   | 'pay-out'
   | 'transactions'
@@ -8,7 +9,8 @@ export type RetailerModulePermission =
   | 'notifications'
   | 'profile';
 
-const STORAGE_KEY = 'qin-star-pay-retailer-module-permissions';
+const STORAGE_KEY = 'bright-spark-retailer-module-permissions';
+const AEPS_MIGRATION_KEY = 'bright-spark-retailer-aeps-permission-migrated';
 
 function readAll(): Record<string, RetailerModulePermission[]> {
   if (typeof window === 'undefined') return {};
@@ -21,7 +23,18 @@ function readAll(): Record<string, RetailerModulePermission[]> {
 
 export const retailerPermissionService = {
   getEnabledModules(retailerId: string, defaults: RetailerModulePermission[]): RetailerModulePermission[] {
-    return readAll()[retailerId] || defaults;
+    const stored = readAll()[retailerId];
+    if (!stored) return defaults;
+    const migrationKey = `${AEPS_MIGRATION_KEY}:${retailerId}`;
+    if (typeof window !== 'undefined' && !localStorage.getItem(migrationKey)) {
+      const migrated: RetailerModulePermission[] = stored.includes('aeps') ? stored : ['aeps', ...stored];
+      const settings = readAll();
+      settings[retailerId] = migrated;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      localStorage.setItem(migrationKey, '1');
+      return migrated;
+    }
+    return stored;
   },
 
   saveEnabledModules(retailerId: string, permissions: RetailerModulePermission[]): void {
@@ -33,6 +46,7 @@ export const retailerPermissionService = {
 
   canAccessNavigationItem(retailerId: string, navigationId: string): boolean {
     const navigationPermissionMap: Partial<Record<string, RetailerModulePermission>> = {
+      'ret-aeps': 'aeps',
       'ret-payin': 'pay-in',
       'ret-payout': 'pay-out',
       'ret-transactions': 'transactions',
@@ -46,7 +60,7 @@ export const retailerPermissionService = {
     };
     const requiredPermission = navigationPermissionMap[navigationId];
     if (!requiredPermission) return true;
-    const defaults: RetailerModulePermission[] = ['pay-in', 'pay-out', 'transactions', 'wallet-ledger', 'commissions', 'reports', 'notifications', 'profile'];
+    const defaults: RetailerModulePermission[] = ['aeps', 'pay-in', 'pay-out', 'transactions', 'wallet-ledger', 'commissions', 'reports', 'notifications', 'profile'];
     return this.getEnabledModules(retailerId, defaults).includes(requiredPermission);
   },
 };

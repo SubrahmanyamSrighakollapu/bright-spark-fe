@@ -64,7 +64,7 @@ export const DeveloperTestControls: React.FC<DeveloperTestControlsProps> = ({
             <Wrench className="w-3.5 h-3.5" />
           </span>
           <span>Developer Test Controls</span>
-          <span className="text-[10px] uppercase font-bold text-indigo-600 px-1.5 py-0.2 bg-indigo-50 border border-indigo-200 rounded">
+          <span className="text-[10px] uppercase font-bold text-indigo-600 px-1.5 py-0.2 bg-indigo-50 border border-[#D4E1AE] rounded">
             QA Only
           </span>
         </div>

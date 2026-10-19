@@ -98,7 +98,7 @@ class PayOutService {
     const random = typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase()
       : Math.random().toString(36).slice(2, 8).toUpperCase();
-    return `QSPD-${date}-${time}-${random}`;
+    return `BSPD-${date}-${time}-${random}`;
   }
 
   /**
@@ -257,7 +257,7 @@ class PayOutService {
         distributorId: 'dst_001',
         masterDistributorId: 'md_001',
         planId: 'plan_std_01',
-        email: 'ret001@qinstarpay.com',
+        email: 'ret001@brightspark.com',
         mobile: '9860066666',
         kycStatus: 'APPROVED',
         approvalStatus: 'APPROVED',
@@ -366,10 +366,10 @@ class PayOutService {
 
       // 7. Generate Clear References & Masked Account
       const timestampSuffix = Date.now().toString().slice(-6);
-      const transactionRef = `QSP2026${timestampSuffix}`;
-      const utr = status === 'SUCCESS' ? `QSPUTR${timestampSuffix}` : undefined;
+      const transactionRef = `BSP2026${timestampSuffix}`;
+      const utr = status === 'SUCCESS' ? `BSPUTR${timestampSuffix}` : undefined;
       const providerRef = `PRVREF${timestampSuffix}`;
-      const orderId = input.beneficiaryReference?.startsWith('QSPD-')
+      const orderId = input.beneficiaryReference?.startsWith('BSPD-')
         ? input.beneficiaryReference
         : this.generateDisbursementReference();
       const maskedAccount = this.maskAccountNumber(input.beneficiaryAccount);
@@ -440,7 +440,7 @@ class PayOutService {
         netAmount: preview.totalWalletDebit,
         status,
         paymentMode: (input.paymentMode as any) || 'IMPS',
-        provider: 'Qin Star Pay Mock Gateway',
+        provider: 'Bright Spark Mock Gateway',
         service: input.serviceType || 'Bank Account Disbursement',
         channel: 'Web',
         beneficiaryName: input.beneficiaryName,
@@ -772,7 +772,7 @@ class PayOutService {
 
       // 2. Update Transaction Status & Generate UTR
       transaction.status = 'SUCCESS';
-      transaction.utr = transaction.utr || `QSPUTR${Date.now().toString().slice(-6)}`;
+      transaction.utr = transaction.utr || `BSPUTR${Date.now().toString().slice(-6)}`;
       transaction.updatedAt = nowIso;
 
       // 3. Post Commission Credit Entry to Ledger

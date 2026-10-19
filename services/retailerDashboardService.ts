@@ -70,7 +70,7 @@ class RetailerDashboardService {
         planId: 'plan_std_01',
         name: 'Metro Store #01',
         businessName: 'Metro Store Retail Solutions',
-        email: 'ret001@qinstarpay.com',
+        email: 'ret001@brightspark.com',
         mobile: '9860066666',
         kycStatus: 'APPROVED',
         approvalStatus: 'APPROVED',

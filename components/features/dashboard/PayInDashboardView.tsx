@@ -124,31 +124,31 @@ function getPayInStatusForRange(preset: CardDatePreset) {
   switch (preset) {
     case 'today':
       return [
-        { name: 'Successful', value: 12842, pct: '89.3%', color: '#155EEF' },
+        { name: 'Successful', value: 12842, pct: '89.3%', color: '#2F6F5E' },
         { name: 'Pending', value: 800, pct: '5.6%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 736, pct: '5.1%', color: '#DC2626' },
       ];
     case 'yesterday':
       return [
-        { name: 'Successful', value: 11200, pct: '87.5%', color: '#155EEF' },
+        { name: 'Successful', value: 11200, pct: '87.5%', color: '#2F6F5E' },
         { name: 'Pending', value: 950, pct: '7.4%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 650, pct: '5.1%', color: '#DC2626' },
       ];
     case '7d':
       return [
-        { name: 'Successful', value: 84200, pct: '89.1%', color: '#155EEF' },
+        { name: 'Successful', value: 84200, pct: '89.1%', color: '#2F6F5E' },
         { name: 'Pending', value: 5200, pct: '5.5%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 5100, pct: '5.4%', color: '#DC2626' },
       ];
     case '30d':
       return [
-        { name: 'Successful', value: 350000, pct: '90.2%', color: '#155EEF' },
+        { name: 'Successful', value: 350000, pct: '90.2%', color: '#2F6F5E' },
         { name: 'Pending', value: 18000, pct: '4.6%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 20000, pct: '5.2%', color: '#DC2626' },
       ];
     case 'custom':
       return [
-        { name: 'Successful', value: 142000, pct: '90.5%', color: '#155EEF' },
+        { name: 'Successful', value: 142000, pct: '90.5%', color: '#2F6F5E' },
         { name: 'Pending', value: 7800, pct: '5.0%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 7100, pct: '4.5%', color: '#DC2626' },
       ];
@@ -159,35 +159,35 @@ function getPayInModesForRange(preset: CardDatePreset) {
   switch (preset) {
     case 'today':
       return [
-        { mode: 'UPI QR / Intent', count: 6850, pct: 48.6, amount: 2450000, color: '#155EEF' },
+        { mode: 'UPI QR / Intent', count: 6850, pct: 48.6, amount: 2450000, color: '#2F6F5E' },
         { mode: 'Net Banking Direct', count: 2900, pct: 20.6, amount: 1210000, color: '#2563EB' },
         { mode: 'Credit / Debit Cards', count: 1850, pct: 13.1, amount: 840000, color: '#3B82F6' },
         { mode: 'PPI / Wallets', count: 1250, pct: 8.9, amount: 420000, color: '#60A5FA' },
       ];
     case 'yesterday':
       return [
-        { mode: 'UPI QR / Intent', count: 5900, pct: 51.2, amount: 2100000, color: '#155EEF' },
+        { mode: 'UPI QR / Intent', count: 5900, pct: 51.2, amount: 2100000, color: '#2F6F5E' },
         { mode: 'Net Banking Direct', count: 2400, pct: 19.4, amount: 980000, color: '#2563EB' },
         { mode: 'Credit / Debit Cards', count: 1600, pct: 14.0, amount: 620000, color: '#3B82F6' },
         { mode: 'PPI / Wallets', count: 900, pct: 7.4, amount: 280000, color: '#60A5FA' },
       ];
     case '7d':
       return [
-        { mode: 'UPI QR / Intent', count: 42500, pct: 50.5, amount: 14800000, color: '#155EEF' },
+        { mode: 'UPI QR / Intent', count: 42500, pct: 50.5, amount: 14800000, color: '#2F6F5E' },
         { mode: 'Net Banking Direct', count: 17800, pct: 21.0, amount: 8200000, color: '#2563EB' },
         { mode: 'Credit / Debit Cards', count: 11400, pct: 13.5, amount: 4500000, color: '#3B82F6' },
         { mode: 'PPI / Wallets', count: 6800, pct: 8.0, amount: 2000000, color: '#60A5FA' },
       ];
     case '30d':
       return [
-        { mode: 'UPI QR / Intent', count: 182000, pct: 52.0, amount: 64400000, color: '#155EEF' },
+        { mode: 'UPI QR / Intent', count: 182000, pct: 52.0, amount: 64400000, color: '#2F6F5E' },
         { mode: 'Net Banking Direct', count: 71750, pct: 20.5, amount: 32000000, color: '#2563EB' },
         { mode: 'Credit / Debit Cards', count: 46200, pct: 13.2, amount: 17600000, color: '#3B82F6' },
         { mode: 'PPI / Wallets', count: 29050, pct: 8.3, amount: 10000000, color: '#60A5FA' },
       ];
     case 'custom':
       return [
-        { mode: 'UPI QR / Intent', count: 73840, pct: 52.0, amount: 25428000, color: '#155EEF' },
+        { mode: 'UPI QR / Intent', count: 73840, pct: 52.0, amount: 25428000, color: '#2F6F5E' },
         { mode: 'Net Banking Direct', count: 29820, pct: 21.0, amount: 10269000, color: '#2563EB' },
         { mode: 'Credit / Debit Cards', count: 18460, pct: 13.0, amount: 6357000, color: '#3B82F6' },
         { mode: 'PPI / Wallets', count: 11360, pct: 8.0, amount: 3912000, color: '#60A5FA' },
@@ -259,7 +259,7 @@ export const PayInDashboardView: React.FC<PayInDashboardViewProps> = ({
           label="Total Pay-In Collection Volume"
           value={formatCurrency(currentMetrics.volume)}
           subtext={currentMetrics.subtext}
-          icon={<ArrowDownLeft className="w-4 h-4 text-[#155EEF]" />}
+          icon={<ArrowDownLeft className="w-4 h-4 text-[#2F6F5E]" />}
           variant="primary"
         />
         <FinancialMetricCard
@@ -280,7 +280,7 @@ export const PayInDashboardView: React.FC<PayInDashboardViewProps> = ({
           label="Est. Gateway Fee Revenue"
           value={formatCurrency(currentMetrics.fee)}
           subtext={`Avg Ticket: ₹${avgTicket}`}
-          icon={<CreditCard className="w-4 h-4 text-[#155EEF]" />}
+          icon={<CreditCard className="w-4 h-4 text-[#2F6F5E]" />}
           variant="neutral"
         />
       </div>
@@ -302,8 +302,8 @@ export const PayInDashboardView: React.FC<PayInDashboardViewProps> = ({
                 <AreaChart data={currentTrend} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="payInBlueGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#155EEF" stopOpacity={0.08} />
-                      <stop offset="95%" stopColor="#155EEF" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#2F6F5E" stopOpacity={0.08} />
+                      <stop offset="95%" stopColor="#2F6F5E" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
@@ -339,7 +339,7 @@ export const PayInDashboardView: React.FC<PayInDashboardViewProps> = ({
                     type="monotone"
                     dataKey="payinAmount"
                     name="Collection Volume"
-                    stroke="#155EEF"
+                    stroke="#2F6F5E"
                     strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#payInBlueGradient)"

@@ -227,7 +227,7 @@ export default function RetailerTransactionsPage() {
                     setPage(1);
                   }}
                   placeholder="Search Txn ID, Mobile, Ref, Beneficiary..."
-                  className="w-full pl-9 pr-3.5 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white"
+                  className="w-full pl-9 pr-3.5 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E] focus:ring-2 focus:ring-[#D4E1AE] bg-white"
                 />
                 {searchQuery && (
                   <button
@@ -252,7 +252,7 @@ export default function RetailerTransactionsPage() {
                     className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                       typeFilter === t
                         ? t === 'PAY_IN'
-                          ? 'bg-[#0F4C81] text-white shadow-2xs'
+                          ? 'bg-[#2F6F5E] text-white shadow-2xs'
                           : t === 'PAY_OUT'
                           ? 'bg-[#F97316] text-white shadow-2xs'
                           : 'bg-slate-900 text-white shadow-2xs'
@@ -271,7 +271,7 @@ export default function RetailerTransactionsPage() {
                   setStatusFilter(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded-xl bg-white focus:outline-hidden focus:border-[#0F4C81]"
+                className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded-xl bg-white focus:outline-hidden focus:border-[#2F6F5E]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="SUCCESS">SUCCESS</option>
@@ -308,7 +308,7 @@ export default function RetailerTransactionsPage() {
           <div className="overflow-x-auto">
             {loading ? (
               <div className="py-16 text-center text-xs text-slate-400 space-y-2">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#0F4C81]" />
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#2F6F5E]" />
                 <p>Loading transaction history...</p>
               </div>
             ) : transactions.length === 0 ? (
@@ -353,7 +353,7 @@ export default function RetailerTransactionsPage() {
                       >
                         {/* Transaction ID & Date */}
                         <td className="py-3.5 px-4">
-                          <span className="font-mono font-bold text-slate-900 group-hover:text-[#0F4C81] transition-colors block">
+                          <span className="font-mono font-bold text-slate-900 group-hover:text-[#2F6F5E] transition-colors block">
                             {t.transactionRef}
                           </span>
                           <span className="text-[11px] text-slate-400 font-mono">

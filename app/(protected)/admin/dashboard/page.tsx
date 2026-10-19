@@ -251,7 +251,7 @@ function AdminDashboardContent() {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="px-4 py-2 bg-[#155EEF] text-white text-xs font-semibold rounded-lg hover:bg-[#1149B8] transition-colors cursor-pointer"
+              className="px-4 py-2 bg-[#2F6F5E] text-white text-xs font-semibold rounded-lg hover:bg-[#25594C] transition-colors cursor-pointer"
             >
               Reset All Filters
             </button>
@@ -269,11 +269,11 @@ function AdminDashboardContent() {
                 onClick={() => setActiveTab('PAY_IN')}
                 className={`px-3.5 py-2 rounded-md font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer ${
                   activeTab === 'PAY_IN'
-                    ? 'bg-[#155EEF] text-white shadow-xs'
+                    ? 'bg-[#2F6F5E] text-white shadow-xs'
                     : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60'
                 }`}
               >
-                <ArrowDownLeft className={`w-3.5 h-3.5 ${activeTab === 'PAY_IN' ? 'text-white' : 'text-[#155EEF]'}`} />
+                <ArrowDownLeft className={`w-3.5 h-3.5 ${activeTab === 'PAY_IN' ? 'text-white' : 'text-[#2F6F5E]'}`} />
                 <span>Pay-In</span>
                 <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
                   activeTab === 'PAY_IN' ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-[#475569]'
@@ -288,11 +288,11 @@ function AdminDashboardContent() {
                 onClick={() => setActiveTab('PAY_OUT')}
                 className={`px-3.5 py-2 rounded-md font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer ${
                   activeTab === 'PAY_OUT'
-                    ? 'bg-[#155EEF] text-white shadow-xs'
+                    ? 'bg-[#2F6F5E] text-white shadow-xs'
                     : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60'
                 }`}
               >
-                <ArrowUpRight className={`w-3.5 h-3.5 ${activeTab === 'PAY_OUT' ? 'text-white' : 'text-[#155EEF]'}`} />
+                <ArrowUpRight className={`w-3.5 h-3.5 ${activeTab === 'PAY_OUT' ? 'text-white' : 'text-[#2F6F5E]'}`} />
                 <span>Pay-Out</span>
                 <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
                   activeTab === 'PAY_OUT' ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-[#475569]'
@@ -307,11 +307,11 @@ function AdminDashboardContent() {
                 onClick={() => setActiveTab('NETWORK_KYC')}
                 className={`px-3.5 py-2 rounded-md font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer ${
                   activeTab === 'NETWORK_KYC'
-                    ? 'bg-[#155EEF] text-white shadow-xs'
+                    ? 'bg-[#2F6F5E] text-white shadow-xs'
                     : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60'
                 }`}
               >
-                <Store className={`w-3.5 h-3.5 ${activeTab === 'NETWORK_KYC' ? 'text-white' : 'text-[#155EEF]'}`} />
+                <Store className={`w-3.5 h-3.5 ${activeTab === 'NETWORK_KYC' ? 'text-white' : 'text-[#2F6F5E]'}`} />
                 <span>Network & KYC</span>
                 {pendingApprovalsCount > 0 && (
                   <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono font-bold ${

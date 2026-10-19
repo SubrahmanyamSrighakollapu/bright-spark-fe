@@ -38,7 +38,7 @@ export const RefundPolicyView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <RotateCcw className="w-6 h-6 text-[#155EEF]" />
+            <RotateCcw className="w-6 h-6 text-[#2F6F5E]" />
             Refund & Cancellation Policy Management
           </h1>
           <p className="text-sm text-[#64748B] mt-0.5">
@@ -52,7 +52,7 @@ export const RefundPolicyView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold text-[#334155] mb-1 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-[#155EEF]" /> Cancellation SLA (Max Hours)
+                <Clock className="w-3.5 h-3.5 text-[#2F6F5E]" /> Cancellation SLA (Max Hours)
               </label>
               <Input
                 type="number"
@@ -66,7 +66,7 @@ export const RefundPolicyView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-[#334155] mb-1 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-[#155EEF]" /> Refund Processing SLA (Turnaround Time)
+                <Clock className="w-3.5 h-3.5 text-[#2F6F5E]" /> Refund Processing SLA (Turnaround Time)
               </label>
               <Input
                 placeholder="e.g. 5-7 Business Days"
@@ -86,13 +86,13 @@ export const RefundPolicyView: React.FC = () => {
               rows={10}
               value={policyContent}
               onChange={(e) => setPolicyContent(e.target.value)}
-              className="w-full p-4 rounded-lg border border-[#CBD5E1] text-xs font-mono text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#155EEF] leading-relaxed"
+              className="w-full p-4 rounded-lg border border-[#CBD5E1] text-xs font-mono text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#2F6F5E] leading-relaxed"
               required
             />
           </div>
 
           <div className="flex justify-end pt-2">
-            <Button type="submit" variant="primary" isLoading={isSaving} className="bg-[#155EEF] hover:bg-[#124BCC]">
+            <Button type="submit" variant="primary" isLoading={isSaving} className="bg-[#2F6F5E] hover:bg-[#25594C]">
               <Save className="w-4 h-4 mr-2" />
               Save Refund Policy
             </Button>

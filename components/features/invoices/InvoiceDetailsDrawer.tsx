@@ -164,9 +164,9 @@ export const InvoiceDetailsDrawer: React.FC<InvoiceDetailsDrawerProps> = ({
 
               <Card title="Issuer (Platform Operations)" subtitle="Billing issuing authority">
                 <div className="space-y-1.5 text-slate-700">
-                  <div className="font-bold text-sm text-slate-900">Qin Star Pay Operations Engine Ltd.</div>
+                  <div className="font-bold text-sm text-slate-900">Bright Spark Operations Engine Ltd.</div>
                   <div className="text-[11px] font-mono text-slate-500">CIN: U72900TG2026PTC189912</div>
-                  <div>GSTIN: <strong className="font-mono text-slate-900">36QSPAY9981P1Z0</strong></div>
+                  <div>GSTIN: <strong className="font-mono text-slate-900">36BSPAY9981P1Z0</strong></div>
                   <div className="text-slate-500">Corporate Finance Tower, Financial District, Gachibowli, Hyderabad - 500032</div>
                 </div>
               </Card>
@@ -249,9 +249,9 @@ export const InvoiceDetailsDrawer: React.FC<InvoiceDetailsDrawerProps> = ({
                 <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
                   <span className="text-[11px] text-slate-400 font-semibold block">Linked Transaction</span>
                   <span className="font-mono font-bold text-xs text-[var(--primary)] block">
-                    {invoice.transactionIds[0] || 'QSP20260903001'}
+                    {invoice.transactionIds[0] || 'BSP20260903001'}
                   </span>
-                  <Link href={`/admin/transactions/${invoice.transactionIds[0] || 'QSP20260903001'}`}>
+                  <Link href={`/admin/transactions/${invoice.transactionIds[0] || 'BSP20260903001'}`}>
                     <span className="text-[11px] text-blue-600 flex items-center gap-1 hover:underline mt-1">
                       <span>View Transaction</span>
                       <ExternalLink className="w-3 h-3" />

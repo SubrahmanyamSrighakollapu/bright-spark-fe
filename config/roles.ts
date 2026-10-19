@@ -1,5 +1,5 @@
 /**
- * Role-Based Access Control (RBAC) foundation for Qin Star Pay.
+ * Role-Based Access Control (RBAC) foundation for Bright Spark.
  */
 
 export const USER_ROLES = {
@@ -68,8 +68,8 @@ export interface UserContext {
 }
 
 export const ROLE_MAPPED_PARENTS: Record<UserRole, string> = {
-  ADMIN: 'Qin Star Pay Admin',
-  SUPER_ADMIN: 'Qin Star Pay Platform',
+  ADMIN: 'Bright Spark Admin',
+  SUPER_ADMIN: 'Bright Spark Platform',
   MASTER_DISTRIBUTOR: 'Master Distributor Network',
   DISTRIBUTOR: 'Distributor Network',
   RETAILER: 'Retailer Operations',
@@ -83,11 +83,11 @@ export const ROLE_MAPPED_PARENTS: Record<UserRole, string> = {
 
 export const MOCK_CURRENT_USER: UserContext = {
   id: 'usr_admin_01',
-  name: 'Qin Star Admin',
-  email: 'admin@qinstarpay.com',
+  name: 'Bright Spark Admin',
+  email: 'admin@brightspark.com',
   role: 'SUPER_ADMIN',
   permissions: ['*'],
-  mappedParentRole: 'Qin Star Pay Admin',
+  mappedParentRole: 'Bright Spark Admin',
 };
 
 /**

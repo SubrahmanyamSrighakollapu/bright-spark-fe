@@ -32,9 +32,9 @@ export interface NoticeBoardItem {
   createdAt: string;
 }
 
-const STORAGE_KEY = 'qin_star_pay_headline_alerts_v1';
-const TICKERS_KEY = 'qin_star_pay_tickers_v1';
-const NOTICES_KEY = 'qin_star_pay_notices_v1';
+const STORAGE_KEY = 'bright_spark_headline_alerts_v1';
+const TICKERS_KEY = 'bright_spark_tickers_v1';
+const NOTICES_KEY = 'bright_spark_notices_v1';
 
 export const INITIAL_HEADLINE_ALERTS: HeadlineAlertItem[] = [
   {

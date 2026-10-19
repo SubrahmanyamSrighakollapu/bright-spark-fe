@@ -70,7 +70,7 @@ export default function TransactionSearchPage() {
           <div className="flex flex-col sm:flex-row items-stretch gap-3">
             <div className="flex-1">
               <Input
-                placeholder="Enter Transaction ID (QSP...), Order ID (ORD...), UTR, or Mobile Number"
+                placeholder="Enter Transaction ID (BSP...), Order ID (ORD...), UTR, or Mobile Number"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 leftIcon={<Search className="w-4 h-4 text-slate-400" />}

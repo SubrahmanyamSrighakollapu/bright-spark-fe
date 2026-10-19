@@ -29,14 +29,14 @@ export const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages,
 
       <div className="flex flex-wrap items-center gap-3">
         {onPageSizeChange && <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500">Rows per page
-          <select value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))} className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+          <select value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))} className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-[#A8BE61] focus:ring-2 focus:ring-[#D4E1AE]">
             {pageSizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
         </label>}
         <nav className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1" aria-label="Pagination">
-          <button type="button" disabled={page === 1} onClick={() => onPageChange(page - 1)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white hover:text-blue-700 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-30" aria-label="Previous page"><ChevronLeft className="h-4 w-4" /></button>
-          {visiblePages.map((number) => <button type="button" key={number} onClick={() => onPageChange(number)} aria-current={number === page ? 'page' : undefined} className={`h-8 min-w-8 rounded-lg px-2 text-xs font-extrabold transition ${number === page ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-700'}`}>{number}</button>)}
-          <button type="button" disabled={page === pages} onClick={() => onPageChange(page + 1)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white hover:text-blue-700 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-30" aria-label="Next page"><ChevronRight className="h-4 w-4" /></button>
+          <button type="button" disabled={page === 1} onClick={() => onPageChange(page - 1)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white hover:text-[#2F6F5E] hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-30" aria-label="Previous page"><ChevronLeft className="h-4 w-4" /></button>
+          {visiblePages.map((number) => <button type="button" key={number} onClick={() => onPageChange(number)} aria-current={number === page ? 'page' : undefined} className={`h-8 min-w-8 rounded-lg px-2 text-xs font-extrabold transition ${number === page ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-[#2F6F5E]'}`}>{number}</button>)}
+          <button type="button" disabled={page === pages} onClick={() => onPageChange(page + 1)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white hover:text-[#2F6F5E] hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-30" aria-label="Next page"><ChevronRight className="h-4 w-4" /></button>
         </nav>
       </div>
     </div>

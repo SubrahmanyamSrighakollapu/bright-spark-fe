@@ -12,9 +12,9 @@ import {
 export const mockAdminUsers: AdminUser[] = [
   {
     id: 'usr_admin_01',
-    employeeId: 'EMP_QSP_001',
+    employeeId: 'EMP_BSP_001',
     name: 'Vikramaditya Sharma',
-    email: 'admin@qinstarpay.com',
+    email: 'admin@brightspark.com',
     mobile: '+91 98765 43210',
     roleIds: ['role_super_admin'],
     roleNames: ['Super Admin'],
@@ -26,9 +26,9 @@ export const mockAdminUsers: AdminUser[] = [
   },
   {
     id: 'usr_ops_01',
-    employeeId: 'EMP_QSP_014',
+    employeeId: 'EMP_BSP_014',
     name: 'Ananya Verma',
-    email: 'ops.lead@qinstarpay.com',
+    email: 'ops.lead@brightspark.com',
     mobile: '+91 98765 11223',
     roleIds: ['role_operations'],
     roleNames: ['Operations Lead'],
@@ -40,9 +40,9 @@ export const mockAdminUsers: AdminUser[] = [
   },
   {
     id: 'usr_acct_01',
-    employeeId: 'EMP_QSP_028',
+    employeeId: 'EMP_BSP_028',
     name: 'Rohan Mehta',
-    email: 'accounts@qinstarpay.com',
+    email: 'accounts@brightspark.com',
     mobile: '+91 98765 99887',
     roleIds: ['role_accounts'],
     roleNames: ['Accounts Manager'],
@@ -54,9 +54,9 @@ export const mockAdminUsers: AdminUser[] = [
   },
   {
     id: 'usr_kyc_01',
-    employeeId: 'EMP_QSP_042',
+    employeeId: 'EMP_BSP_042',
     name: 'Priya Nair',
-    email: 'kyc.desk@qinstarpay.com',
+    email: 'kyc.desk@brightspark.com',
     mobile: '+91 98765 55443',
     roleIds: ['role_kyc'],
     roleNames: ['KYC Compliance Lead'],
@@ -68,9 +68,9 @@ export const mockAdminUsers: AdminUser[] = [
   },
   {
     id: 'usr_supp_01',
-    employeeId: 'EMP_QSP_089',
+    employeeId: 'EMP_BSP_089',
     name: 'Devendra Singh',
-    email: 'support@qinstarpay.com',
+    email: 'support@brightspark.com',
     mobile: '+91 98765 77665',
     roleIds: ['role_support'],
     roleNames: ['Customer Support Lead'],
@@ -346,8 +346,8 @@ export const mockReasonCodes: ReasonCode[] = [
 
 export const mockPlatformSettings: PlatformSettings = {
   general: {
-    platformName: 'Qin Star Pay Operations Engine',
-    supportEmail: 'support@qinstarpay.com',
+    platformName: 'Bright Spark Operations Engine',
+    supportEmail: 'support@brightspark.com',
     supportPhone: '+91 1800 200 9988',
     defaultCurrency: 'INR',
     timezone: 'Asia/Kolkata (IST +05:30)',
@@ -358,7 +358,7 @@ export const mockPlatformSettings: PlatformSettings = {
     defaultTimeoutMs: 5000,
     maxRetryCount: 3,
     statusCheckIntervalSeconds: 30,
-    transactionPrefix: 'QSP',
+    transactionPrefix: 'BSP',
     orderPrefix: 'ORD',
   },
   settlement: {
@@ -375,11 +375,11 @@ export const mockPlatformSettings: PlatformSettings = {
     criticalAlertEnabled: true,
   },
   branding: {
-    platformName: 'Qin Star Pay',
-    logoUrl: '/images/qinstarpay_logo.svg',
+    platformName: 'Bright Spark',
+    logoUrl: '/bright-spark-logo.jpg',
     faviconUrl: '/favicon.ico',
     primaryBrandColor: '#002B49',
-    loginPageTitle: 'Qin Star Pay Operational Portal',
+    loginPageTitle: 'Bright Spark Operational Portal',
     supportText: 'Need assistance? Contact 24/7 Operations Support.',
   },
   security: {

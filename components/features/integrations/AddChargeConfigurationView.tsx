@@ -202,7 +202,7 @@ export const AddChargeConfigurationView: React.FC = () => {
       key: 'chargeValue',
       header: 'Fee Rate',
       render: (row) => (
-        <span className="font-bold text-[#155EEF] text-sm">
+        <span className="font-bold text-[#2F6F5E] text-sm">
           {row.chargeType === 'percentage' ? `${row.chargeValue}%` : `₹${row.chargeValue.toFixed(2)}`}
         </span>
       ),
@@ -231,7 +231,7 @@ export const AddChargeConfigurationView: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => handleOpenEdit(row)}
-            className="h-8 px-2 text-[#155EEF] hover:bg-[#F1F5F9]"
+            className="h-8 px-2 text-[#2F6F5E] hover:bg-[#F1F5F9]"
           >
             <Edit className="w-3.5 h-3.5 mr-1" />
             Edit
@@ -256,7 +256,7 @@ export const AddChargeConfigurationView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <Percent className="w-6 h-6 text-[#155EEF]" />
+            <Percent className="w-6 h-6 text-[#2F6F5E]" />
             Gateway Charge & Processing Fee Configuration
           </h1>
           <p className="text-sm text-[#64748B] mt-0.5">
@@ -330,7 +330,7 @@ export const AddChargeConfigurationView: React.FC = () => {
           </div>
 
           <div className="flex justify-end pt-2">
-            <Button type="submit" variant="primary" className="bg-[#155EEF] hover:bg-[#124BCC]">
+            <Button type="submit" variant="primary" className="bg-[#2F6F5E] hover:bg-[#25594C]">
               <Plus className="w-4 h-4 mr-2" />
               Add Fee Rule
             </Button>
@@ -396,7 +396,7 @@ export const AddChargeConfigurationView: React.FC = () => {
                 id="modalGst"
                 checked={isTaxApplicable}
                 onChange={(e) => setIsTaxApplicable(e.target.checked)}
-                className="w-4 h-4 text-[#155EEF] rounded"
+                className="w-4 h-4 text-[#2F6F5E] rounded"
               />
               <label htmlFor="modalGst" className="text-xs font-medium text-[#0F172A]">
                 Add 18% GST tax to fee calculation
@@ -406,7 +406,7 @@ export const AddChargeConfigurationView: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="bg-[#155EEF]">
+              <Button type="submit" variant="primary" className="bg-[#2F6F5E]">
                 Update Rule
               </Button>
             </div>

@@ -129,7 +129,7 @@ export const AdminOverviewCards: React.FC<AdminOverviewCardsProps> = ({ summary 
           <span className="text-[10px] text-slate-500 block mt-0.5 font-medium">{summary.systemRolesCount} Core • {summary.customRolesCount} Custom</span>
         </Card>
 
-        <Card className="p-3.5 bg-white border border-slate-200/80 shadow-xs hover:border-blue-400 transition-all">
+        <Card className="p-3.5 bg-white border border-slate-200/80 shadow-xs hover:border-[#91A94E] transition-all">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Permissions</span>
             <div className="p-1.5 rounded-lg bg-blue-50 text-blue-700">

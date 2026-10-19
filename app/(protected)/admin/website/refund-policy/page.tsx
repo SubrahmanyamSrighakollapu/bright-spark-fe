@@ -2,7 +2,7 @@ import React from 'react';
 import { RefundPolicyView } from '@/components/features/website/RefundPolicyView';
 
 export const metadata = {
-  title: 'Refund Policy | Qin Star Pay Admin',
+  title: 'Refund Policy | Bright Spark Admin',
   description: 'Define customer order cancellation policies and dispute timelines',
 };
 

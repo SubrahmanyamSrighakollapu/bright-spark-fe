@@ -178,7 +178,7 @@ export const EmployeesListView: React.FC = () => {
       header: 'Employee Code',
       render: (r) => (
         <div>
-          <span className="font-mono font-bold text-[#155EEF] text-xs block">{r.employeeCode}</span>
+          <span className="font-mono font-bold text-[#2F6F5E] text-xs block">{r.employeeCode}</span>
           <span className="text-[10px] text-slate-400 font-semibold uppercase">Role: Employee</span>
         </div>
       ),
@@ -259,7 +259,7 @@ export const EmployeesListView: React.FC = () => {
       <div className="shrink-0 bg-white rounded-2xl border border-[#E5EAF1] p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-extrabold text-[#0F172A] flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-[#155EEF]" />
+            <UserCheck className="w-5 h-5 text-[#2F6F5E]" />
             Employee Management
           </h1>
           <p className="text-xs text-[#64748B] mt-1 font-medium">
@@ -383,7 +383,7 @@ export const EmployeesListView: React.FC = () => {
         <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
           {isLoading ? (
             <div className="flex items-center justify-center p-12 text-slate-500 gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-[#155EEF]" />
+              <Loader2 className="w-5 h-5 animate-spin text-[#2F6F5E]" />
               <span className="text-xs font-medium">Loading employee records...</span>
             </div>
           ) : employees.length === 0 ? (
@@ -463,7 +463,7 @@ export const EmployeesListView: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-white border border-slate-200 rounded-lg">
                 <span className="text-[11px] text-slate-400 block">Department</span>
-                <span className="font-bold text-[#155EEF] text-xs">{selectedEmployee.departmentCode}</span>
+                <span className="font-bold text-[#2F6F5E] text-xs">{selectedEmployee.departmentCode}</span>
               </div>
 
               <div className="p-3 bg-white border border-slate-200 rounded-lg">

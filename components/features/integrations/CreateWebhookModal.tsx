@@ -85,7 +85,7 @@ export const CreateWebhookModal: React.FC<CreateWebhookModalProps> = ({
 
         <Input
           label="Webhook Endpoint URL"
-          placeholder="https://api.qinstarpay.com/v1/callbacks/..."
+          placeholder="https://api.brightspark.com/v1/callbacks/..."
           value={endpointUrl}
           onChange={(e) => setEndpointUrl(e.target.value)}
           required

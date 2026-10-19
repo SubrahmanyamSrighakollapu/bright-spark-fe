@@ -2,7 +2,7 @@ import React from 'react';
 import { AddChargeConfigurationView } from '@/components/features/integrations/AddChargeConfigurationView';
 
 export const metadata = {
-  title: 'Charge Configuration | Qin Star Pay Admin',
+  title: 'Charge Configuration | Bright Spark Admin',
   description: 'Define processing fee rules and GST tax configurations',
 };
 

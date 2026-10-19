@@ -2,7 +2,7 @@ import React from 'react';
 import { InvoiceDetailsView } from '@/components/features/administration/InvoiceDetailsView';
 
 export const metadata = {
-  title: 'Invoice Details Configuration | Qin Star Pay Admin',
+  title: 'Invoice Details Configuration | Bright Spark Admin',
   description: 'Configure company legal details, GSTIN, logos, and printable invoice terms',
 };
 

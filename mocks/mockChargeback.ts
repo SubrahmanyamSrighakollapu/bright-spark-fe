@@ -3,7 +3,7 @@ import { Chargeback } from '@/types/domain';
 export const mockChargebacks: Chargeback[] = [
   {
     chargebackId: 'CB_20260903_001',
-    transactionId: 'QSP20260903001',
+    transactionId: 'BSP20260903001',
     orderId: 'ORD_20260903_9901',
     entityId: 'ent_mch_01',
     entityName: 'Apex Pay Solutions',
@@ -72,7 +72,7 @@ export const mockChargebacks: Chargeback[] = [
   },
   {
     chargebackId: 'CB_20260903_002',
-    transactionId: 'QSP20260903004',
+    transactionId: 'BSP20260903004',
     orderId: 'ORD_20260903_8812',
     entityId: 'ent_rtl_01',
     entityName: 'Zenith Retail',
@@ -115,7 +115,7 @@ export const mockChargebacks: Chargeback[] = [
   },
   {
     chargebackId: 'CB_20260903_003',
-    transactionId: 'QSP20260903005',
+    transactionId: 'BSP20260903005',
     orderId: 'ORD_20260903_7712',
     entityId: 'ent_mch_01',
     entityName: 'Apex Pay Solutions',
@@ -182,7 +182,7 @@ export const mockChargebacks: Chargeback[] = [
   },
   {
     chargebackId: 'CB_20260903_004',
-    transactionId: 'QSP20260903008',
+    transactionId: 'BSP20260903008',
     orderId: 'ORD_20260903_6612',
     entityId: 'ent_mch_02',
     entityName: 'Global Fintech Ltd',

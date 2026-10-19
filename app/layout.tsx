@@ -13,13 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Qin Star Pay — Enterprise Payment Operations Platform",
+  title: "Bright Spark — Enterprise Payment Operations Platform",
   description: "Financial operations command center for pay-in, pay-out, wallet, ledger, and multi-tier network management.",
+  icons: { icon: "/bright-spark-logo.jpg", apple: "/bright-spark-logo.jpg" },
 };
 
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/context/AuthContext";
-import { QinStarPrimeReactProvider } from "@/components/providers/PrimeReactProvider";
+import { BrightSparkPrimeReactProvider } from "@/components/providers/PrimeReactProvider";
 import { ConfirmationProvider } from "@/context/ConfirmationContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -29,13 +30,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <QinStarPrimeReactProvider>
+        <BrightSparkPrimeReactProvider>
           <ToastProvider>
             <ConfirmationProvider>
               <AuthProvider>{children}</AuthProvider>
             </ConfirmationProvider>
           </ToastProvider>
-        </QinStarPrimeReactProvider>
+        </BrightSparkPrimeReactProvider>
       </body>
     </html>
   );

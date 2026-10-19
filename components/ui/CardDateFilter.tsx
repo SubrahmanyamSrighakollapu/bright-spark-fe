@@ -87,14 +87,14 @@ export const CardDateFilter: React.FC<CardDateFilterProps> = ({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'inline-flex items-center gap-1.5 bg-[#F8FAFC] border border-[#E5EAF1] hover:border-[#155EEF] text-[#475569] font-semibold rounded-md transition-all cursor-pointer hover:bg-white',
+          'inline-flex items-center gap-1.5 bg-[#F8FAFC] border border-[#E5EAF1] hover:border-[#2F6F5E] text-[#475569] font-semibold rounded-md transition-all cursor-pointer hover:bg-white',
           size === 'xs' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-xs',
-          isOpen ? 'border-[#155EEF] ring-2 ring-blue-50' : ''
+          isOpen ? 'border-[#2F6F5E] ring-2 ring-blue-50' : ''
         )}
       >
-        <Calendar className="w-3.5 h-3.5 text-[#155EEF]" />
+        <Calendar className="w-3.5 h-3.5 text-[#2F6F5E]" />
         <span>{getDisplayLabel()}</span>
-        <ChevronDown className={cn('w-3 h-3 text-[#64748B] transition-transform duration-200', isOpen ? 'rotate-180 text-[#155EEF]' : '')} />
+        <ChevronDown className={cn('w-3 h-3 text-[#64748B] transition-transform duration-200', isOpen ? 'rotate-180 text-[#2F6F5E]' : '')} />
       </button>
 
       {isOpen && (
@@ -114,12 +114,12 @@ export const CardDateFilter: React.FC<CardDateFilterProps> = ({
                   className={cn(
                     'w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors font-medium flex items-center justify-between cursor-pointer',
                     isSelected
-                      ? 'bg-blue-50 text-[#155EEF] font-bold'
+                      ? 'bg-blue-50 text-[#2F6F5E] font-bold'
                       : 'text-[#334155] hover:bg-[#F1F5F9]'
                   )}
                 >
                   <span>{p.label}</span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-[#155EEF]" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-[#2F6F5E]" />}
                 </button>
               );
             })}
@@ -138,7 +138,7 @@ export const CardDateFilter: React.FC<CardDateFilterProps> = ({
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-[#CBD5E1] rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#155EEF]"
+                    className="w-full px-2 py-1 text-xs border border-[#CBD5E1] rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#2F6F5E]"
                   />
                 </div>
                 <div>
@@ -147,14 +147,14 @@ export const CardDateFilter: React.FC<CardDateFilterProps> = ({
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-[#CBD5E1] rounded bg-white focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
+                    className="w-full px-2 py-1 text-xs border border-[#CBD5E1] rounded bg-white focus:outline-none focus:ring-2 focus:ring-[#2F6F5E]"
                   />
                 </div>
               </div>
               <button
                 type="button"
                 onClick={handleApplyCustom}
-                className="w-full py-1.5 bg-[#155EEF] hover:bg-[#1149B8] text-white rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                className="w-full py-1.5 bg-[#2F6F5E] hover:bg-[#25594C] text-white rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
               >
                 <span>Apply Range</span>
                 <ArrowRight className="w-3 h-3" />

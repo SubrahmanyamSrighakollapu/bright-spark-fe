@@ -168,7 +168,7 @@ export const RolesManagementView: React.FC = () => {
       header: 'Role Title & Code',
       render: (row) => (
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-lg bg-blue-50 text-[#155EEF]">
+          <div className="p-2 rounded-lg bg-blue-50 text-[#2F6F5E]">
             <Shield className="w-4 h-4" />
           </div>
           <div>
@@ -280,7 +280,7 @@ export const RolesManagementView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <Shield className="w-6 h-6 text-[#155EEF]" />
+            <Shield className="w-6 h-6 text-[#2F6F5E]" />
             Roles & Permission Matrix Management
           </h1>
           <p className="text-xs text-[#64748B] mt-1">
@@ -373,7 +373,7 @@ export const RolesManagementView: React.FC = () => {
                               type="checkbox"
                               checked={isChecked}
                               onChange={() => handleTogglePermission(p.code)}
-                              className="w-3.5 h-3.5 text-[#155EEF] rounded"
+                              className="w-3.5 h-3.5 text-[#2F6F5E] rounded"
                             />
                             <span className="truncate">{p.code}</span>
                           </label>

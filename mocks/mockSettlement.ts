@@ -6,7 +6,7 @@ export const mockSettlements: Settlement[] = [
     entityId: 'ent_mch_01',
     entityType: 'MERCHANT',
     entityName: 'Apex Pay Solutions',
-    entityCode: 'QSP-MCH-001',
+    entityCode: 'BSP-MCH-001',
     walletId: 'wlt_mch_001',
     settlementMode: 'BANK_TRANSFER',
     settlementCycle: 'T+1',
@@ -47,7 +47,7 @@ export const mockSettlements: Settlement[] = [
     ],
     includedTransactions: [
       {
-        transactionId: 'QSP20260903001',
+        transactionId: 'BSP20260903001',
         type: 'PAY_IN',
         grossAmount: 50000.0,
         charges: 500.0,
@@ -56,7 +56,7 @@ export const mockSettlements: Settlement[] = [
         status: 'SUCCESS',
       },
       {
-        transactionId: 'QSP20260903004',
+        transactionId: 'BSP20260903004',
         type: 'PAY_IN',
         grossAmount: 30000.0,
         charges: 300.0,
@@ -65,7 +65,7 @@ export const mockSettlements: Settlement[] = [
         status: 'SUCCESS',
       },
       {
-        transactionId: 'QSP20260903005',
+        transactionId: 'BSP20260903005',
         type: 'PAY_IN',
         grossAmount: 20000.0,
         charges: 200.0,
@@ -80,7 +80,7 @@ export const mockSettlements: Settlement[] = [
     entityId: 'ent_dist_01',
     entityType: 'DISTRIBUTOR',
     entityName: 'North Zone Dist',
-    entityCode: 'QSP-DIST-001',
+    entityCode: 'BSP-DIST-001',
     walletId: 'wlt_dist_001',
     settlementMode: 'IMPS',
     settlementCycle: 'T+0',
@@ -131,7 +131,7 @@ export const mockSettlements: Settlement[] = [
     ],
     includedTransactions: [
       {
-        transactionId: 'QSP20260903006',
+        transactionId: 'BSP20260903006',
         type: 'PAY_IN',
         grossAmount: 200000.0,
         charges: 2000.0,
@@ -140,7 +140,7 @@ export const mockSettlements: Settlement[] = [
         status: 'SUCCESS',
       },
       {
-        transactionId: 'QSP20260903007',
+        transactionId: 'BSP20260903007',
         type: 'PAY_IN',
         grossAmount: 450000.0,
         charges: 4500.0,
@@ -155,7 +155,7 @@ export const mockSettlements: Settlement[] = [
     entityId: 'ent_mch_02',
     entityType: 'MERCHANT',
     entityName: 'Global Fintech Ltd',
-    entityCode: 'QSP-MCH-002',
+    entityCode: 'BSP-MCH-002',
     walletId: 'wlt_mch_002',
     settlementMode: 'NEFT',
     settlementCycle: 'T+1',
@@ -193,7 +193,7 @@ export const mockSettlements: Settlement[] = [
     ],
     includedTransactions: [
       {
-        transactionId: 'QSP20260903008',
+        transactionId: 'BSP20260903008',
         type: 'PAY_IN',
         grossAmount: 180000.0,
         charges: 1800.0,
@@ -208,7 +208,7 @@ export const mockSettlements: Settlement[] = [
     entityId: 'ent_rtl_01',
     entityType: 'RETAILER',
     entityName: 'Zenith Retail',
-    entityCode: 'QSP-RTL-001',
+    entityCode: 'BSP-RTL-001',
     walletId: 'wlt_rtl_001',
     settlementMode: 'BANK_TRANSFER',
     settlementCycle: 'T+1',
@@ -244,7 +244,7 @@ export const mockSettlements: Settlement[] = [
     ],
     includedTransactions: [
       {
-        transactionId: 'QSP20260903009',
+        transactionId: 'BSP20260903009',
         type: 'PAY_IN',
         grossAmount: 95000.0,
         charges: 950.0,

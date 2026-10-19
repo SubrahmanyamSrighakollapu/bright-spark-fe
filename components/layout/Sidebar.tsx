@@ -25,7 +25,7 @@ export interface SidebarProps {
 
 function getCategoryForNavItem(id: string): string | null {
   if (id === 'dashboard' || id === 'md-dashboard' || id === 'dst-dashboard' || id === 'ret-dashboard') return 'MAIN';
-  if (id === 'transactions' || id === 'users' || id === 'employees' || id === 'kyc' || id === 'help-desk-admin' || id === 'ops-help-desk' || id === 'ret-bbps' || id === 'ret-payin' || id === 'ret-qr-payin' || id === 'ret-payment-links' || id === 'ret-payout' || id === 'ret-transactions' || id === 'md-distributors' || id === 'md-retailers' || id === 'dst-retailers' || id === 'md-kyc-documents' || id === 'dst-kyc-documents') return 'OPERATIONS';
+  if (id === 'transactions' || id === 'users' || id === 'employees' || id === 'kyc' || id === 'help-desk-admin' || id === 'ops-help-desk' || id === 'ret-bbps' || id === 'ret-aeps' || id === 'ret-payin' || id === 'ret-qr-payin' || id === 'ret-payment-links' || id === 'ret-payout' || id === 'ret-transactions' || id === 'md-distributors' || id === 'md-retailers' || id === 'dst-retailers' || id === 'md-kyc-documents' || id === 'dst-kyc-documents') return 'OPERATIONS';
   if (id === 'wallet' || id === 'wallet-management' || id === 'topup-approvals' || id === 'settlements' || id === 'reports' || id === 'chargebacks' || id === 'invoices' || id === 'ret-topup' || id === 'md-wallet' || id === 'dst-wallet' || id === 'ret-wallet' || id === 'md-commissions' || id === 'dst-commissions' || id === 'ret-commissions' || id === 'md-reports' || id === 'dst-reports' || id === 'ret-reports') return 'FINANCE';
   if (id === 'notifications' || id === 'md-notifications' || id === 'dst-notifications' || id === 'ret-notifications') return 'COMMUNICATIONS';
   if (id === 'integrations' || id === 'administration' || id === 'website') return 'SYSTEM';
@@ -109,27 +109,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             isCollapsed ? 'mx-auto justify-center' : ''
           )}
         >
-          <div className="w-10 h-10 rounded-xl bg-slate-50 p-1 flex items-center justify-center shrink-0 border border-[#E5EAF1] group-hover:border-[var(--primary-300)] group-hover:bg-blue-50/50 transition-all duration-200">
+          <div className={cn('h-10 overflow-hidden rounded-lg bg-white flex items-center shrink-0 transition-all duration-200', isCollapsed ? 'w-10' : 'w-[190px]')}>
             <Image
-              src="/logo.jpeg"
-              alt="Qin Star Pay Logo"
-              width={38}
-              height={38}
-              className="object-contain rounded-lg w-full h-full"
+              src="/bright-spark-logo.jpg"
+              alt="Bright Spark Innovations Pvt Ltd"
+              width={1237}
+              height={312}
+              className={cn('h-full max-w-none', isCollapsed ? 'w-[158px] object-cover object-left' : 'w-full object-contain')}
               priority
             />
           </div>
-
-          {!isCollapsed && (
-            <div className="flex flex-col truncate">
-              <span className="font-extrabold text-sm tracking-wide text-slate-900 leading-tight group-hover:text-[#155EEF] transition-colors">
-                QIN STAR PAY
-              </span>
-              <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase mt-0.5">
-                FINTECH WORKSPACE
-              </span>
-            </div>
-          )}
         </Link>
 
         {!isCollapsed && (
@@ -196,8 +185,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className="w-8 h-8 rounded-full object-cover shrink-0 border border-blue-200 shadow-2xs"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-blue-50 text-[#155EEF] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
-                <Shield className="w-4 h-4 text-[#155EEF]" />
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-[#2F6F5E] font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
+                <Shield className="w-4 h-4 text-[#2F6F5E]" />
               </div>
             )}
 
@@ -230,7 +219,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         isOpen={showLogoutModal}
         onConfirm={handleConfirmLogout}
         onCancel={() => setShowLogoutModal(false)}
-        title="Sign Out of Qin Star Pay?"
+        title="Sign Out of Bright Spark?"
         message="Are you sure you want to sign out of your session? Unsaved changes will be discarded."
         confirmText="Sign Out"
         cancelText="Cancel"

@@ -8,8 +8,8 @@ import { kycService } from '@/services/kycService';
 import { APP_CONFIG } from '@/config';
 import type { LoginLocation } from '@/utils/geolocation';
 
-const STORAGE_KEY_SESSION_LOCAL = 'qin-star-pay-auth-session-local';
-const STORAGE_KEY_SESSION_SESSION = 'qin-star-pay-auth-session-session';
+const STORAGE_KEY_SESSION_LOCAL = 'bright-spark-auth-session-local';
+const STORAGE_KEY_SESSION_SESSION = 'bright-spark-auth-session-session';
 const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 
 export interface AuthContextType {
@@ -47,11 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfilePhotoUrl(url);
       if (session?.userId) {
         if (url) {
-          localStorage.setItem(`qsp_custom_profile_photo_${session.userId}`, url);
-          if (session.entityId) localStorage.setItem(`qsp_custom_profile_photo_${session.entityId}`, url);
+          localStorage.setItem(`bsp_custom_profile_photo_${session.userId}`, url);
+          if (session.entityId) localStorage.setItem(`bsp_custom_profile_photo_${session.entityId}`, url);
         } else {
-          localStorage.removeItem(`qsp_custom_profile_photo_${session.userId}`);
-          if (session.entityId) localStorage.removeItem(`qsp_custom_profile_photo_${session.entityId}`);
+          localStorage.removeItem(`bsp_custom_profile_photo_${session.userId}`);
+          if (session.entityId) localStorage.removeItem(`bsp_custom_profile_photo_${session.entityId}`);
         }
       }
     },
@@ -66,8 +66,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const customPhoto =
-      localStorage.getItem(`qsp_custom_profile_photo_${session.userId}`) ||
-      (session.entityId ? localStorage.getItem(`qsp_custom_profile_photo_${session.entityId}`) : null);
+      localStorage.getItem(`bsp_custom_profile_photo_${session.userId}`) ||
+      (session.entityId ? localStorage.getItem(`bsp_custom_profile_photo_${session.entityId}`) : null);
 
     if (customPhoto) {
       setProfilePhotoUrl(customPhoto);
@@ -75,8 +75,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const cached =
-      localStorage.getItem(`qsp_profile_photo_${session.userId}`) ||
-      (session.entityId ? localStorage.getItem(`qsp_profile_photo_${session.entityId}`) : null);
+      localStorage.getItem(`bsp_profile_photo_${session.userId}`) ||
+      (session.entityId ? localStorage.getItem(`bsp_profile_photo_${session.entityId}`) : null);
 
     if (cached) {
       setProfilePhotoUrl(cached);
@@ -129,19 +129,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             reader.onloadend = () => {
               const dataUrl = reader.result as string;
               if (dataUrl && dataUrl.startsWith('data:image')) {
-                const latestCustom = localStorage.getItem(`qsp_custom_profile_photo_${session.userId}`);
+                const latestCustom = localStorage.getItem(`bsp_custom_profile_photo_${session.userId}`);
                 if (!latestCustom) {
                   setProfilePhotoUrl(dataUrl);
-                  localStorage.setItem(`qsp_profile_photo_${session.userId}`, dataUrl);
+                  localStorage.setItem(`bsp_profile_photo_${session.userId}`, dataUrl);
                   if (session.entityId) {
-                    localStorage.setItem(`qsp_profile_photo_${session.entityId}`, dataUrl);
+                    localStorage.setItem(`bsp_profile_photo_${session.entityId}`, dataUrl);
                   }
                 }
               }
             };
             reader.readAsDataURL(blob);
           } catch {
-            const latestCustom = localStorage.getItem(`qsp_custom_profile_photo_${session.userId}`);
+            const latestCustom = localStorage.getItem(`bsp_custom_profile_photo_${session.userId}`);
             if (!latestCustom && photoDoc.fileUrl && photoDoc.fileUrl.startsWith('data:image')) {
               setProfilePhotoUrl(photoDoc.fileUrl);
             }
@@ -203,8 +203,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession((current) => current ? { ...current, accessToken: detail.accessToken,
         refreshToken: detail.refreshToken || current.refreshToken } : current);
     };
-    window.addEventListener('qsp:tokens-refreshed', updateTokens);
-    return () => window.removeEventListener('qsp:tokens-refreshed', updateTokens);
+    window.addEventListener('bsp:tokens-refreshed', updateTokens);
+    return () => window.removeEventListener('bsp:tokens-refreshed', updateTokens);
   }, []);
 
   const setPreviewRole = useCallback((role: UserRole | null) => {

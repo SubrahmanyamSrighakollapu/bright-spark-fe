@@ -10,14 +10,14 @@ import { FileText, Save, Upload, Building, ShieldCheck, Mail, Phone, MapPin } fr
 export const InvoiceDetailsView: React.FC = () => {
   const { toastSuccess } = useToast();
 
-  const [companyName, setCompanyName] = useState('Qin Star Pay India Private Limited');
+  const [companyName, setCompanyName] = useState('Bright Spark India Private Limited');
   const [gstNo, setGstNo] = useState('36AAACQ9481Q1Z4');
   const [address, setAddress] = useState('Plot No. 42, Financial District, Nanakramguda, Hyderabad, Telangana - 500032');
   const [phone, setPhone] = useState('+91 98765 43210');
-  const [email, setEmail] = useState('billing@qinstarpay.com');
+  const [email, setEmail] = useState('billing@brightspark.com');
   const [footerNote, setFooterNote] = useState('This is a computer-generated tax invoice. No signature required under Section 31 of CGST Act 2017.');
   const [termsContent, setTermsContent] = useState('1. All payments are subject to bank processing rules.\n2. Discrepancies must be reported within 7 business days.\n3. GST charges are non-refundable after tax invoice filing.');
-  const [logoFileName, setLogoFileName] = useState<string | null>('qinstar_official_logo.png');
+  const [logoFileName, setLogoFileName] = useState<string | null>('bright_spark_official_logo.jpg');
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +38,7 @@ export const InvoiceDetailsView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <FileText className="w-6 h-6 text-[#155EEF]" />
+            <FileText className="w-6 h-6 text-[#2F6F5E]" />
             Invoice & Legal Tax Configuration
           </h1>
           <p className="text-sm text-[#64748B] mt-0.5">
@@ -53,7 +53,7 @@ export const InvoiceDetailsView: React.FC = () => {
           <Card className="p-6 bg-white border border-[#E5EAF1] shadow-xs rounded-xl">
             <form onSubmit={handleSave} className="space-y-6">
               <h2 className="text-base font-bold text-[#0F172A] pb-2 border-b border-[#E2E8F0] flex items-center gap-2">
-                <Building className="w-4 h-4 text-[#155EEF]" /> Entity Details
+                <Building className="w-4 h-4 text-[#2F6F5E]" /> Entity Details
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -89,7 +89,7 @@ export const InvoiceDetailsView: React.FC = () => {
                   rows={2}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
+                  className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#2F6F5E]"
                   required
                 />
               </div>
@@ -110,7 +110,7 @@ export const InvoiceDetailsView: React.FC = () => {
                 <label className="block text-xs font-semibold text-[#334155] mb-1">Company Header Logo Asset</label>
                 <div className="p-4 rounded-xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-50 text-[#155EEF] flex items-center justify-center font-bold text-lg border border-blue-200">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 text-[#2F6F5E] flex items-center justify-center font-bold text-lg border border-blue-200">
                       Q
                     </div>
                     <div>
@@ -123,7 +123,7 @@ export const InvoiceDetailsView: React.FC = () => {
                   <label className="cursor-pointer">
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                     <span className="px-3 py-1.5 rounded-lg border border-[#CBD5E1] bg-white text-xs font-semibold text-[#0F172A] hover:bg-[#F1F5F9] inline-flex items-center gap-1.5">
-                      <Upload className="w-3.5 h-3.5 text-[#155EEF]" />
+                      <Upload className="w-3.5 h-3.5 text-[#2F6F5E]" />
                       Upload Logo
                     </span>
                   </label>
@@ -133,7 +133,7 @@ export const InvoiceDetailsView: React.FC = () => {
               {/* Legal Notes */}
               <div className="space-y-4 pt-2">
                 <h2 className="text-base font-bold text-[#0F172A] pb-2 border-b border-[#E2E8F0] flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#155EEF]" /> Invoice Terms & Legal Footers
+                  <ShieldCheck className="w-4 h-4 text-[#2F6F5E]" /> Invoice Terms & Legal Footers
                 </h2>
 
                 <div>
@@ -147,7 +147,7 @@ export const InvoiceDetailsView: React.FC = () => {
                     rows={4}
                     value={termsContent}
                     onChange={(e) => setTermsContent(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
+                    className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#2F6F5E]"
                   />
                 </div>
               </div>
@@ -173,7 +173,7 @@ export const InvoiceDetailsView: React.FC = () => {
                 <div>
                   <div className="font-bold text-[#0F172A] text-sm">{companyName || 'Company Name'}</div>
                   <div className="text-[10px] text-[#64748B] mt-0.5 max-w-[200px]">{address}</div>
-                  <div className="text-[10px] text-[#155EEF] font-semibold mt-1">GSTIN: {gstNo}</div>
+                  <div className="text-[10px] text-[#2F6F5E] font-semibold mt-1">GSTIN: {gstNo}</div>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-xs text-[#0F172A]">TAX INVOICE</span>

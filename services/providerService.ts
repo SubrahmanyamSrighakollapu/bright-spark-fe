@@ -133,7 +133,7 @@ export const providerService = {
             status: p.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
             supportedServices: ['PAY_IN', 'PAY_OUT', 'SETTLEMENT'],
             supportedModes: ['UPI', 'IMPS', 'NEFT'],
-            baseUrl: p.baseUrl || 'https://api.qinstarpay.com',
+            baseUrl: p.baseUrl || 'https://api.brightspark.com',
             authType: 'BEARER_TOKEN',
             timeout: 5000,
             priority: 1,

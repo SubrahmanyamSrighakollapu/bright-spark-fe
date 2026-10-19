@@ -37,11 +37,11 @@ export function ForcePasswordChangeModal() {
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-[2px]" role="dialog" aria-modal="true" aria-labelledby="force-password-title">
       <form onSubmit={submit} className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white shadow-[0_28px_80px_-20px_rgba(15,23,42,0.55)]">
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#0F4C81] to-[#1769aa] px-6 py-6 text-white sm:px-7">
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#2F6F5E] to-[#3D765F] px-6 py-6 text-white sm:px-7">
           <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/10" />
           <div className="relative flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15 shadow-inner"><ShieldCheck className="h-6 w-6" /></div>
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100">Account security</p><h2 id="force-password-title" className="mt-1 text-xl font-bold">Create your new password</h2><p className="mt-1.5 text-xs leading-5 text-blue-100">Replace your temporary password to securely access Qin Star Pay.</p></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-100">Account security</p><h2 id="force-password-title" className="mt-1 text-xl font-bold">Create your new password</h2><p className="mt-1.5 text-xs leading-5 text-blue-100">Replace your temporary password to securely access Bright Spark.</p></div>
           </div>
         </div>
         <div className="space-y-4 px-6 py-6 sm:px-7">

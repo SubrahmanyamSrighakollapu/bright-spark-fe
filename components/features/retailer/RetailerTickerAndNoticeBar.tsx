@@ -71,7 +71,7 @@ export const RetailerTickerAndNoticeBar: React.FC = () => {
   return (
     <div className="space-y-3">
       {/* Scroll Text Ticker Strip */}
-      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-[#0F4C81] to-slate-900 border border-indigo-400/20 shadow-md text-white flex items-center justify-between gap-3 overflow-hidden relative">
+      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-[#2F6F5E] to-slate-900 border border-indigo-400/20 shadow-md text-white flex items-center justify-between gap-3 overflow-hidden relative">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-mono font-extrabold shrink-0 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-0.5" />
@@ -109,7 +109,7 @@ export const RetailerTickerAndNoticeBar: React.FC = () => {
         onClose={() => setIsNoticeModalOpen(false)}
         title={
           <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
-            <Bell className="w-5 h-5 text-[#0F4C81]" />
+            <Bell className="w-5 h-5 text-[#2F6F5E]" />
             <span>Platform Bulletin & Downline Notice Board</span>
           </div>
         }
@@ -124,7 +124,7 @@ export const RetailerTickerAndNoticeBar: React.FC = () => {
             notices.map((notice) => (
               <div
                 key={notice.id}
-                className="p-4 rounded-xl border border-slate-200 bg-white space-y-2 shadow-2xs hover:border-indigo-200 transition-colors"
+                className="p-4 rounded-xl border border-slate-200 bg-white space-y-2 shadow-2xs hover:border-[#D4E1AE] transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
                   <h4 className="font-bold text-sm text-slate-900">{notice.noticeTitle}</h4>

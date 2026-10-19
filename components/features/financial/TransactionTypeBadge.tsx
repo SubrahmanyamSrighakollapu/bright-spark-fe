@@ -20,9 +20,9 @@ export const TransactionTypeBadge: React.FC<TransactionTypeBadgeProps> = ({
   if (isPayIn) {
     return (
       <span
-        className={`inline-flex items-center gap-1 font-bold rounded-lg bg-indigo-50 text-[#0F4C81] border border-indigo-200/80 ${paddingClass}`}
+        className={`inline-flex items-center gap-1 font-bold rounded-lg bg-indigo-50 text-[#2F6F5E] border border-[#D4E1AE]/80 ${paddingClass}`}
       >
-        <ArrowDownLeft className="w-3 h-3 text-[#0F4C81]" />
+        <ArrowDownLeft className="w-3 h-3 text-[#2F6F5E]" />
         <span>Pay-In</span>
       </span>
     );

@@ -443,7 +443,7 @@ export default function RetailerPayInPage() {
                   {/* SECTION 1: Customer Details */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-indigo-50 text-[#0F4C81] flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-50 text-[#2F6F5E] flex items-center justify-center font-bold text-xs">
                         1
                       </div>
                       <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
@@ -479,7 +479,7 @@ export default function RetailerPayInPage() {
                             onChange={(e) => setCustomerName(e.target.value)}
                             placeholder="e.g. Rajesh Kumar"
                             required
-                            className="w-full pl-10 pr-3.5 py-2.5 text-xs h-11 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white transition-all"
+                            className="w-full pl-10 pr-3.5 py-2.5 text-xs h-11 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E] focus:ring-2 focus:ring-[#D4E1AE] bg-white transition-all"
                           />
                         </div>
                       </div>
@@ -489,7 +489,7 @@ export default function RetailerPayInPage() {
                   {/* SECTION 2: Payment & Service Selection */}
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-indigo-50 text-[#0F4C81] flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-50 text-[#2F6F5E] flex items-center justify-center font-bold text-xs">
                         2
                       </div>
                       <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
@@ -548,7 +548,7 @@ export default function RetailerPayInPage() {
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-indigo-50 text-[#0F4C81] flex items-center justify-center font-bold text-xs">
+                        <div className="w-7 h-7 rounded-lg bg-indigo-50 text-[#2F6F5E] flex items-center justify-center font-bold text-xs">
                           3
                         </div>
                         <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
@@ -556,7 +556,7 @@ export default function RetailerPayInPage() {
                         </h2>
                       </div>
                       {activeLimit && (
-                        <span className="text-[11px] font-mono font-medium text-indigo-900 bg-indigo-50 border border-indigo-200/80 px-2.5 py-1 rounded-lg">
+                        <span className="text-[11px] font-mono font-medium text-indigo-900 bg-indigo-50 border border-[#D4E1AE]/80 px-2.5 py-1 rounded-lg">
                           Allowed range: ₹{activeLimit.minPerTransaction} — ₹{activeLimit.maxPerTransaction.toLocaleString('en-IN')}
                         </span>
                       )}
@@ -575,7 +575,7 @@ export default function RetailerPayInPage() {
                             <div className="space-y-2.5 p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <Package className="w-4 h-4 text-[#0F4C81]" />
+                                  <Package className="w-4 h-4 text-[#2F6F5E]" />
                                   <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                                     Configured Products & Prices ({selectedCategoryObj.name})
                                   </span>
@@ -584,7 +584,7 @@ export default function RetailerPayInPage() {
                                   className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
                                     isPresetOnly
                                       ? 'text-amber-800 bg-amber-100/90 border border-amber-200'
-                                      : 'text-[#0F4C81] bg-indigo-100/70'
+                                      : 'text-[#2F6F5E] bg-indigo-100/70'
                                   }`}
                                 >
                                   {isPresetOnly ? 'Mandatory Package Selection (Admin Policy)' : 'Admin Configured Presets'}
@@ -605,14 +605,14 @@ export default function RetailerPayInPage() {
                                       onClick={() => handleSelectProduct(product)}
                                       className={`p-3 rounded-xl border text-left cursor-pointer transition-all space-y-1 relative ${
                                         isSelected
-                                          ? 'bg-white border-[#0F4C81] ring-2 ring-indigo-200 shadow-xs'
-                                          : 'bg-white/80 border-slate-200 hover:border-indigo-300 hover:bg-white'
+                                          ? 'bg-white border-[#2F6F5E] ring-2 ring-indigo-200 shadow-xs'
+                                          : 'bg-white/80 border-slate-200 hover:border-[#A8BE61] hover:bg-white'
                                       }`}
                                     >
                                       <div className="flex items-start justify-between gap-2">
                                         <div className="space-y-0.5">
                                           <div className="flex items-center gap-1.5">
-                                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#0F4C81] shrink-0" />}
+                                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#2F6F5E] shrink-0" />}
                                             <h4 className="text-xs font-bold text-slate-900 leading-tight">
                                               {product.name}
                                             </h4>
@@ -622,7 +622,7 @@ export default function RetailerPayInPage() {
                                           </p>
                                         </div>
                                         <div className="text-right shrink-0">
-                                          <span className="text-sm font-extrabold font-mono text-[#0F4C81]">
+                                          <span className="text-sm font-extrabold font-mono text-[#2F6F5E]">
                                             {formatCurrency(product.price)}
                                           </span>
                                         </div>
@@ -682,14 +682,14 @@ export default function RetailerPayInPage() {
                                     : isPresetOnly
                                     ? 'border-amber-300 bg-amber-50/30 text-amber-900 font-extrabold cursor-not-allowed'
                                     : selectedProductId
-                                    ? 'border-[#0F4C81] focus:ring-indigo-100 bg-indigo-50/20 text-slate-900'
-                                    : 'border-slate-300 focus:border-[#0F4C81] focus:ring-indigo-100 bg-slate-50/30 text-slate-900'
+                                    ? 'border-[#2F6F5E] focus:ring-[#D4E1AE] bg-indigo-50/20 text-slate-900'
+                                    : 'border-slate-300 focus:border-[#2F6F5E] focus:ring-[#D4E1AE] bg-slate-50/30 text-slate-900'
                                 }`}
                               />
                             </div>
 
                             {parseFloat(amountStr) > 0 && (
-                              <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#0F4C81]">
+                              <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#2F6F5E]">
                                 {formatAmountInWords(parseFloat(amountStr))}
                               </div>
                             )}
@@ -723,7 +723,7 @@ export default function RetailerPayInPage() {
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
                         placeholder="e.g. Grocery package payment / walk-in collection notes"
-                        className="w-full px-3.5 py-2.5 text-xs h-11 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white transition-all"
+                        className="w-full px-3.5 py-2.5 text-xs h-11 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E] focus:ring-2 focus:ring-[#D4E1AE] bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -734,7 +734,7 @@ export default function RetailerPayInPage() {
                       type="submit"
                       variant="primary"
                       fullWidth
-                      className="h-12 text-sm font-bold bg-[#0F4C81] hover:bg-indigo-900 text-white shadow-sm"
+                      className="h-12 text-sm font-bold bg-[#2F6F5E] hover:bg-[#1B4339] text-white shadow-sm"
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
                       Continue to Review
@@ -751,7 +751,7 @@ export default function RetailerPayInPage() {
               <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-[#0F4C81] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-[#2F6F5E] flex items-center justify-center">
                       <Percent className="w-4 h-4" />
                     </div>
                     <div>
@@ -786,7 +786,7 @@ export default function RetailerPayInPage() {
                       </div>
                       <div className="pt-2.5 border-t border-slate-200/80 flex justify-between items-center text-slate-900 font-sans">
                         <span className="font-bold text-xs uppercase tracking-wider text-slate-700">Net Settlement Credit</span>
-                        <span className="font-mono text-base font-extrabold text-[#0F4C81]">
+                        <span className="font-mono text-base font-extrabold text-[#2F6F5E]">
                           {formatCurrency(preview.actualCreditAmount)}
                         </span>
                       </div>
@@ -830,7 +830,7 @@ export default function RetailerPayInPage() {
                   <h2 className="text-lg font-bold text-slate-900">Review Pay-In Collection</h2>
                   <p className="text-xs text-slate-500">Please verify customer details and financial totals before confirming.</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-[#0F4C81] border border-indigo-200">
+                <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 text-[#2F6F5E] border border-[#D4E1AE]">
                   {paymentMode} Collection
                 </span>
               </div>
@@ -839,7 +839,7 @@ export default function RetailerPayInPage() {
                 {/* Customer Details Box */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
                   <h3 className="font-bold text-slate-700 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-[#0F4C81]" /> Customer & Transaction Details
+                    <User className="w-3.5 h-3.5 text-[#2F6F5E]" /> Customer & Transaction Details
                   </h3>
                   <div className="space-y-2 text-slate-800 font-mono text-xs">
                     <div className="flex justify-between py-1 border-b border-slate-200/60">
@@ -876,7 +876,7 @@ export default function RetailerPayInPage() {
                 </div>
 
                 {/* Financial Breakdown Box */}
-                <div className="p-4 rounded-xl border border-indigo-200 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white space-y-3">
+                <div className="p-4 rounded-xl border border-[#D4E1AE] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white space-y-3">
                   <h3 className="font-bold text-indigo-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                     <Percent className="w-3.5 h-3.5 text-indigo-400" /> Commercial Summary
                   </h3>
@@ -928,7 +928,7 @@ export default function RetailerPayInPage() {
                 <Button
                   variant="primary"
                   size="md"
-                  className="bg-[#0F4C81] hover:bg-indigo-900 text-white font-bold px-6 shadow-sm"
+                  className="bg-[#2F6F5E] hover:bg-[#1B4339] text-white font-bold px-6 shadow-sm"
                   onClick={handleConfirmPayIn}
                   isLoading={isSubmitting}
                   leftIcon={<CheckCircle2 className="w-4 h-4" />}
@@ -1011,7 +1011,7 @@ export default function RetailerPayInPage() {
               </Button>
 
               <Link href="/retailer/transactions">
-                <Button variant="primary" size="md" className="bg-[#0F4C81] text-white" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                <Button variant="primary" size="md" className="bg-[#2F6F5E] text-white" rightIcon={<ArrowRight className="w-4 h-4" />}>
                   View Transactions
                 </Button>
               </Link>

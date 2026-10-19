@@ -69,10 +69,10 @@ export const CreateDebitRequestModal: React.FC<CreateDebitRequestModalProps> = (
           value={walletId}
           onChange={(e) => setWalletId(e.target.value)}
           options={[
-            { value: 'wlt_mch_001', label: 'Apex Pay Solutions (QSP-MCH-001)' },
-            { value: 'wlt_mch_002', label: 'Global Fintech Ltd (QSP-MCH-002)' },
-            { value: 'wlt_dist_001', label: 'North Zone Dist (QSP-DIST-001)' },
-            { value: 'wlt_rtl_001', label: 'Zenith Retail (QSP-RTL-001)' },
+            { value: 'wlt_mch_001', label: 'Apex Pay Solutions (BSP-MCH-001)' },
+            { value: 'wlt_mch_002', label: 'Global Fintech Ltd (BSP-MCH-002)' },
+            { value: 'wlt_dist_001', label: 'North Zone Dist (BSP-DIST-001)' },
+            { value: 'wlt_rtl_001', label: 'Zenith Retail (BSP-RTL-001)' },
           ]}
         />
 

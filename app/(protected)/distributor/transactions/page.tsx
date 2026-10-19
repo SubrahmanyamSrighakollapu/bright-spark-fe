@@ -289,7 +289,7 @@ function DistributorTransactionsContent() {
                   setCurrentPage(1);
                 }}
                 placeholder="Search transaction ID, UTR, order ID or retailer..."
-                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-blue-500"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-[#2F6F5E]"
               />
             </div>
 

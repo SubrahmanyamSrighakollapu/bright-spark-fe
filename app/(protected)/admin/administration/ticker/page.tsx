@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollTextManagerView } from '@/components/features/administration/ScrollTextManagerView';
 
 export const metadata = {
-  title: 'Scroll Text Manager | Qin Star Pay Admin',
+  title: 'Scroll Text Manager | Bright Spark Admin',
   description: 'Publish real-time scrolling news tickers',
 };
 

@@ -20,6 +20,7 @@ import {
   Save,
   RotateCcw,
   ShieldCheck,
+  Fingerprint,
 } from 'lucide-react';
 
 interface RetailerPermission {
@@ -31,6 +32,7 @@ interface RetailerPermission {
 }
 
 const DEFAULT_PERMISSIONS: RetailerPermission[] = [
+  { id: 'aeps', name: 'AEPS', description: 'Access retailer Aadhaar Enabled Payment System services.', icon: <Fingerprint className="h-4 w-4 text-[#2F6F5E]" />, enabled: true },
   { id: 'pay-in', name: 'Pay-In', description: 'Accept customer collections through enabled payment methods.', icon: <ArrowDownLeft className="h-4 w-4 text-emerald-600" />, enabled: true },
   { id: 'pay-out', name: 'Pay-Out', description: 'Initiate beneficiary and retailer disbursements.', icon: <ArrowUpRight className="h-4 w-4 text-rose-600" />, enabled: true },
   { id: 'transactions', name: 'Transactions', description: 'View Pay-In and Pay-Out transaction history and details.', icon: <ArrowLeftRight className="h-4 w-4 text-blue-600" />, enabled: true },
@@ -100,7 +102,7 @@ export const UserServiceSettings: React.FC = () => {
             <div>
               <span className="inline-flex rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-blue-700">Retailer access control</span>
               <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">Retailer Settings</h1>
-              <p className="mt-1 text-sm text-slate-500">Select a retailer and manage the Qin Star Pay modules available to that account.</p>
+              <p className="mt-1 text-sm text-slate-500">Select a retailer and manage the Bright Spark modules available to that account.</p>
             </div>
           </div>
 
@@ -163,7 +165,7 @@ export const UserServiceSettings: React.FC = () => {
                         aria-checked={permission.enabled}
                         aria-label={`${permission.enabled ? 'Disable' : 'Enable'} ${permission.name}`}
                         onClick={() => handleToggle(permission.id)}
-                        className={`relative inline-flex h-6 w-11 cursor-pointer rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-200 ${permission.enabled ? 'bg-blue-600' : 'bg-slate-300'}`}
+                        className={`relative inline-flex h-6 w-11 cursor-pointer rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#D4E1AE] ${permission.enabled ? 'bg-[#2F6F5E]' : 'bg-slate-300'}`}
                       >
                         <span className={`inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white shadow transition-transform ${permission.enabled ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
                       </button>

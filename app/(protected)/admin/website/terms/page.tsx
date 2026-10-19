@@ -2,7 +2,7 @@ import React from 'react';
 import { TermsAndConditionsView } from '@/components/features/website/TermsAndConditionsView';
 
 export const metadata = {
-  title: 'Terms & Conditions | Qin Star Pay Admin',
+  title: 'Terms & Conditions | Bright Spark Admin',
   description: 'Maintain legal user service agreements and platform usage terms',
 };
 

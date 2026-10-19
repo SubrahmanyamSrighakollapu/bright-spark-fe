@@ -28,7 +28,7 @@ const INITIAL_SECTIONS: TermsSection[] = [
   {
     id: 'sec_2',
     title: '2. Wallet Balance & Transaction Liabilities',
-    content: 'Wallet balances represent prepaid settlement funds. Minimum safety balances must be maintained at all times. Qin Star Pay reserves the right to hold funds on flagged suspicious activities.',
+    content: 'Wallet balances represent prepaid settlement funds. Minimum safety balances must be maintained at all times. Bright Spark reserves the right to hold funds on flagged suspicious activities.',
     updatedAt: '2026-09-10T12:00:00Z',
   },
   {
@@ -103,7 +103,7 @@ export const TermsAndConditionsView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <FileText className="w-6 h-6 text-[#155EEF]" />
+            <FileText className="w-6 h-6 text-[#2F6F5E]" />
             Terms & Conditions Management
           </h1>
           <p className="text-sm text-[#64748B] mt-0.5">
@@ -115,7 +115,7 @@ export const TermsAndConditionsView: React.FC = () => {
             <Eye className="w-4 h-4 mr-1.5" />
             Preview Terms
           </Button>
-          <Button variant="primary" onClick={handleOpenAdd} className="bg-[#155EEF] hover:bg-[#124BCC]">
+          <Button variant="primary" onClick={handleOpenAdd} className="bg-[#2F6F5E] hover:bg-[#25594C]">
             <Plus className="w-4 h-4 mr-1.5" />
             Add Section
           </Button>
@@ -134,7 +134,7 @@ export const TermsAndConditionsView: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleOpenEdit(sec)}
-                    className="h-8 px-2 text-[#155EEF]"
+                    className="h-8 px-2 text-[#2F6F5E]"
                   >
                     <Edit className="w-3.5 h-3.5 mr-1" /> Edit
                   </Button>
@@ -160,7 +160,7 @@ export const TermsAndConditionsView: React.FC = () => {
         <div>
           <Card className="p-5 bg-white border border-[#E5EAF1] shadow-xs rounded-xl space-y-4">
             <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider flex items-center gap-1.5">
-              <History className="w-3.5 h-3.5 text-[#155EEF]" /> Policy Edits Audit Log
+              <History className="w-3.5 h-3.5 text-[#2F6F5E]" /> Policy Edits Audit Log
             </h3>
             <div className="space-y-3">
               {AUDIT_LOGS.map((log, i) => (
@@ -202,7 +202,7 @@ export const TermsAndConditionsView: React.FC = () => {
                 placeholder="Enter detailed legal terms text..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#155EEF]"
+                className="w-full px-3 py-2 rounded-lg border border-[#CBD5E1] text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#2F6F5E]"
                 required
               />
             </div>
@@ -210,7 +210,7 @@ export const TermsAndConditionsView: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="bg-[#155EEF]">
+              <Button type="submit" variant="primary" className="bg-[#2F6F5E]">
                 Save Section
               </Button>
             </div>
@@ -227,7 +227,7 @@ export const TermsAndConditionsView: React.FC = () => {
         >
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 text-xs text-[#0F172A]">
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-xs font-semibold">
-              Legal Master Agreement — Qin Star Pay Platform
+              Legal Master Agreement — Bright Spark Platform
             </div>
             {sections.map((s) => (
               <div key={s.id} className="space-y-1">

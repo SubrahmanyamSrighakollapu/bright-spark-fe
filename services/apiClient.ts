@@ -60,10 +60,10 @@ class ApiClient {
   private getStoredSession(): { isLocal: boolean; session: Record<string, unknown> } | null {
     if (typeof window === 'undefined') return null;
     try {
-      const sessionRaw = sessionStorage.getItem('qin-star-pay-auth-session-session');
+      const sessionRaw = sessionStorage.getItem('bright-spark-auth-session-session');
       if (sessionRaw) return { isLocal: false, session: JSON.parse(sessionRaw) };
 
-      const localRaw = localStorage.getItem('qin-star-pay-auth-session-local');
+      const localRaw = localStorage.getItem('bright-spark-auth-session-local');
       if (localRaw) return { isLocal: true, session: JSON.parse(localRaw) };
     } catch {
       return null;
@@ -87,17 +87,17 @@ class ApiClient {
       ...(refreshToken ? { refreshToken } : {}),
     };
 
-    const key = stored.isLocal ? 'qin-star-pay-auth-session-local' : 'qin-star-pay-auth-session-session';
+    const key = stored.isLocal ? 'bright-spark-auth-session-local' : 'bright-spark-auth-session-session';
     const storage = stored.isLocal ? localStorage : sessionStorage;
     storage.setItem(key, JSON.stringify(updatedSession));
-    window.dispatchEvent(new CustomEvent('qsp:tokens-refreshed', { detail: { accessToken, refreshToken } }));
+    window.dispatchEvent(new CustomEvent('bsp:tokens-refreshed', { detail: { accessToken, refreshToken } }));
   }
 
   private clearSessionAndRedirect() {
     if (typeof window === 'undefined') return;
     try {
-      sessionStorage.removeItem('qin-star-pay-auth-session-session');
-      localStorage.removeItem('qin-star-pay-auth-session-local');
+      sessionStorage.removeItem('bright-spark-auth-session-session');
+      localStorage.removeItem('bright-spark-auth-session-local');
     } catch {}
 
     if (window.location.pathname !== '/login') {

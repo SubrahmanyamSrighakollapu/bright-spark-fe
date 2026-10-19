@@ -2,7 +2,7 @@ import React from 'react';
 import { PlanCommissionView } from '@/components/features/administration/PlanCommissionView';
 
 export const metadata = {
-  title: 'Plan Commission Configuration | Qin Star Pay Admin',
+  title: 'Plan Commission Configuration | Bright Spark Admin',
   description: 'Configure revenue distribution rates across downline tiers',
 };
 

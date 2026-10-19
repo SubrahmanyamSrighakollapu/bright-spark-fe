@@ -178,7 +178,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         isOpen={showLogoutConfirmation}
         onCancel={() => setShowLogoutConfirmation(false)}
         onConfirm={handleLogout}
-        title="Sign out of Qin Star Pay?"
+        title="Sign out of Bright Spark?"
         message="You will need to sign in again to access your account."
         confirmText="Sign Out"
         variant="danger"

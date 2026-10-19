@@ -97,11 +97,11 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
       {/* 1. Retailers, Distributors & Master Distributors Details Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
         {/* Tier 1: Master Distributors Card */}
-        <div role="link" tabIndex={0} onClick={() => router.push('/admin/network/master-distributors')} onKeyDown={(e) => e.key === 'Enter' && router.push('/admin/network/master-distributors')} className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-indigo-300 hover:shadow-md cursor-pointer">
+        <div role="link" tabIndex={0} onClick={() => router.push('/admin/network/master-distributors')} onKeyDown={(e) => e.key === 'Enter' && router.push('/admin/network/master-distributors')} className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-[#A8BE61] hover:shadow-md cursor-pointer">
           <div>
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 text-[#155EEF]">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 text-[#2F6F5E]">
                   <Award className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
@@ -125,16 +125,16 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E5EAF1] mt-3 text-xs">
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-[#0F172A]">0</strong></span>
-            <span className="flex items-center gap-0.5 font-semibold text-[#155EEF]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
+            <span className="flex items-center gap-0.5 font-semibold text-[#2F6F5E]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
           </div>
         </div>
 
         {/* Tier 2: Distributors Card */}
-        <div role="link" tabIndex={0} onClick={() => router.push('/admin/network/distributors')} onKeyDown={(e) => e.key === 'Enter' && router.push('/admin/network/distributors')} className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-blue-300 hover:shadow-md cursor-pointer">
+        <div role="link" tabIndex={0} onClick={() => router.push('/admin/network/distributors')} onKeyDown={(e) => e.key === 'Enter' && router.push('/admin/network/distributors')} className="bg-white border border-[#E5EAF1] rounded-xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-[#A8BE61] hover:shadow-md cursor-pointer">
           <div>
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 text-[#155EEF]">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 text-[#2F6F5E]">
                   <Building2 className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
@@ -158,7 +158,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E5EAF1] mt-3 text-xs">
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-emerald-700">+2</strong></span>
-            <span className="flex items-center gap-0.5 font-semibold text-[#155EEF]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
+            <span className="flex items-center gap-0.5 font-semibold text-[#2F6F5E]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
           </div>
         </div>
 
@@ -191,7 +191,7 @@ export const NetworkKYCDashboardView: React.FC<NetworkKYCDashboardViewProps> = (
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E5EAF1] mt-3 text-xs">
             <span className="font-semibold text-[#334155]">New Today: <strong className="text-emerald-700">+5</strong></span>
-            <span className="flex items-center gap-0.5 font-semibold text-[#155EEF]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
+            <span className="flex items-center gap-0.5 font-semibold text-[#2F6F5E]">View records <ArrowUpRight className="h-3.5 w-3.5" /></span>
           </div>
         </div>
 

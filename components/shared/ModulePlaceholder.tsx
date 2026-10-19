@@ -13,7 +13,7 @@ export interface ModulePlaceholderProps {
 export const ModulePlaceholder: React.FC<ModulePlaceholderProps> = ({
   title,
   moduleCode,
-  description = 'Operational module interface for Qin Star Pay operations platform.',
+  description = 'Operational module interface for Bright Spark operations platform.',
 }) => {
   return (
     <PageContainer

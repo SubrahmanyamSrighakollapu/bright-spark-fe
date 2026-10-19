@@ -15,7 +15,7 @@ export interface AppShellProps {
   children: React.ReactNode;
 }
 
-const STORAGE_KEY_SIDEBAR = 'qin-star-pay-sidebar-collapsed';
+const STORAGE_KEY_SIDEBAR = 'bright-spark-sidebar-collapsed';
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { currentUser: authUser, setPreviewRole } = useAuth();

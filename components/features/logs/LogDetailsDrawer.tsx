@@ -251,7 +251,7 @@ export const LogDetailsDrawer: React.FC<LogDetailsDrawerProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500/15 to-purple-500/15 border border-indigo-200 flex items-center justify-center shrink-0 font-bold text-indigo-700 text-[12px]">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500/15 to-purple-500/15 border border-[#D4E1AE] flex items-center justify-center shrink-0 font-bold text-indigo-700 text-[12px]">
                     {initials(activityLog?.actorName || loginLog?.userName || 'System')}
                   </div>
                   <div className="min-w-0">

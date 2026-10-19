@@ -371,7 +371,7 @@ export const WalletManagementView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E5EAF1] shadow-xs">
         <div>
           <h1 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-[#155EEF]" />
+            <Wallet className="w-6 h-6 text-[#2F6F5E]" />
             Master Wallet Management & Adjustment Hub
           </h1>
           <p className="text-xs text-[#64748B] mt-1">
@@ -446,7 +446,7 @@ export const WalletManagementView: React.FC = () => {
                     <div
                       key={u.id}
                       onClick={() => handleSelectUser(u)}
-                      className="p-2.5 hover:bg-blue-50 cursor-pointer border-b border-slate-100 last:border-0 flex items-center justify-between text-xs"
+                      className="p-2.5 hover:bg-[#F3F7E9] cursor-pointer border-b border-slate-100 last:border-0 flex items-center justify-between text-xs"
                     >
                       <div>
                         <div className="font-bold text-slate-900 flex items-center gap-1.5">

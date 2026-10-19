@@ -60,7 +60,7 @@ export const RetailerHeadlineTicker: React.FC = () => {
   return (
     <div className="relative z-20 overflow-hidden border-b border-blue-200/70 bg-gradient-to-r from-blue-50/90 via-white to-amber-50/80 shadow-2xs select-none">
       <div className="flex h-10 max-w-full items-center px-3 sm:px-4">
-        <div className="mr-3 flex shrink-0 items-center gap-1.5 rounded-lg border border-blue-900/40 bg-[#0F4C81] px-2.5 py-1 text-white shadow-xs">
+        <div className="mr-3 flex shrink-0 items-center gap-1.5 rounded-lg border border-blue-900/40 bg-[#2F6F5E] px-2.5 py-1 text-white shadow-xs">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
@@ -89,7 +89,7 @@ export const RetailerHeadlineTicker: React.FC = () => {
                 <span className="inline-flex items-center rounded-md border border-blue-300 bg-blue-100 px-2 py-0.5 font-mono text-[10px] font-bold text-blue-900 shadow-2xs">
                   {item.speed.toUpperCase()}
                 </span>
-                <span className="font-sans tracking-wide text-slate-800 transition-colors hover:text-[#0F4C81]">
+                <span className="font-sans tracking-wide text-slate-800 transition-colors hover:text-[#2F6F5E]">
                   {item.scrollText}
                 </span>
                 <span className="text-sm font-bold text-indigo-400">•</span>

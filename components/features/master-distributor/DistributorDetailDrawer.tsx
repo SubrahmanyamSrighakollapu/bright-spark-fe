@@ -59,7 +59,7 @@ export const DistributorDetailDrawer: React.FC<DistributorDetailDrawerProps> = (
       title={
         <div className="flex items-center gap-2">
           <span>{distributor.name}</span>
-          <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+          <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-[#D4E1AE]">
             {distributor.code}
           </span>
         </div>
@@ -277,7 +277,7 @@ export const DistributorDetailDrawer: React.FC<DistributorDetailDrawerProps> = (
         {/* Tab 3: Scoped Wallet */}
         {activeTab === 'wallet' && (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-slate-50">
+            <div className="p-4 rounded-xl border border-[#D4E1AE] bg-gradient-to-br from-indigo-50 via-white to-slate-50">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">

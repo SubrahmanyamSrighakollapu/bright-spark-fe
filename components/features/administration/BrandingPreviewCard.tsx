@@ -22,7 +22,7 @@ export const BrandingPreviewCard: React.FC<BrandingPreviewCardProps> = ({ brandi
               QS
             </div>
             <div>
-              <div className="font-extrabold text-sm tracking-tight">{branding.platformName || 'Qin Star Pay'}</div>
+              <div className="font-extrabold text-sm tracking-tight">{branding.platformName || 'Bright Spark'}</div>
               <span className="text-[10px] text-slate-400 font-mono">Enterprise Operations Engine</span>
             </div>
           </div>

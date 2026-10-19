@@ -39,7 +39,7 @@ export default function AdministrationOverviewPage() {
   return (
     <PageContainer
       title="Administration"
-      description="Manage Qin Star Pay access controls, operational masters, transaction limits, platform settings, and security governance."
+      description="Manage Bright Spark access controls, operational masters, transaction limits, platform settings, and security governance."
     >
       <AdminOverviewCards summary={summary || defaultSummary} />
     </PageContainer>

@@ -160,7 +160,7 @@ export default function RetailerReportsPage() {
           header: 'Txn ID / Ref',
           render: (r) => (
             <div>
-              <span className="font-mono font-bold text-[#0F4C81]">{r.transactionRef || r.id}</span>
+              <span className="font-mono font-bold text-[#2F6F5E]">{r.transactionRef || r.id}</span>
               {r.utr && r.utr !== 'N/A' && (
                 <span className="block text-[10px] text-slate-400 font-mono">UTR: {r.utr}</span>
               )}
@@ -199,7 +199,7 @@ export default function RetailerReportsPage() {
           key: 'netAmount',
           header: 'Net Wallet Impact',
           align: 'right',
-          render: (r) => <span className="font-bold text-[#0F4C81] font-mono">{formatCurrency(r.netAmount || r.amount)}</span>,
+          render: (r) => <span className="font-bold text-[#2F6F5E] font-mono">{formatCurrency(r.netAmount || r.amount)}</span>,
         },
         {
           key: 'status',
@@ -231,7 +231,7 @@ export default function RetailerReportsPage() {
         {
           key: 'transactionRef',
           header: 'Txn ID / Ref',
-          render: (r) => <span className="font-mono font-bold text-[#0F4C81]">{r.transactionRef}</span>,
+          render: (r) => <span className="font-mono font-bold text-[#2F6F5E]">{r.transactionRef}</span>,
         },
         {
           key: 'serviceType',
@@ -249,7 +249,7 @@ export default function RetailerReportsPage() {
           header: 'Plan Rule',
           align: 'center',
           render: (r) => (
-            <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-[#0F4C81] font-semibold border border-indigo-200">
+            <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-[#2F6F5E] font-semibold border border-[#D4E1AE]">
               {r.mdCommissionRate}
             </span>
           ),
@@ -290,7 +290,7 @@ export default function RetailerReportsPage() {
         {
           key: 'referenceId',
           header: 'Ledger Reference',
-          render: (r) => <span className="font-mono font-bold text-[#0F4C81]">{r.referenceId || r.id}</span>,
+          render: (r) => <span className="font-mono font-bold text-[#2F6F5E]">{r.referenceId || r.id}</span>,
         },
         {
           key: 'entryType',
@@ -379,7 +379,7 @@ export default function RetailerReportsPage() {
               <Button
                 variant="primary"
                 size="sm"
-                className="bg-[#0F4C81] text-white"
+                className="bg-[#2F6F5E] text-white"
                 onClick={handleExportCsv}
                 leftIcon={<Download className="w-4 h-4" />}
                 disabled={reportData.length === 0}
@@ -393,10 +393,10 @@ export default function RetailerReportsPage() {
         {/* Security Scope Banner */}
         <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs text-slate-800 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#0F4C81] shrink-0" />
-            <span>Report data strictly scoped to authenticated Retailer ID: <strong className="font-mono text-[#0F4C81]">{retailerId}</strong></span>
+            <ShieldCheck className="w-4 h-4 text-[#2F6F5E] shrink-0" />
+            <span>Report data strictly scoped to authenticated Retailer ID: <strong className="font-mono text-[#2F6F5E]">{retailerId}</strong></span>
           </div>
-          <span className="text-[10px] font-mono font-bold bg-white text-[#0F4C81] px-2 py-0.5 rounded border border-blue-200">
+          <span className="text-[10px] font-mono font-bold bg-white text-[#2F6F5E] px-2 py-0.5 rounded border border-blue-200">
             Self-Scoped Operations
           </span>
         </div>
@@ -449,7 +449,7 @@ export default function RetailerReportsPage() {
               <select
                 value={txnTypeFilter}
                 onChange={(e) => setTxnTypeFilter(e.target.value)}
-                className="text-xs font-semibold border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-hidden focus:border-[#0F4C81]"
+                className="text-xs font-semibold border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-hidden focus:border-[#2F6F5E]"
               >
                 <option value="ALL">All Types</option>
                 <option value="PAY_IN">Pay-In Collection</option>
@@ -461,7 +461,7 @@ export default function RetailerReportsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-xs font-semibold border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-hidden focus:border-[#0F4C81]"
+                className="text-xs font-semibold border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-hidden focus:border-[#2F6F5E]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="SUCCESS">Success / Credited</option>

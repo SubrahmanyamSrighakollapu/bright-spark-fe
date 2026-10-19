@@ -58,7 +58,7 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
       isOpen={isOpen}
       onClose={saving ? () => undefined : onClose}
       title="Change password"
-      description="Use your current password to secure your Qin Star Pay account."
+      description="Use your current password to secure your Bright Spark account."
       size="md"
     >
       <form onSubmit={submit} className="space-y-4">

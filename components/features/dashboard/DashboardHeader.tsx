@@ -35,8 +35,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-900 bg-indigo-50 border border-indigo-200/60 px-2 py-0.5 rounded-full">
-                Qin Star Pay Admin
+              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-900 bg-indigo-50 border border-[#D4E1AE]/60 px-2 py-0.5 rounded-full">
+                Bright Spark Admin
               </span>
               <span className="text-xs text-slate-500 font-medium">Platform Administrator</span>
             </div>

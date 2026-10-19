@@ -87,7 +87,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
         title={
           <div className="flex items-center gap-2">
             <span>{item.name}</span>
-            <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+            <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-[#D4E1AE]">
               {item.code}
             </span>
           </div>
@@ -223,7 +223,7 @@ export const ApprovalDetailDrawer: React.FC<ApprovalDetailDrawerProps> = ({
               {documents.map((doc) => (
                 <div
                   key={doc.id}
-                  className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between hover:border-indigo-300 transition-colors"
+                  className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between hover:border-[#A8BE61] transition-colors"
                 >
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-slate-900">{doc.title}</p>

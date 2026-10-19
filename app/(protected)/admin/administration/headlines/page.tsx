@@ -229,14 +229,14 @@ export default function AdminHeadlinesPage() {
           </Card>
 
           <Card className="p-4 bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-[#0F4C81] flex items-center justify-center shrink-0 border border-indigo-100">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-[#2F6F5E] flex items-center justify-center shrink-0 border border-indigo-100">
               <Flame className="w-5 h-5" />
             </div>
             <div>
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
                 Promotions
               </span>
-              <span className="text-xl font-extrabold text-[#0F4C81] font-mono">
+              <span className="text-xl font-extrabold text-[#2F6F5E] font-mono">
                 {promotionsCount}
               </span>
               <span className="text-[10px] text-indigo-700 font-medium block">Active Margin Offers</span>
@@ -267,14 +267,14 @@ export default function AdminHeadlinesPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search headlines by keyword or badge..."
-                className="w-full pl-10 pr-4 py-2 text-xs border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-slate-50/50"
+                className="w-full pl-10 pr-4 py-2 text-xs border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E] focus:ring-2 focus:ring-[#D4E1AE] bg-slate-50/50"
               />
             </div>
 
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] bg-white font-medium shrink-0"
+              className="px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E] bg-white font-medium shrink-0"
             >
               <option value="ALL">All Categories</option>
               <option value="PROMOTION">Promotions</option>
@@ -299,7 +299,7 @@ export default function AdminHeadlinesPage() {
               size="sm"
               onClick={() => handleOpenModal()}
               leftIcon={<Plus className="w-4 h-4" />}
-              className="bg-[#0F4C81] text-white font-bold text-xs"
+              className="bg-[#2F6F5E] text-white font-bold text-xs"
             >
               Add Headline Alert
             </Button>
@@ -330,7 +330,7 @@ export default function AdminHeadlinesPage() {
                   key={item.id}
                   className={`p-5 rounded-2xl border transition-all bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                     item.status === 'ACTIVE'
-                      ? 'border-slate-200/90 shadow-xs hover:border-indigo-300'
+                      ? 'border-slate-200/90 shadow-xs hover:border-[#A8BE61]'
                       : 'border-slate-200/60 bg-slate-50/50 opacity-70'
                   }`}
                 >
@@ -409,7 +409,7 @@ export default function AdminHeadlinesPage() {
           onClose={() => setIsModalOpen(false)}
           title={
             <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
-              <Megaphone className="w-5 h-5 text-[#0F4C81]" />
+              <Megaphone className="w-5 h-5 text-[#2F6F5E]" />
               <span>{editingItem ? 'Edit Headline Alert' : 'Add New Headline Alert'}</span>
             </div>
           }
@@ -429,7 +429,7 @@ export default function AdminHeadlinesPage() {
                 form="headline-form"
                 variant="primary"
                 size="sm"
-                className="bg-[#0F4C81] text-white font-bold"
+                className="bg-[#2F6F5E] text-white font-bold"
               >
                 {editingItem ? 'Save Headline Changes' : 'Publish Headline Alert'}
               </Button>
@@ -446,7 +446,7 @@ export default function AdminHeadlinesPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Special Pay-In Festival Offer"
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E]"
                 required
               />
             </div>
@@ -460,7 +460,7 @@ export default function AdminHeadlinesPage() {
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Enter the full marquee text message displayed on Retailer dashboards..."
                 rows={3}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E]"
                 required
               />
             </div>
@@ -473,7 +473,7 @@ export default function AdminHeadlinesPage() {
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E]"
                 >
                   <option value="PROMOTION">PROMOTION (Offers & Margins)</option>
                   <option value="INFO">INFO (System Updates)</option>
@@ -489,7 +489,7 @@ export default function AdminHeadlinesPage() {
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E]"
                 >
                   <option value="HIGH">HIGH Priority</option>
                   <option value="MEDIUM">MEDIUM Priority</option>
@@ -507,7 +507,7 @@ export default function AdminHeadlinesPage() {
                 value={badgeText}
                 onChange={(e) => setBadgeText(e.target.value)}
                 placeholder="e.g. FESTIVAL OFFER, SECURITY ALERT"
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81]"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E]"
               />
             </div>
           </form>

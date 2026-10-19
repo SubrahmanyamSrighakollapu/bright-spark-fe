@@ -269,7 +269,7 @@ export const RetailerPaymentMethodDrawer: React.FC<RetailerPaymentMethodDrawerPr
                   formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Volume']}
                   contentStyle={{ borderRadius: '8px', fontSize: '12px', border: '1px solid #E2E8F0' }}
                 />
-                <Bar dataKey="amount" radius={[0, 4, 4, 0]} fill={isPayIn ? '#0F4C81' : '#F97316'} barSize={18} />
+                <Bar dataKey="amount" radius={[0, 4, 4, 0]} fill={isPayIn ? '#2F6F5E' : '#F97316'} barSize={18} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -286,7 +286,7 @@ export const RetailerPaymentMethodDrawer: React.FC<RetailerPaymentMethodDrawerPr
               <button
                 type="button"
                 onClick={() => setSelectedModeFilter(null)}
-                className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
+                className="text-xs text-[#2F6F5E] font-bold hover:underline cursor-pointer"
               >
                 Clear Filter ({selectedModeFilter})
               </button>

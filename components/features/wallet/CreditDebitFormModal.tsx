@@ -215,12 +215,12 @@ export const CreditDebitFormModal: React.FC<CreditDebitFormModalProps> = ({
               value={selectedWalletId}
               onChange={(e) => setSelectedWalletId(e.target.value)}
               options={[
-                { value: 'wlt_master_001', label: 'Qin Star Pay Master Treasury (QSP-MSTR-01)' },
-                { value: 'wlt_dist_001', label: 'North Zone Dist (QSP-DIST-001)' },
-                { value: 'wlt_dist_002', label: 'West Coast Agency (QSP-DIST-002)' },
-                { value: 'wlt_rtl_001', label: 'Zenith Retail (QSP-RTL-001)' },
-                { value: 'wlt_mch_001', label: 'Apex Pay Solutions (QSP-MCH-001)' },
-                { value: 'wlt_mch_002', label: 'Global Fintech Ltd (QSP-MCH-002)' },
+                { value: 'wlt_master_001', label: 'Bright Spark Master Treasury (BSP-MSTR-01)' },
+                { value: 'wlt_dist_001', label: 'North Zone Dist (BSP-DIST-001)' },
+                { value: 'wlt_dist_002', label: 'West Coast Agency (BSP-DIST-002)' },
+                { value: 'wlt_rtl_001', label: 'Zenith Retail (BSP-RTL-001)' },
+                { value: 'wlt_mch_001', label: 'Apex Pay Solutions (BSP-MCH-001)' },
+                { value: 'wlt_mch_002', label: 'Global Fintech Ltd (BSP-MCH-002)' },
               ]}
             />
           )}

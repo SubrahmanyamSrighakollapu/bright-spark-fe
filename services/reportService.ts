@@ -67,12 +67,12 @@ function triggerBrowserDownload(blob: Blob, filename: string): void {
 function getStoredToken(): string | null {
   if (typeof window === 'undefined') return null;
   try {
-    const sessionRaw = sessionStorage.getItem('qin-star-pay-auth-session-session');
+    const sessionRaw = sessionStorage.getItem('bright-spark-auth-session-session');
     if (sessionRaw) {
       const parsed = JSON.parse(sessionRaw);
       return typeof parsed?.accessToken === 'string' ? parsed.accessToken : null;
     }
-    const localRaw = localStorage.getItem('qin-star-pay-auth-session-local');
+    const localRaw = localStorage.getItem('bright-spark-auth-session-local');
     if (localRaw) {
       const parsed = JSON.parse(localRaw);
       return typeof parsed?.accessToken === 'string' ? parsed.accessToken : null;
@@ -1468,6 +1468,6 @@ export const reportService = {
    */
   exportToCsv(filename: string, rows: Record<string, unknown>[]) {
     if (!rows || rows.length === 0) return;
-    window.dispatchEvent(new CustomEvent('qin-star-pay:excel-export', { detail: { filename, rows } }));
+    window.dispatchEvent(new CustomEvent('bright-spark:excel-export', { detail: { filename, rows } }));
   },
 };

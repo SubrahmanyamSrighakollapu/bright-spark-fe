@@ -293,7 +293,7 @@ class PayInService {
         distributorId: 'dst_001',
         masterDistributorId: 'md_001',
         planId: 'plan_std_01',
-        email: 'ret001@qinstarpay.com',
+        email: 'ret001@brightspark.com',
         mobile: '9860066666',
         kycStatus: 'APPROVED',
         approvalStatus: 'APPROVED',
@@ -341,8 +341,8 @@ class PayInService {
 
       // 5. Generate Clear Mock References
       const timestampSuffix = Date.now().toString().slice(-6);
-      const transactionRef = `QSP2026${timestampSuffix}`;
-      const utr = status === 'SUCCESS' ? `QSPUTR${timestampSuffix}` : undefined;
+      const transactionRef = `BSP2026${timestampSuffix}`;
+      const utr = status === 'SUCCESS' ? `BSPUTR${timestampSuffix}` : undefined;
       const providerRef = `PRVREF${timestampSuffix}`;
       const orderId = input.customerReference || `ORD_IN_${timestampSuffix}`;
 
@@ -411,7 +411,7 @@ class PayInService {
         netAmount: preview.actualCreditAmount,
         status,
         paymentMode: (input.paymentMode as any) || 'UPI',
-        provider: input.paymentGatewayName || 'Qin Star Pay Mock Gateway',
+        provider: input.paymentGatewayName || 'Bright Spark Mock Gateway',
         service: input.serviceType || 'UPI Pay-In Collection',
         channel: 'Web',
         customerName: input.customerName || 'Walk-in Customer',

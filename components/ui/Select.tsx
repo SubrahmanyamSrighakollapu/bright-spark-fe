@@ -95,7 +95,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             itemLabel: { className: 'cursor-pointer' },
           }}
           className={cn(
-            'qs-dropdown relative flex h-11 w-full cursor-pointer select-none items-center rounded-[var(--radius-md)] border border-[var(--border)] bg-white text-sm text-[var(--text-primary)] transition-colors hover:border-slate-300 focus-within:border-[var(--border-focus)] focus-within:ring-2 focus-within:ring-blue-100',
+            'qs-dropdown relative flex h-11 w-full cursor-pointer select-none items-center rounded-[var(--radius-md)] border border-[var(--border)] bg-white text-sm text-[var(--text-primary)] transition-colors hover:border-slate-300 focus-within:border-[var(--border-focus)] focus-within:ring-2 focus-within:ring-[#D4E1AE]',
             !currentValue && 'text-[var(--text-disabled)]',
             disabled && 'cursor-not-allowed bg-[var(--bg-secondary)] text-[var(--text-disabled)]',
             error && 'border-[var(--danger)] focus-within:border-[var(--danger)] focus-within:ring-[var(--danger)]',

@@ -80,7 +80,7 @@ export const CreateAdminUserModal: React.FC<CreateAdminUserModalProps> = ({
           />
           <Input
             label="Employee ID *"
-            placeholder="e.g. EMP_QSP_102"
+            placeholder="e.g. EMP_BSP_102"
             value={employeeId}
             onChange={(e) => setEmployeeId(e.target.value)}
             required
@@ -91,7 +91,7 @@ export const CreateAdminUserModal: React.FC<CreateAdminUserModalProps> = ({
           <Input
             label="Work Email Address *"
             type="email"
-            placeholder="e.g. rahul@qinstarpay.com"
+            placeholder="e.g. rahul@brightspark.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

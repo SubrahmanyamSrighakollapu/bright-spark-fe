@@ -102,7 +102,7 @@ export const ActivityLogTable: React.FC<ActivityLogTableProps> = ({
       render: (row: ActivityLog) => (
         <div className="min-w-[180px]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-200 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-[#D4E1AE] flex items-center justify-center shrink-0">
               <Building2 className="w-3.5 h-3.5 text-indigo-700" />
             </div>
             <div className="min-w-0">

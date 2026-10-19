@@ -1,5 +1,5 @@
 /**
- * Financial and general formatting utilities for Qin Star Pay.
+ * Financial and general formatting utilities for Bright Spark.
  * Formats currency (including Indian Rupee format), numbers, percentages, dates, and times.
  */
 

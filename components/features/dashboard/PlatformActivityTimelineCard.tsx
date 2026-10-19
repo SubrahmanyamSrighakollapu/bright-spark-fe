@@ -46,7 +46,7 @@ export const PlatformActivityTimelineCard: React.FC = () => {
         </div>
         <Link
           href="/admin/logs/activity"
-          className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+          className="text-xs font-bold text-indigo-600 hover:text-[#25594C] flex items-center gap-1 transition-colors"
         >
           <span>View Activity Logs</span>
           <ArrowRight className="w-3.5 h-3.5" />

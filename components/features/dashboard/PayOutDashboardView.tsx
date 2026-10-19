@@ -125,28 +125,28 @@ function getPayOutStatusForRange(preset: CardDatePreset) {
   switch (preset) {
     case 'today':
       return [
-        { name: 'Dispatched & Settled', value: 3850, pct: '91.3%', color: '#155EEF' },
+        { name: 'Dispatched & Settled', value: 3850, pct: '91.3%', color: '#2F6F5E' },
         { name: 'Pending Bank ACK', value: 240, pct: '5.7%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 85, pct: '2.0%', color: '#DC2626' },
         { name: 'On Hold (SLA Hold)', value: 40, pct: '1.0%', color: '#94A3B8' },
       ];
     case 'yesterday':
       return [
-        { name: 'Dispatched & Settled', value: 3520, pct: '89.8%', color: '#155EEF' },
+        { name: 'Dispatched & Settled', value: 3520, pct: '89.8%', color: '#2F6F5E' },
         { name: 'Pending Bank ACK', value: 260, pct: '6.6%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 95, pct: '2.4%', color: '#DC2626' },
         { name: 'On Hold (SLA Hold)', value: 45, pct: '1.2%', color: '#94A3B8' },
       ];
     case '7d':
       return [
-        { name: 'Dispatched & Settled', value: 25740, pct: '90.5%', color: '#155EEF' },
+        { name: 'Dispatched & Settled', value: 25740, pct: '90.5%', color: '#2F6F5E' },
         { name: 'Pending Bank ACK', value: 1680, pct: '5.9%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 740, pct: '2.6%', color: '#DC2626' },
         { name: 'On Hold (SLA Hold)', value: 290, pct: '1.0%', color: '#94A3B8' },
       ];
     case '30d':
       return [
-        { name: 'Dispatched & Settled', value: 107600, pct: '91.2%', color: '#155EEF' },
+        { name: 'Dispatched & Settled', value: 107600, pct: '91.2%', color: '#2F6F5E' },
         { name: 'Pending Bank ACK', value: 5660, pct: '4.8%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 2830, pct: '2.4%', color: '#DC2626' },
         { name: 'On Hold (SLA Hold)', value: 1910, pct: '1.6%', color: '#94A3B8' },
@@ -154,7 +154,7 @@ function getPayOutStatusForRange(preset: CardDatePreset) {
     case 'custom':
     default:
       return [
-        { name: 'Dispatched & Settled', value: 47600, pct: '90.8%', color: '#155EEF' },
+        { name: 'Dispatched & Settled', value: 47600, pct: '90.8%', color: '#2F6F5E' },
         { name: 'Pending Bank ACK', value: 2620, pct: '5.0%', color: '#D97706' },
         { name: 'Failed / Rejected', value: 1360, pct: '2.6%', color: '#DC2626' },
         { name: 'On Hold (SLA Hold)', value: 820, pct: '1.6%', color: '#94A3B8' },
@@ -166,28 +166,28 @@ function getPayOutChannelsForRange(preset: CardDatePreset) {
   switch (preset) {
     case 'today':
       return [
-        { mode: 'IMPS Instant Payout', count: 2020, pct: 48.0, amount: 1490000, color: '#155EEF' },
+        { mode: 'IMPS Instant Payout', count: 2020, pct: 48.0, amount: 1490000, color: '#2F6F5E' },
         { mode: 'UPI Payout Direct', count: 1240, pct: 29.5, amount: 920000, color: '#2563EB' },
         { mode: 'NEFT Batch Transfer', count: 660, pct: 15.7, amount: 490000, color: '#3B82F6' },
         { mode: 'RTGS High-Value', count: 295, pct: 6.8, amount: 220000, color: '#60A5FA' },
       ];
     case 'yesterday':
       return [
-        { mode: 'IMPS Instant Payout', count: 1850, pct: 47.2, amount: 1340000, color: '#155EEF' },
+        { mode: 'IMPS Instant Payout', count: 1850, pct: 47.2, amount: 1340000, color: '#2F6F5E' },
         { mode: 'UPI Payout Direct', count: 1180, pct: 30.1, amount: 850000, color: '#2563EB' },
         { mode: 'NEFT Batch Transfer', count: 610, pct: 15.6, amount: 440000, color: '#3B82F6' },
         { mode: 'RTGS High-Value', count: 280, pct: 7.1, amount: 220000, color: '#60A5FA' },
       ];
     case '7d':
       return [
-        { mode: 'IMPS Instant Payout', count: 13650, pct: 48.0, amount: 10450000, color: '#155EEF' },
+        { mode: 'IMPS Instant Payout', count: 13650, pct: 48.0, amount: 10450000, color: '#2F6F5E' },
         { mode: 'UPI Payout Direct', count: 8390, pct: 29.5, amount: 6430000, color: '#2563EB' },
         { mode: 'NEFT Batch Transfer', count: 4460, pct: 15.7, amount: 3420000, color: '#3B82F6' },
         { mode: 'RTGS High-Value', count: 1950, pct: 6.8, amount: 1500000, color: '#60A5FA' },
       ];
     case '30d':
       return [
-        { mode: 'IMPS Instant Payout', count: 56640, pct: 48.0, amount: 45360000, color: '#155EEF' },
+        { mode: 'IMPS Instant Payout', count: 56640, pct: 48.0, amount: 45360000, color: '#2F6F5E' },
         { mode: 'UPI Payout Direct', count: 34810, pct: 29.5, amount: 27870000, color: '#2563EB' },
         { mode: 'NEFT Batch Transfer', count: 18520, pct: 15.7, amount: 14830000, color: '#3B82F6' },
         { mode: 'RTGS High-Value', count: 8030, pct: 6.8, amount: 6440000, color: '#60A5FA' },
@@ -195,7 +195,7 @@ function getPayOutChannelsForRange(preset: CardDatePreset) {
     case 'custom':
     default:
       return [
-        { mode: 'IMPS Instant Payout', count: 25150, pct: 48.0, amount: 20208000, color: '#155EEF' },
+        { mode: 'IMPS Instant Payout', count: 25150, pct: 48.0, amount: 20208000, color: '#2F6F5E' },
         { mode: 'UPI Payout Direct', count: 15450, pct: 29.5, amount: 12419000, color: '#2563EB' },
         { mode: 'NEFT Batch Transfer', count: 8220, pct: 15.7, amount: 6609000, color: '#3B82F6' },
         { mode: 'RTGS High-Value', count: 3580, pct: 6.8, amount: 2864000, color: '#60A5FA' },
@@ -286,7 +286,7 @@ export const PayOutDashboardView: React.FC<PayOutDashboardViewProps> = ({
           label="Payout SLA Success Rate"
           value={`${currentMetrics.successRate}%`}
           subtext="Avg Latency: 1.2s instant"
-          icon={<Landmark className="w-4 h-4 text-[#155EEF]" />}
+          icon={<Landmark className="w-4 h-4 text-[#2F6F5E]" />}
           variant="primary"
         />
       </div>
@@ -308,8 +308,8 @@ export const PayOutDashboardView: React.FC<PayOutDashboardViewProps> = ({
                 <AreaChart data={currentTrend} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="payOutAmberGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#155EEF" stopOpacity={0.08} />
-                      <stop offset="95%" stopColor="#155EEF" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#2F6F5E" stopOpacity={0.08} />
+                      <stop offset="95%" stopColor="#2F6F5E" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
@@ -345,7 +345,7 @@ export const PayOutDashboardView: React.FC<PayOutDashboardViewProps> = ({
                     type="monotone"
                     dataKey="payoutAmount"
                     name="Payout Volume"
-                    stroke="#155EEF"
+                    stroke="#2F6F5E"
                     strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#payOutAmberGradient)"

@@ -399,7 +399,7 @@ export const settlementService = {
         if (action === 'MATCH') {
           r.reconciliationStatus = 'MATCHED';
           r.difference = 0;
-          r.reconciledBy = 'Qin Star Admin';
+          r.reconciledBy = 'Bright Spark Admin';
           r.reconciledAt = new Date().toISOString();
           r.remarks = remarks || 'Manually reconciled and approved by finance admin.';
         } else {

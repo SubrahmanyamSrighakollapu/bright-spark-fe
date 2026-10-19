@@ -74,7 +74,7 @@ export const CreateEmployeeWizard: React.FC = () => {
     <Card title="Employee Details" subtitle="Enter the required identity, department and work-schedule information">
       <div className="grid grid-cols-1 gap-5 pt-1 md:grid-cols-2 xl:grid-cols-3">
         <Input label="Full Name" placeholder="e.g. Rajesh Kumar" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))} required />
-        <Input label="Official Email ID" type="email" placeholder="rajesh@qinstarpay.com" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
+        <Input label="Official Email ID" type="email" placeholder="rajesh@brightspark.com" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
         <PhoneInputWithCountryCode label="Mobile Number" placeholder="9876543210" value={form.mobile} countryCode={form.countryCode} error={mobileError} maxLength={10} onPhoneChange={(phone) => { setMobileError(''); setForm((current) => ({ ...current, mobile: phone })); }} onCountryCodeChange={(code) => { setMobileError(''); setForm((current) => ({ ...current, countryCode: code })); }} required />
         <Select label="Department" placeholder={loadingMeta ? 'Loading departments…' : 'Select department'} value={form.departmentCode} disabled={loadingMeta} onChange={(event) => setForm((current) => ({ ...current, departmentCode: event.target.value }))} options={departments.map((department) => ({ value: department.code, label: department.label }))} required />
         <Input label="Joining Date" type="date" value={form.joiningDate} onChange={(event) => setForm((current) => ({ ...current, joiningDate: event.target.value }))} leftIcon={<CalendarDays className="h-4 w-4 text-slate-400" />} required />
@@ -83,7 +83,7 @@ export const CreateEmployeeWizard: React.FC = () => {
 
       <div className="mt-6 grid gap-3 md:grid-cols-2">
         <div className="flex gap-3 rounded-xl border border-blue-100 bg-blue-50/70 p-4"><BriefcaseBusiness className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" /><div><p className="text-xs font-bold text-slate-900">Department controls access</p><p className="mt-1 text-[11px] leading-4 text-slate-600">The matching employee role and permissions are assigned automatically from the selected department.</p></div></div>
-        <div className="flex gap-3 rounded-xl border border-amber-100 bg-amber-50/70 p-4"><KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><div><p className="text-xs font-bold text-slate-900">Temporary password</p><p className="mt-1 text-[11px] leading-4 text-slate-600">Generated as QinStarEmp@ plus the last four mobile digits. It must be changed on first login.</p></div></div>
+        <div className="flex gap-3 rounded-xl border border-amber-100 bg-amber-50/70 p-4"><KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><div><p className="text-xs font-bold text-slate-900">Temporary password</p><p className="mt-1 text-[11px] leading-4 text-slate-600">Generated as BrightSparkEmp@ plus the last four mobile digits. It must be changed on first login.</p></div></div>
       </div>
     </Card>
 

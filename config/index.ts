@@ -1,9 +1,9 @@
 /**
- * Application configuration for Qin Star Pay.
+ * Application configuration for Bright Spark.
  */
 
 export const APP_CONFIG = {
-  appName: 'Qin Star Pay',
+  appName: 'Bright Spark',
   appVersion: '1.0.0-phase1',
   apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1',
   isDev: process.env.NODE_ENV !== 'production',

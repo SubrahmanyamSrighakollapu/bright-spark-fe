@@ -13,8 +13,8 @@ import { mockNotifications, defaultNotificationPreferences } from '@/mocks/mockN
 import { APP_CONFIG } from '@/config';
 import { apiClient } from './apiClient';
 
-const NOTIFICATIONS_STORAGE_KEY = 'qsp_notifications_v1';
-const PREFERENCES_STORAGE_KEY = 'qsp_notification_prefs_v1';
+const NOTIFICATIONS_STORAGE_KEY = 'bsp_notifications_v1';
+const PREFERENCES_STORAGE_KEY = 'bsp_notification_prefs_v1';
 
 const loadInitialNotifications = (): Notification[] => {
   if (typeof window === 'undefined') return [...mockNotifications];
@@ -365,9 +365,9 @@ export const notificationService = {
 
     const getStoredSession = (): { accessToken: string | null } => {
       try {
-        const s1 = sessionStorage.getItem('qin-star-pay-auth-session-session');
+        const s1 = sessionStorage.getItem('bright-spark-auth-session-session');
         if (s1) return { accessToken: (JSON.parse(s1).accessToken as string) || null };
-        const s2 = localStorage.getItem('qin-star-pay-auth-session-local');
+        const s2 = localStorage.getItem('bright-spark-auth-session-local');
         if (s2) return { accessToken: (JSON.parse(s2).accessToken as string) || null };
       } catch {
         /* noop */
@@ -403,7 +403,7 @@ export const notificationService = {
 
   getRelatedRecordRoute(notification: Notification): string {
     if (notification.entityType === 'TRANSACTION' || notification.category === 'TRANSACTION') {
-      return `/admin/transactions/${notification.entityId || 'QSP20260903001'}`;
+      return `/admin/transactions/${notification.entityId || 'BSP20260903001'}`;
     }
     if (notification.entityType === 'SETTLEMENT' || notification.category === 'SETTLEMENT') {
       return '/admin/settlements';

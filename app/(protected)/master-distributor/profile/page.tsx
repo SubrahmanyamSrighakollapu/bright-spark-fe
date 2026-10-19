@@ -177,7 +177,7 @@ export default function MasterDistributorProfilePage() {
                     className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover shadow-md ring-4 ring-indigo-50 border border-slate-200"
                   />
                 ) : (
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-[#0F4C81] text-white font-extrabold text-2xl md:text-3xl flex items-center justify-center shadow-md ring-4 ring-indigo-50">
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-[#2F6F5E] text-white font-extrabold text-2xl md:text-3xl flex items-center justify-center shadow-md ring-4 ring-indigo-50">
                     {(profile?.fullName || session?.name || 'MD').slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -205,7 +205,7 @@ export default function MasterDistributorProfilePage() {
                   <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
                     {profile?.fullName || session?.name || 'Apex National Network'}
                   </h2>
-                  <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#0F4C81] border border-indigo-200">
+                  <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#2F6F5E] border border-[#D4E1AE]">
                     {profile?.code || 'MD001'}
                   </span>
                 </div>
@@ -215,9 +215,9 @@ export default function MasterDistributorProfilePage() {
 
             <label
               htmlFor="md-photo-btn"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-[#0F4C81] border border-indigo-200 rounded-xl text-xs font-bold cursor-pointer transition-colors shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-[#E8F0D4] text-[#2F6F5E] border border-[#D4E1AE] rounded-xl text-xs font-bold cursor-pointer transition-colors shrink-0"
             >
-              <Upload className="w-4 h-4 text-[#0F4C81]" />
+              <Upload className="w-4 h-4 text-[#2F6F5E]" />
               <span>{isUploadingPhoto ? 'Uploading...' : 'Upload Profile Photo'}</span>
               <input
                 id="md-photo-btn"
@@ -234,12 +234,12 @@ export default function MasterDistributorProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
             <div className="space-y-4">
               <h3 className="font-bold text-slate-900 uppercase tracking-wider text-xs flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                <Building2 className="w-4 h-4 text-[#0F4C81]" /> Business Profile
+                <Building2 className="w-4 h-4 text-[#2F6F5E]" /> Business Profile
               </h3>
               <div className="space-y-2 font-mono text-slate-800">
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500 font-sans">Entity Code:</span>
-                  <span className="font-bold text-[#0F4C81]">{profile?.code}</span>
+                  <span className="font-bold text-[#2F6F5E]">{profile?.code}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500 font-sans">Legal Entity:</span>
@@ -254,7 +254,7 @@ export default function MasterDistributorProfilePage() {
 
             <div className="space-y-4">
               <h3 className="font-bold text-slate-900 uppercase tracking-wider text-xs flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                <Mail className="w-4 h-4 text-[#0F4C81]" /> Contact & Communication
+                <Mail className="w-4 h-4 text-[#2F6F5E]" /> Contact & Communication
               </h3>
               <div className="space-y-2 font-mono text-slate-800">
                 <div className="flex justify-between py-1 border-b border-slate-100">
@@ -267,7 +267,7 @@ export default function MasterDistributorProfilePage() {
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-slate-500 font-sans">Operating Role:</span>
-                  <span className="font-sans font-bold text-[#0F4C81]">MASTER_DISTRIBUTOR</span>
+                  <span className="font-sans font-bold text-[#2F6F5E]">MASTER_DISTRIBUTOR</span>
                 </div>
               </div>
             </div>
@@ -279,9 +279,9 @@ export default function MasterDistributorProfilePage() {
           <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-slate-500 uppercase flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#0F4C81]" /> Direct Distributors
+                <Users className="w-4 h-4 text-[#2F6F5E]" /> Direct Distributors
               </span>
-              <span className="font-mono text-xs font-bold text-[#0F4C81]">8 Active</span>
+              <span className="font-mono text-xs font-bold text-[#2F6F5E]">8 Active</span>
             </div>
             <p className="text-2xl font-extrabold text-slate-900 font-mono">8 Partners</p>
           </div>
@@ -289,21 +289,21 @@ export default function MasterDistributorProfilePage() {
           <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-slate-500 uppercase flex items-center gap-1.5">
-                <Store className="w-4 h-4 text-[#0F4C81]" /> Retailer Outlets
+                <Store className="w-4 h-4 text-[#2F6F5E]" /> Retailer Outlets
               </span>
               <span className="font-mono text-xs font-bold text-emerald-700">42 Outlets</span>
             </div>
             <p className="text-2xl font-extrabold text-slate-900 font-mono">42 Retailers</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white border border-indigo-200 shadow-xs space-y-2">
+          <div className="p-5 rounded-2xl bg-white border border-[#D4E1AE] shadow-xs space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-[#0F4C81] uppercase flex items-center gap-1.5">
-                <Wallet className="w-4 h-4 text-[#0F4C81]" /> Available Wallet
+              <span className="font-bold text-[#2F6F5E] uppercase flex items-center gap-1.5">
+                <Wallet className="w-4 h-4 text-[#2F6F5E]" /> Available Wallet
               </span>
               <span className="font-mono text-xs font-bold text-emerald-700">ACTIVE</span>
             </div>
-            <p className="text-2xl font-extrabold text-[#0F4C81] font-mono">{formatCurrency(walletBalance)}</p>
+            <p className="text-2xl font-extrabold text-[#2F6F5E] font-mono">{formatCurrency(walletBalance)}</p>
           </div>
         </div>
       </div>

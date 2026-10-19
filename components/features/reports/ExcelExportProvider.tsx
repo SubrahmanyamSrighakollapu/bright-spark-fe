@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Download, FileSpreadsheet } from 'lucide-react';
 
-export const EXCEL_EXPORT_EVENT = 'qin-star-pay:excel-export';
+export const EXCEL_EXPORT_EVENT = 'bright-spark:excel-export';
 
 interface ExportRequest {
   filename: string;

@@ -1,5 +1,5 @@
 /**
- * Centralized status constants and UI metadata mappings for Qin Star Pay.
+ * Centralized status constants and UI metadata mappings for Bright Spark.
  */
 
 export const TRANSACTION_STATUS = {

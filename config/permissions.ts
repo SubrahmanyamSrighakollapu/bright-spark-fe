@@ -1,7 +1,7 @@
 import { UserContext } from './roles';
 
 /**
- * Standardized Permission Tokens for Qin Star Pay
+ * Standardized Permission Tokens for Bright Spark
  * Format: MODULE_ACTION
  */
 export const PERMISSIONS = {

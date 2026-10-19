@@ -35,7 +35,7 @@ export const DistributorHeader: React.FC<DistributorHeaderProps> = ({
       <div className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full bg-blue-400/10 blur-3xl" />
       <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
       <div className="flex items-start gap-4">
-        <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F4C81] to-indigo-700 text-white shadow-lg shadow-blue-900/20">
+        <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2F6F5E] to-indigo-700 text-white shadow-lg shadow-blue-900/20">
           <Waypoints className="h-6 w-6" />
         </div>
         <div className="space-y-1">
@@ -43,7 +43,7 @@ export const DistributorHeader: React.FC<DistributorHeaderProps> = ({
             <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
               Welcome back, {name}
             </h1>
-            <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#0F4C81] border border-indigo-200">
+            <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#2F6F5E] border border-[#D4E1AE]">
               {code}
             </span>
             <StatusBadge status="ACTIVE" label="Distributor Portal Active" size="sm" />

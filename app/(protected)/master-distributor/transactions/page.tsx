@@ -209,7 +209,7 @@ function MasterDistributorTransactionsContent() {
                     setCurrentPage(1);
                   }}
                   placeholder="Search Txn ID, Ref, Retailer, Distributor..."
-                  className="w-full pl-9 pr-3.5 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#0F4C81] focus:ring-2 focus:ring-indigo-100 bg-white"
+                  className="w-full pl-9 pr-3.5 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:outline-hidden focus:border-[#2F6F5E] focus:ring-2 focus:ring-[#D4E1AE] bg-white"
                 />
                 {searchQuery && (
                   <button type="button" onClick={() => setSearchQuery('')} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
@@ -225,7 +225,7 @@ function MasterDistributorTransactionsContent() {
                   setDistributorFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded-xl bg-white focus:outline-hidden focus:border-[#0F4C81]"
+                className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded-xl bg-white focus:outline-hidden focus:border-[#2F6F5E]"
               >
                 <option value="ALL">All Distributors</option>
                 {distributors.map((d) => (
@@ -247,7 +247,7 @@ function MasterDistributorTransactionsContent() {
                     className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                       typeFilter === t
                         ? t === 'PAY_IN'
-                          ? 'bg-[#0F4C81] text-white shadow-2xs'
+                          ? 'bg-[#2F6F5E] text-white shadow-2xs'
                           : t === 'PAY_OUT'
                           ? 'bg-[#F97316] text-white shadow-2xs'
                           : 'bg-slate-900 text-white shadow-2xs'
@@ -276,7 +276,7 @@ function MasterDistributorTransactionsContent() {
           <div className="overflow-x-auto">
             {isLoading ? (
               <div className="py-16 text-center text-xs text-slate-400 space-y-2">
-                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#0F4C81]" />
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#2F6F5E]" />
                 <p>Loading network transactions...</p>
               </div>
             ) : transactions.length === 0 ? (
@@ -313,7 +313,7 @@ function MasterDistributorTransactionsContent() {
                       }}
                     >
                       <td className="py-3.5 px-4 font-mono">
-                        <span className="font-bold text-slate-900 group-hover:text-[#0F4C81] transition-colors block">
+                        <span className="font-bold text-slate-900 group-hover:text-[#2F6F5E] transition-colors block">
                           {t.transactionRef}
                         </span>
                         <span className="text-[11px] text-slate-400">{formatDateTime(t.createdAt)}</span>

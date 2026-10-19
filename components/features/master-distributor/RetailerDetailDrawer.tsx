@@ -89,7 +89,7 @@ export const RetailerDetailDrawer: React.FC<RetailerDetailDrawerProps> = ({
       title={
         <div className="flex items-center gap-2">
           <span>{retailer.name}</span>
-          <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+          <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-[#D4E1AE]">
             {retailer.code}
           </span>
         </div>
@@ -270,7 +270,7 @@ export const RetailerDetailDrawer: React.FC<RetailerDetailDrawerProps> = ({
               <div className="text-xs space-y-1">
                 <p className="font-bold text-slate-900">
                   {masterDistributor?.name || 'Apex National Network'}
-                  <span className="ml-2 font-mono text-[11px] px-1.5 py-0.5 rounded bg-white text-indigo-700 border border-indigo-200">
+                  <span className="ml-2 font-mono text-[11px] px-1.5 py-0.5 rounded bg-white text-indigo-700 border border-[#D4E1AE]">
                     {masterDistributor?.code || retailer.masterDistributorId}
                   </span>
                 </p>
@@ -352,7 +352,7 @@ export const RetailerDetailDrawer: React.FC<RetailerDetailDrawerProps> = ({
         {activeTab === 'financials' && (
           <div className="space-y-4">
             {/* Wallet Summary */}
-            <div className="p-4 rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-slate-50">
+            <div className="p-4 rounded-xl border border-[#D4E1AE] bg-gradient-to-br from-indigo-50 via-white to-slate-50">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">

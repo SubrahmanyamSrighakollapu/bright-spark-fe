@@ -3,7 +3,7 @@ import { Transaction } from '@/types/domain';
 export const mockTransactions: Transaction[] = [
   {
     id: 'tx_01',
-    transactionRef: 'QSP20260903001',
+    transactionRef: 'BSP20260903001',
     orderId: 'ORD_9918231',
     referenceId: 'REF_9918231',
     utr: 'UTR991823101',
@@ -50,7 +50,7 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: 'tx_02',
-    transactionRef: 'QSP20260903002',
+    transactionRef: 'BSP20260903002',
     orderId: 'ORD_9918232',
     referenceId: 'REF_9918232',
     utr: 'UTR991823202',
@@ -93,7 +93,7 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: 'tx_03',
-    transactionRef: 'QSP20260903003',
+    transactionRef: 'BSP20260903003',
     orderId: 'ORD_9918233',
     referenceId: 'REF_9918233',
     utr: 'UTR991823303',
@@ -126,7 +126,7 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: 'tx_04',
-    transactionRef: 'QSP20260903004',
+    transactionRef: 'BSP20260903004',
     orderId: 'ORD_9918234',
     referenceId: 'REF_9918234',
     merchantName: 'Swift Commerce',
@@ -168,7 +168,7 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: 'tx_06',
-    transactionRef: 'QSP20260903006',
+    transactionRef: 'BSP20260903006',
     orderId: 'ORD_9918236',
     referenceId: 'REF_9918236',
     utr: 'UTR991823606',
@@ -197,7 +197,7 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: 'tx_07',
-    transactionRef: 'QSP20260903007',
+    transactionRef: 'BSP20260903007',
     orderId: 'ORD_9918237',
     referenceId: 'REF_9918237',
     utr: 'UTR991823707',
@@ -230,7 +230,7 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: 'tx_08',
-    transactionRef: 'QSP20260903008',
+    transactionRef: 'BSP20260903008',
     orderId: 'ORD_9918238',
     merchantName: 'Swift Commerce',
     distributorName: 'North Zone Dist',
@@ -256,7 +256,7 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: 'tx_09',
-    transactionRef: 'QSP20260903009',
+    transactionRef: 'BSP20260903009',
     orderId: 'ORD_9918239',
     merchantName: 'Apex Pay Solutions',
     distributorName: 'North Zone Dist',
