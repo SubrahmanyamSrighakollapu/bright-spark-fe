@@ -356,9 +356,9 @@ export const notificationService = {
 
     const params = buildFilterParams(filters);
     // Build URL manually since we need to fetch as blob + access response headers
-    const urlObj = new URL(
-      `${APP_CONFIG.apiBaseUrl}${APP_CONFIG.apiBaseUrl.endsWith('/') ? '' : '/'}notifications/export`
-    );
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    const rawPath = `${APP_CONFIG.apiBaseUrl}${APP_CONFIG.apiBaseUrl.endsWith('/') ? '' : '/'}notifications/export`;
+    const urlObj = new URL(rawPath, base);
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) urlObj.searchParams.append(key, String(value));
     });
