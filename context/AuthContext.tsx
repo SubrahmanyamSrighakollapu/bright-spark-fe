@@ -11,6 +11,7 @@ import type { LoginLocation } from '@/utils/geolocation';
 const STORAGE_KEY_SESSION_LOCAL = 'bright-spark-auth-session-local';
 const STORAGE_KEY_SESSION_SESSION = 'bright-spark-auth-session-session';
 const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+const SESSION_HYDRATION_TIMEOUT_MS = 10_000;
 
 export interface AuthContextType {
   session: AuthSession | null;
@@ -174,7 +175,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (APP_CONFIG.useMockData && !parsedSession.accessToken) {
           setSession(parsedSession);
         } else if (parsedSession.accessToken) {
-          const current = await authService.getCurrentUser(parsedSession.accessToken);
+          const current = await Promise.race([
+            authService.getCurrentUser(parsedSession.accessToken),
+            new Promise<null>((resolve) => {
+              window.setTimeout(() => resolve(null), SESSION_HYDRATION_TIMEOUT_MS);
+            }),
+          ]);
           if (current) {
             setSession({ ...parsedSession, email: current.email, entityId: current.partyId || undefined,
               role: (current.roles[0] as UserRole) || parsedSession.role, permissions: current.permissions,

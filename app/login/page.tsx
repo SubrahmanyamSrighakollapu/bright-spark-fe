@@ -97,8 +97,6 @@ export default function LoginPage() {
     setFieldErrors({});
   };
 
-  if (isLoading) return <div className="flex min-h-screen items-center justify-center bg-slate-950 text-sm font-semibold text-white">Preparing your secure workspace…</div>;
-
   return (
     <main className="min-h-screen bg-white">
       <div className="grid min-h-screen w-full bg-white lg:grid-cols-[1.08fr_0.92fr]">
