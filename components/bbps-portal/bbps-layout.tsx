@@ -7,11 +7,11 @@ interface BBPSLayoutProps {
   pageTitle?: string;
 }
 
-export function BBPSLayout({ children, pageTitle }: BBPSLayoutProps) {
+export function BBPSLayout({ children }: BBPSLayoutProps) {
   return (
     <div className="min-h-full bg-slate-50 text-slate-900 font-sans flex flex-col antialiased">
       {/* Top Header Navbar matching screenshots */}
-      <BBPSHeader pageTitle={pageTitle} />
+      <BBPSHeader />
 
       {/* Main Full-Width Content View Canvas */}
       <main className="flex-1 w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8">
