@@ -3,7 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      { source: '/', destination: '/login', permanent: false },
       { source: '/transactions', destination: '/admin/transactions', permanent: false },
       { source: '/transactions/:path*', destination: '/admin/transactions/:path*', permanent: false },
       { source: '/wallet', destination: '/admin/wallet', permanent: false },

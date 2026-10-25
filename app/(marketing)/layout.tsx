@@ -1,12 +1,13 @@
 ﻿import type { Metadata } from 'next';
 import './marketing.css';
+import './fintech.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Bright Spark Travel',
-    template: '%s | Bright Spark Travel',
+    default: 'Bright Spark',
+    template: '%s | Bright Spark',
   },
-  description: 'Discover travel experiences, destinations, stays, tours, and services with Bright Spark.',
+  description: 'Connected digital payment services and financial operations for growing business networks.',
 };
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {

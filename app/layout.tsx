@@ -15,7 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Bright Spark — Enterprise Payment Operations Platform",
   description: "Financial operations command center for pay-in, pay-out, wallet, ledger, and multi-tier network management.",
-  icons: { icon: "/bright-spark-logo.jpg", apple: "/bright-spark-logo.jpg" },
+  icons: {
+    icon: [{ url: "/bright-spark-favicon.jpg", type: "image/jpeg" }],
+    shortcut: "/bright-spark-favicon.jpg",
+    apple: "/bright-spark-favicon.jpg",
+  },
 };
 
 import { ToastProvider } from "@/components/ui/Toast";
