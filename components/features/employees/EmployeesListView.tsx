@@ -345,7 +345,7 @@ export const EmployeesListView: React.FC = () => {
         <div className="grid shrink-0 grid-cols-1 items-center gap-3 border-b border-[#E5EAF1] bg-[#F8FAFC] px-4 py-3 lg:grid-cols-[minmax(300px,1fr)_430px]">
           <div className="min-w-0">
             <Input
-              placeholder="Search by Name, Employee Code (EMP_OPS_001), or Email..."
+              placeholder="Search by Name, Employee Code (EMPOPS001), or Email..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setPagination((current) => ({ ...current, page: 1 })); }}
               leftIcon={<Search className="w-4 h-4 text-slate-400" />}

@@ -62,7 +62,7 @@ export default function LoginPage() {
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const errors = { identifier: identifier.trim() ? undefined : 'Username, email, or mobile number is required.', password: password ? undefined : 'Password is required.' };
+    const errors = { identifier: identifier.trim() ? undefined : 'Email, user ID, employee ID, or mobile number is required.', password: password ? undefined : 'Password is required.' };
     setFieldErrors(errors);
     setErrorMessage(null);
     if (errors.identifier || errors.password) return;
@@ -123,10 +123,11 @@ export default function LoginPage() {
             <div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#2F6F5E]">Secure sign in</p><h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950">Welcome back</h2><p className="mt-2 text-sm leading-6 text-slate-500">Access the workspace assigned to your Bright Spark role.</p></div>
             {errorMessage && <div className="mt-6 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-medium leading-5 text-rose-800"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{errorMessage}</div>}
             <form onSubmit={submit} className="mt-7 space-y-4">
-              <FormField label="Username, email or mobile" required error={fieldErrors.identifier}><Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="Enter your registered identity" className="h-11" leftIcon={<Mail className="h-4 w-4" />} autoComplete="username" /></FormField>
+              <FormField label="Email, user ID, employee ID or mobile" required error={fieldErrors.identifier}><Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="Email or ID, e.g. EMPOPS001" className="h-11" leftIcon={<Mail className="h-4 w-4" />} autoComplete="username" /></FormField>
               <FormField label="Password" required error={fieldErrors.password}><PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" className="h-11" leftIcon={<Lock className="h-4 w-4" />} autoComplete="current-password" /></FormField>
               <div className="flex items-center justify-between"><Checkbox checked={rememberMe} onChange={setRememberMe} label={<span className="text-xs font-medium">Remember me</span>} /><button type="button" onClick={() => setForgotOpen(true)} className="cursor-pointer text-xs font-bold text-[#2F6F5E] hover:underline">Forgot password?</button></div>
               <Button type="submit" size="lg" fullWidth isLoading={isSubmitting} rightIcon={<ArrowRight className="h-4 w-4" />}>Sign in securely</Button>
+              <p className="text-xs text-slate-500">Admins: sign in with your email address.</p>
             </form>
             <div className="my-6 flex items-center gap-3"><span className="h-px flex-1 bg-slate-200" /><span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">New partner?</span><span className="h-px flex-1 bg-slate-200" /></div>
             <Link href="/signup" className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-700 transition-colors hover:border-[#2F6F5E] hover:bg-[#F3F7E9] hover:text-[#2F6F5E]">Apply for an account <ArrowRight className="h-4 w-4" /></Link>

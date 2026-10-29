@@ -140,7 +140,7 @@ export const employeeService = {
       return {
         id: `emp_${Date.now()}`,
         userId: `usr_emp_${Date.now()}`,
-        employeeCode: `EMP_${input.departmentCode.slice(0, 3)}_${Math.floor(100 + Math.random() * 900)}`,
+        employeeCode: `EMP${({ OPERATIONS: 'OPS', ACCOUNTS: 'ACC', KYC: 'KYC', SALES: 'SAL' } as Record<string, string>)[input.departmentCode] ?? input.departmentCode.slice(0, 3).replace(/_/g, '')}${Math.floor(100 + Math.random() * 900)}`,
         fullName: input.fullName,
         email: input.email,
         mobile: input.mobile || null,
