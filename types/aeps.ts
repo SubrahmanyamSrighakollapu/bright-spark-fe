@@ -1,5 +1,5 @@
 ﻿export type AEPSServiceType = 'CASH_WITHDRAWAL' | 'BALANCE_ENQUIRY' | 'MINI_STATEMENT' | 'CASH_DEPOSIT';
-export type AEPSTransactionStatus = 'SUCCESS' | 'FAILED' | 'PENDING';
+export type AEPSTransactionStatus = 'SUCCESS' | 'FAILED' | 'PENDING' | 'UNKNOWN';
 export type AEPSBiometricState = 'IDLE' | 'DEVICE_READY' | 'CAPTURING' | 'CAPTURE_SUCCESS' | 'CAPTURE_FAILED' | 'CANCELLED';
 
 export interface AEPSBank { id: string; name: string; }
@@ -27,5 +27,21 @@ export interface AEPSCustomerInput {
   deviceId: string;
   consent: boolean;
   amount?: number;
+}
+
+export interface AEPSAgentState {
+  onboardingStatus: 'NOT_STARTED' | 'PENDING' | 'SUCCESS' | 'FAILED';
+  kycStatus: 'UNKNOWN' | 'REQUIRED' | 'PENDING' | 'COMPLETED' | 'FAILED';
+  daily2faStatus: 'UNKNOWN' | 'REQUIRED' | 'COMPLETED' | 'FAILED';
+  lastProviderMessage?: string;
+}
+
+export interface AEPSEligibility {
+  kycRequired: boolean;
+  daily2faRequired: boolean;
+  kycWadhValue?: string;
+  amountForOtp: number;
+  tranTypeForOtp?: string;
+  message: string;
 }
 

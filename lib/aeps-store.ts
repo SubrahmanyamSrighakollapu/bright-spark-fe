@@ -9,9 +9,13 @@ interface AEPSStore {
   authenticatedAt: string | null;
   operatorSessionExpiresAt: string | null;
   transactions: AEPSTransaction[];
+  amountForOtp: number;
+  tranTypeForOtp: string | null;
   setAuthenticatedAt: (value: string | null) => void;
   clearOperatorSession: () => void;
   addTransaction: (transaction: AEPSTransaction) => void;
+  setTransactions: (transactions: AEPSTransaction[]) => void;
+  setOtpPolicy: (amount: number, transactionType?: string) => void;
 }
 
 export const useAEPSStore = create<AEPSStore>()(persist(
@@ -19,6 +23,8 @@ export const useAEPSStore = create<AEPSStore>()(persist(
     authenticatedAt: null,
     operatorSessionExpiresAt: null,
     transactions: AEPS_SEED_TRANSACTIONS,
+    amountForOtp: 0,
+    tranTypeForOtp: null,
     setAuthenticatedAt: (authenticatedAt) => set({
       authenticatedAt,
       operatorSessionExpiresAt: authenticatedAt
@@ -27,10 +33,12 @@ export const useAEPSStore = create<AEPSStore>()(persist(
     }),
     clearOperatorSession: () => set({ authenticatedAt: null, operatorSessionExpiresAt: null }),
     addTransaction: (transaction) => set((state) => ({ transactions: [transaction, ...state.transactions.filter((item) => item.id !== transaction.id)] })),
+    setTransactions: (transactions) => set({ transactions }),
+    setOtpPolicy: (amountForOtp, tranTypeForOtp) => set({ amountForOtp, tranTypeForOtp: tranTypeForOtp ?? null }),
   }),
   {
     name: 'bright-spark-aeps-v2',
-    partialize: (state) => ({ authenticatedAt: state.authenticatedAt, operatorSessionExpiresAt: state.operatorSessionExpiresAt, transactions: state.transactions }),
+    partialize: (state) => ({ authenticatedAt: state.authenticatedAt, operatorSessionExpiresAt: state.operatorSessionExpiresAt, transactions: state.transactions, amountForOtp: state.amountForOtp, tranTypeForOtp: state.tranTypeForOtp }),
   },
 ));
 

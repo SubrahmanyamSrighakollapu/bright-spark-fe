@@ -1,0 +1,23 @@
+'use client';
+
+import { FormEvent, useState } from 'react';
+import { Button, Card, Checkbox, Input, useToast } from '@/components/ui';
+import { aepsService, type AepsOnboardingInput } from '@/services/aepsService';
+
+const initial: AepsOnboardingInput = { name:'',mobile:'',email:'',pan:'',aadhaar:'',dob:'',agentCode:'',address:'',state:'',city:'',pin:'',bankName:'',accountNumber:'',ifsc:'',shopName:'',shopAddress:'',isPhysicalVerified:false };
+
+export function AepsOnboardingCard({ pending, onComplete }: { pending: boolean; onComplete: () => void }) {
+  const [form,setForm]=useState(initial); const [saving,setSaving]=useState(false); const { toastSuccess,toastError }=useToast();
+  const update=(key:keyof AepsOnboardingInput,value:string|boolean)=>setForm((current)=>({...current,[key]:value}));
+  const submit=async(event:FormEvent)=>{event.preventDefault();setSaving(true);try{const result=await aepsService.onboard(form);toastSuccess(result.message);onComplete();}catch(error){toastError(error instanceof Error?error.message:'AEPS onboarding failed');}finally{setSaving(false);}};
+  const check=async()=>{setSaving(true);try{const result=await aepsService.onboardingStatus();toastSuccess(result.message);onComplete();}catch(error){toastError(error instanceof Error?error.message:'Unable to check onboarding status');}finally{setSaving(false);}};
+  if(pending)return <Card title="AEPS agent onboarding pending" subtitle="The earlier provider request has not reached a final state."><Button isLoading={saving} onClick={()=>void check()}>Check Onboarding Status</Button></Card>;
+  return <Card title="AEPS Agent Onboarding" subtitle="This registration is separate from the Bright Spark retailer KYC and is submitted securely to the AEPS provider."><form onSubmit={submit} className="space-y-5"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <Input required label="Full Name" value={form.name} onChange={(e)=>update('name',e.target.value)}/><Input required label="Mobile" maxLength={10} value={form.mobile} onChange={(e)=>update('mobile',e.target.value.replace(/\D/g,''))}/><Input required type="email" label="Email" value={form.email} onChange={(e)=>update('email',e.target.value)}/>
+    <Input required label="PAN" maxLength={10} pattern="[A-Z]{5}[0-9]{4}[A-Z]" title="Use the format ABCDE1234F" helperText="Format: ABCDE1234F" value={form.pan} onChange={(e)=>update('pan',e.target.value.toUpperCase())}/><Input required label="Aadhaar" maxLength={12} pattern="[0-9]{12}" value={form.aadhaar} onChange={(e)=>update('aadhaar',e.target.value.replace(/\D/g,''))}/><Input required type="date" label="Date of Birth" value={form.dob} onChange={(e)=>update('dob',e.target.value)}/>
+    <Input required label="Agent Code" value={form.agentCode} onChange={(e)=>update('agentCode',e.target.value)}/><Input required label="Address" value={form.address} onChange={(e)=>update('address',e.target.value)}/><Input required label="State" value={form.state} onChange={(e)=>update('state',e.target.value)}/>
+    <Input required label="City" value={form.city} onChange={(e)=>update('city',e.target.value)}/><Input required label="PIN Code" maxLength={6} value={form.pin} onChange={(e)=>update('pin',e.target.value.replace(/\D/g,''))}/><Input required label="Bank Name" value={form.bankName} onChange={(e)=>update('bankName',e.target.value)}/>
+    <Input required label="Account Number" pattern="[0-9]{6,20}" value={form.accountNumber} onChange={(e)=>update('accountNumber',e.target.value.replace(/\D/g,''))}/><Input required label="IFSC" maxLength={11} pattern="[A-Z]{4}0[A-Z0-9]{6}" title="Use the 11-character bank IFSC format" helperText="Example format: SBIN0XXXXXX" value={form.ifsc} onChange={(e)=>update('ifsc',e.target.value.toUpperCase())}/><Input required label="Shop Name" value={form.shopName} onChange={(e)=>update('shopName',e.target.value)}/>
+    <Input required label="Shop Address" value={form.shopAddress} onChange={(e)=>update('shopAddress',e.target.value)} containerClassName="md:col-span-2"/>
+  </div><p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">For UAT, use only the PAN, Aadhaar, bank, and agent information approved by the AEPS provider. Random or production identity data may be rejected.</p><Checkbox label="The retailer location and submitted shop details have been physically verified." checked={form.isPhysicalVerified} onChange={(value)=>update('isPhysicalVerified',value)}/><div className="flex justify-end border-t border-slate-200 pt-4"><Button type="submit" isLoading={saving} disabled={!form.isPhysicalVerified}>Submit AEPS Onboarding</Button></div></form></Card>;
+}
